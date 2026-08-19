@@ -46,7 +46,7 @@ set search_path = public
 as $$
 declare
     -- EDIT ME: your school's email domain, no '@'.
-    school_domain constant text := 'yourschool.edu';
+    school_domain constant text := 'dpsiedge.edu.in';
 
     v_user   uuid := auth.uid();
     v_email  text := auth.jwt() ->> 'email';
@@ -58,7 +58,7 @@ begin
     end if;
 
     -- Checked here rather than in the browser, so it cannot be edited away.
-    if v_email is null or v_email not like '%@' || school_domain then
+    if v_email is null or lower(v_email) not like '%@' || lower(school_domain) then
         raise exception 'Voting is limited to % accounts', school_domain
             using errcode = 'insufficient_privilege';
     end if;
