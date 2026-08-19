@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "C:/Users/Ojas Bhatnagar/Desktop/SchoolSuggestions/backend/venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m", "http.server", "5173",
+        "--directory", "C:/Users/Ojas Bhatnagar/Desktop/SchoolSuggestions/frontend"
+      ],
+      "port": 5173
+    }
+  ]
+}

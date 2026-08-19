@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>School Suggestions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>School Suggestions</h1>
+    <div id="account">
+      <span id="who" hidden></span>
+      <button id="signin" class="ghost" hidden>Sign in to vote</button>
+      <button id="signout" class="ghost" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Make a suggestion</h2>
+      <p class="hint">
+        Suggestions are anonymous. An AI checks each one against the school
+        rules before staff review it.
+      </p>
+      <form id="submit-form">
+        <textarea id="suggestion" maxlength="2000" rows="4" required
+          placeholder="What would you change about the school?"></textarea>
+        <div class="row">
+          <span id="counter" class="hint"></span>
+          <button id="send" type="submit">Submit</button>
+        </div>
+      </form>
+      <div id="result" class="notice" hidden></div>
+    </section>
+
+    <section>
+      <div class="row">
+        <h2>Suggestions</h2>
+        <select id="sort" aria-label="Sort suggestions">
+          <option value="votes">Most voted</option>
+          <option value="created_at">Newest</option>
+        </select>
+      </div>
+      <div id="list" aria-live="polite">
+        <p class="hint">Loading…</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

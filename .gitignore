@@ -1,0 +1,24 @@
+# Secrets -- never commit these
+.env
+.env.*
+!.env.example
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Supabase CLI
+.supabase/
+supabase/.temp/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Deliberately NOT ignored: frontend/config.js
+# It holds the Supabase anon key, which is public by design and has to ship to
+# the browser. RLS and the security definer functions are what protect the
+# data, not key secrecy. Cloudflare Pages needs this file in the repo to build.
