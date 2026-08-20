@@ -66,6 +66,12 @@ select id, suggestion, status from public.suggestions order by id;
 --
 -- spam, feasibility and reason remain excluded -- those stay staff-only.
 
+-- NOTE ON COLUMN ORDER: `create or replace view` can only APPEND columns.
+-- Inserting `status` before `created_at` makes Postgres read it as renaming
+-- column 6, which fails with:
+--   42P16: cannot change name of view column "created_at" to "status"
+-- So status goes last. The frontend reads fields by name, so order is
+-- irrelevant to it.
 create or replace view public.public_suggestions as
 select
     id,
@@ -73,8 +79,8 @@ select
     category,
     summary,
     votes,
-    status,
-    created_at
+    created_at,
+    status
 from public.suggestions
 where spam = 'No';
 
