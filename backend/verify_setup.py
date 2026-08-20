@@ -37,11 +37,43 @@ def missing(exc) -> bool:
     return "PGRST202" in s or "could not find" in s.lower()
 
 
+def is_transport_error(exc) -> bool:
+    """True for TLS/DNS/connection failures -- the network, not the database.
+
+    These must never be mistaken for a probe result. School Wi-Fi with TLS
+    interception produces CERTIFICATE_VERIFY_FAILED on every request, and a
+    probe that treats "some error occurred" as success will report a pass.
+    """
+    s = str(exc)
+    return any(m in s for m in (
+        "CERTIFICATE_VERIFY_FAILED", "SSLError", "ConnectError",
+        "ConnectTimeout", "getaddrinfo", "Connection refused",
+    ))
+
+
+def connectivity_problem(url: str):
+    """Return an error string if the host is unreachable, else None.
+
+    Any HTTP response at all -- including 404 -- proves TLS and DNS work.
+    """
+    import httpx
+    try:
+        httpx.get(url, timeout=15)
+        return None
+    except Exception as exc:
+        return f"{type(exc).__name__}: {exc}"
+
+
 def check(label, fn):
     """fn returns (ok: bool, detail: str)."""
     try:
         ok, detail = fn()
     except Exception as exc:
+        if is_transport_error(exc):
+            raise SystemExit(
+                "\nNETWORK FAILURE during '" + label + "':\n  " + str(exc) +
+                "\n\nResults would be meaningless, so nothing further was checked."
+            )
         ok, detail = False, f"{type(exc).__name__}: {str(exc)[:90]}"
     status = "PASS" if ok else "FAIL"
     results.append(status)
@@ -57,6 +89,15 @@ def main() -> int:
         return 1
     sb = create_client(url, key)
     full = "--full" in sys.argv
+
+    problem = connectivity_problem(url)
+    if problem:
+        print(f"\nCannot reach {url}")
+        print(f"  {problem}\n")
+        print("This is the network, not the database. CERTIFICATE_VERIFY_FAILED")
+        print("means TLS interception (e.g. school Wi-Fi). Retry on another")
+        print("network; no checks were run.")
+        return 2
 
     print("\nSection 1 -- diagnostic artefacts removed")
 
@@ -107,6 +148,8 @@ def main() -> int:
             sb.rpc("vote_for_suggestion", {"p_id": -1}).execute()
             return False, "returned success for id -1 -- guard clause is not working"
         except Exception as exc:
+            if is_transport_error(exc):
+                raise
             if missing(exc):
                 return False, "vote_for_suggestion MISSING -- run setup-auth.sql section 2"
             if "permission denied" in str(exc).lower():
@@ -130,6 +173,8 @@ def main() -> int:
                 f"({len(rows)} rows returned) -- run setup.sql section 5"
             )
         except Exception as exc:
+            if is_transport_error(exc):
+                raise
             if missing(exc):
                 return False, "base table not found -- unexpected"
             return True, "direct table access denied; view is the only read path"
