@@ -119,8 +119,12 @@ def analyse_suggestion(client: genai.Client, rules: str, suggestion: str) -> dic
     return analysis
 
 
-def save_analysis(supabase, suggestion: str, analysis: dict) -> int:
-    """Store one suggestion via the submit_suggestion RPC. Returns the new id."""
+def save_analysis(supabase, suggestion: str, analysis: dict) -> dict:
+    """Store one suggestion via the submit_suggestion RPC.
+
+    Returns {"id": int, "status": str}. The database decides the status --
+    spam or Not Feasible is auto-rejected, anything else waits for staff.
+    """
     try:
         response = supabase.rpc(
             "submit_suggestion",
@@ -166,12 +170,17 @@ def main() -> int:
         print(f"  {field.capitalize():<12} {analysis[field]}")
 
     try:
-        new_id = save_analysis(supabase, suggestion, analysis)
+        saved = save_analysis(supabase, suggestion, analysis)
     except RuntimeError as exc:
         print(f"\nNot saved: {exc}", file=sys.stderr)
         return 1
 
-    print(f"\nSaved as suggestion #{new_id}")
+    if saved["status"] == "rejected":
+        why = "spam" if analysis["spam"] == "Yes" else "not feasible"
+        print(f"\nSaved as suggestion #{saved['id']}, auto-rejected ({why}).")
+        print("Staff can still see and reverse this under the Rejected filter.")
+    else:
+        print(f"\nSaved as suggestion #{saved['id']}, awaiting staff approval.")
     return 0
 
 

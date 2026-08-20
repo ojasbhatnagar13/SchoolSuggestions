@@ -185,16 +185,22 @@ els.form.addEventListener("submit", async (event) => {
     }
     if (!res.ok) throw new Error(payload.error || `Request failed (${res.status})`);
 
-    if (payload.flagged) {
-      // Still stored -- staff review everything. The student is told it was
-      // flagged so they can rephrase rather than assume it vanished.
+    // Nothing appears publicly until staff approve it, so say so either way --
+    // otherwise a student submits, sees no new entry in the list, and assumes
+    // it failed.
+    if (payload.status === "rejected") {
       notice(
-        "Submitted, but the AI flagged this for staff review. " +
-        "If that seems wrong, try rewording it.",
+        `This doesn’t fit the school suggestion rules, so it wasn’t added. ` +
+        (payload.reason ? `Reason: ${payload.reason} ` : "") +
+        `If you think that’s wrong, reword it or speak to a teacher.`,
         "warn",
       );
     } else {
-      notice(`Submitted as #${payload.id} under “${payload.category}”. Thanks!`, "ok");
+      notice(
+        `Submitted as #${payload.id} under “${payload.category}”. ` +
+        `It will appear below once staff have approved it.`,
+        "ok",
+      );
     }
     els.text.value = "";
     updateCounter();

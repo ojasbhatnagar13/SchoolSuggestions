@@ -179,6 +179,9 @@ async function rpc(name: string, body: unknown) {
   return await res.json();
 }
 
+// Returns { id, status }. The database decides the status -- spam or
+// Not Feasible is auto-rejected, anything else waits for staff. Keeping that
+// rule in one place means this function cannot drift from main.py.
 async function save(suggestion: string, analysis: Record<string, string>) {
   return await rpc("submit_suggestion", {
     p_suggestion: suggestion,
@@ -187,7 +190,7 @@ async function save(suggestion: string, analysis: Record<string, string>) {
     p_category: analysis.category,
     p_reason: analysis.reason,
     p_summary: analysis.summary,
-  }); // the new id
+  }) as { id: number; status: string };
 }
 
 Deno.serve(async (req) => {
@@ -240,14 +243,18 @@ Deno.serve(async (req) => {
 
   try {
     const analysis = await moderate(suggestion, apiKey);
-    const id = await save(suggestion, analysis);
-    // `spam` and `reason` are staff-only, so only the student-facing parts of
-    // the verdict go back to the browser.
+    const saved = await save(suggestion, analysis);
+
+    // `spam` and `feasibility` stay staff-only. `reason` is returned only when
+    // the suggestion was rejected: at that point it is an explanation of the
+    // student's own submission, and telling them why is better than letting it
+    // vanish silently.
     return json({
-      id,
+      id: saved.id,
+      status: saved.status,
       category: analysis.category,
       summary: analysis.summary,
-      flagged: analysis.spam === "Yes",
+      reason: saved.status === "rejected" ? analysis.reason : undefined,
     });
   } catch (err) {
     console.error(err);
