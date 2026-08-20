@@ -140,3 +140,43 @@ button.vote {
 button.vote.voted { border-color: var(--accent); color: var(--accent); }
 
 #counter.low { color: var(--warn-fg); }
+
+/* --- staff review --- */
+
+.ghost-link {
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.ghost-link:hover { border-color: var(--accent); color: var(--accent); }
+
+.toolbar { margin-bottom: 0.75rem; }
+
+.tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.chip {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--line);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.chip.is-on { color: var(--accent); border-color: var(--accent); }
+
+/* Flagged rows are tinted rather than hidden -- the AI is advisory, so staff
+   still review them and can disagree. */
+.card.is-flagged { border-left: 3px solid var(--warn-fg); }
+
+.tag-flag { color: var(--warn-fg); border-color: var(--warn-fg); }
+
+.reason { font-style: italic; }
+
+.suggestion select { margin-left: 0.4rem; }

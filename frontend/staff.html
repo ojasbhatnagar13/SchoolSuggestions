@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Review — School Suggestions</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Staff Review</h1>
+    <div id="account">
+      <span id="who" hidden></span>
+      <a href="index.html" class="ghost-link">Student view</a>
+      <button id="signin" class="ghost" hidden>Sign in</button>
+      <button id="signout" class="ghost" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="gate" class="notice" hidden></div>
+
+    <section id="board" hidden>
+      <div class="row toolbar">
+        <div class="filters" role="group" aria-label="Filter by status">
+          <button class="chip is-on" data-filter="all">All</button>
+          <button class="chip" data-filter="pending">Pending</button>
+          <button class="chip" data-filter="approved">Approved</button>
+          <button class="chip" data-filter="rejected">Rejected</button>
+          <button class="chip" data-filter="actioned">Actioned</button>
+          <button class="chip" data-filter="flagged">Flagged</button>
+        </div>
+        <span id="count" class="hint"></span>
+      </div>
+      <div id="list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script type="module" src="staff.js"></script>
+</body>
+</html>

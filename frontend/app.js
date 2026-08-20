@@ -6,6 +6,28 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Must match maxlength in index.html and MAX_LENGTH in the Edge Function.
 const MAX_LENGTH = 2000;
 
+// A random per-browser id used only for submission rate limiting. It is not
+// an identity: it is never tied to a suggestion, the server only ever sees a
+// salted hash of it, and clearing site data resets it. That last part means
+// it stops casual repeat-spam, not a determined attacker -- the per-network
+// limit in the Edge Function is what backstops that.
+function deviceToken() {
+  const KEY = "suggestion-device-token";
+  let token = null;
+  try {
+    token = localStorage.getItem(KEY);
+    if (!token) {
+      token = crypto.randomUUID();
+      localStorage.setItem(KEY, token);
+    }
+  } catch {
+    // Private browsing or blocked storage. Fall back to a per-session value;
+    // the request still works, it just shares the network bucket.
+    token = "";
+  }
+  return token;
+}
+
 const $ = (id) => document.getElementById(id);
 const els = {
   form: $("submit-form"), text: $("suggestion"), send: $("send"),
@@ -151,10 +173,16 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ suggestion }),
+      body: JSON.stringify({ suggestion, deviceToken: deviceToken() }),
     });
     const payload = await res.json();
 
+    if (res.status === 429) {
+      // Rate limited. The database writes this wording, so show it as-is and
+      // treat it as a warning rather than an error -- nothing broke.
+      notice(payload.error, "warn");
+      return;
+    }
     if (!res.ok) throw new Error(payload.error || `Request failed (${res.status})`);
 
     if (payload.flagged) {

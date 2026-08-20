@@ -128,31 +128,66 @@ async function moderate(suggestion: string, apiKey: string) {
   return analysis as Record<string, string>;
 }
 
-async function save(suggestion: string, analysis: Record<string, string>) {
+// Salted SHA-256 of an identifier. The raw IP and device token never leave
+// this function -- only these hashes reach the database, so the throttle log
+// cannot be tied back to a person or to their suggestions.
+async function hash(value: string): Promise<string> {
+  const salt = Deno.env.get("THROTTLE_SALT") ?? "schoolsuggestions-default-salt";
+  const bytes = new TextEncoder().encode(`${value}:${salt}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function clientIp(req: Request): string {
+  return req.headers.get("cf-connecting-ip")
+    ?? req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+    ?? "unknown";
+}
+
+class RpcError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+// Every database call goes through here. submit_suggestion and
+// claim_submission_slot are both `security definer`, so the anon key is
+// enough -- nothing in this function needs RLS-bypassing power.
+async function rpc(name: string, body: unknown) {
   const url = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-  const res = await fetch(`${url}/rest/v1/rpc/submit_suggestion`, {
+  const res = await fetch(`${url}/rest/v1/rpc/${name}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       apikey: anonKey,
       Authorization: `Bearer ${anonKey}`,
     },
-    body: JSON.stringify({
-      p_suggestion: suggestion,
-      p_spam: analysis.spam,
-      p_feasibility: analysis.feasibility,
-      p_category: analysis.category,
-      p_reason: analysis.reason,
-      p_summary: analysis.summary,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    throw new Error(`Database write failed (${res.status}): ${(await res.text()).slice(0, 200)}`);
+    let message = (await res.text()).slice(0, 300);
+    try {
+      message = JSON.parse(message).message ?? message;
+    } catch { /* not JSON, use the raw text */ }
+    throw new RpcError(message, res.status);
   }
-  return await res.json(); // the new id
+  return await res.json();
+}
+
+async function save(suggestion: string, analysis: Record<string, string>) {
+  return await rpc("submit_suggestion", {
+    p_suggestion: suggestion,
+    p_spam: analysis.spam,
+    p_feasibility: analysis.feasibility,
+    p_category: analysis.category,
+    p_reason: analysis.reason,
+    p_summary: analysis.summary,
+  }); // the new id
 }
 
 Deno.serve(async (req) => {
@@ -165,8 +200,11 @@ Deno.serve(async (req) => {
   }
 
   let suggestion: string;
+  let deviceToken: string;
   try {
-    suggestion = String((await req.json())?.suggestion ?? "").trim();
+    const body = await req.json();
+    suggestion = String(body?.suggestion ?? "").trim();
+    deviceToken = String(body?.deviceToken ?? "").trim();
   } catch {
     return json({ error: "Body must be JSON like {\"suggestion\": \"...\"}" }, 400);
   }
@@ -179,6 +217,25 @@ Deno.serve(async (req) => {
       { error: `Suggestions are limited to ${MAX_LENGTH} characters.` },
       400,
     );
+  }
+
+  try {
+    // Rate limit BEFORE calling Gemini, so a flood costs no AI quota.
+    // A missing device token is not fatal -- it just falls back to the IP,
+    // which means an old cached page still works, just with a shared bucket.
+    await rpc("claim_submission_slot", {
+      p_device_hash: await hash(deviceToken || `nodevice:${clientIp(req)}`),
+      p_network_hash: await hash(clientIp(req)),
+    });
+  } catch (err) {
+    if (err instanceof RpcError) {
+      // The database owns the limits and writes the student-facing wording,
+      // so pass its message straight through. 429 lets the browser tell a
+      // rate limit apart from a real failure.
+      return json({ error: err.message }, 429);
+    }
+    console.error(err);
+    return json({ error: "Could not check submission limit." }, 502);
   }
 
   try {
