@@ -73,6 +73,14 @@ $$;
 
 -- submit_suggestion now returns jsonb rather than a bare id, so callers can
 -- tell the student what actually happened instead of guessing.
+--
+-- The DROP is required, not tidiness: `create or replace function` cannot
+-- change a return type, and without this Postgres raises
+--   42P13: cannot change return type of existing function
+-- Dropping also discards the function's grants, which is why they are
+-- re-granted below rather than left alone.
+drop function if exists public.submit_suggestion(text, text, text, text, text, text);
+
 create or replace function public.submit_suggestion(
     p_suggestion   text,
     p_spam         text,
