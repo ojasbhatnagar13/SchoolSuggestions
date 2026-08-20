@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers config for the static frontend.
+  //
+  // Cloudflare now recommends Workers with static assets over Pages for new
+  // projects -- Pages still runs but only receives maintenance updates.
+  //
+  // There is no "main" entrypoint here on purpose: with an assets block and no
+  // Worker script, Cloudflare serves the files straight from its edge. No cold
+  // starts, no CPU billing, and static asset requests are free.
+  "name": "schoolsuggestions",
+  "compatibility_date": "2026-08-19",
+
+  "assets": {
+    // The site lives in frontend/, not the repo root. Without this, Cloudflare
+    // would serve the repository itself -- README, backend source and all.
+    "directory": "./frontend"
+  }
+}
