@@ -57,13 +57,21 @@ Fill every field:
   category     A short noun phrase, e.g. Facilities, Clubs, Events.
   reason       One or two sentences justifying the verdict, citing the rule
                that applies.
-  summary      The suggestion condensed to a single neutral sentence.`;
+  summary      The suggestion condensed to a single neutral sentence.
+  topic        The core request in 2-4 lowercase words, naming the thing being
+               asked for and nothing else. No verbs, no filler, no location
+               detail unless it is the point of the request. This is used to
+               spot duplicates, so two students asking for the same thing must
+               produce the same phrase.
+               "We need more bike racks near the gym" -> "bike racks"
+               "can we get a chess club on fridays"   -> "chess club"
+               "the canteen food is too watery"       -> "canteen food quality"`;
 
 // Mirrors ANALYSIS_SCHEMA in backend/main.py and the columns of
 // public.suggestions.
 const RESPONSE_SCHEMA = {
   type: "OBJECT",
-  required: ["spam", "feasibility", "category", "reason", "summary"],
+  required: ["spam", "feasibility", "category", "reason", "summary", "topic"],
   properties: {
     spam: { type: "STRING", enum: ["Yes", "No"] },
     feasibility: {
@@ -73,6 +81,7 @@ const RESPONSE_SCHEMA = {
     category: { type: "STRING" },
     reason: { type: "STRING" },
     summary: { type: "STRING" },
+    topic: { type: "STRING" },
   },
 };
 
@@ -179,9 +188,10 @@ async function rpc(name: string, body: unknown) {
   return await res.json();
 }
 
-// Returns { id, status }. The database decides the status -- spam or
-// Not Feasible is auto-rejected, anything else waits for staff. Keeping that
-// rule in one place means this function cannot drift from main.py.
+// Returns { id, status } normally, or { status: "duplicate", duplicate_of,
+// existing } when this idea already exists. The database owns both decisions
+// -- auto-rejection and duplicate matching -- so this function cannot drift
+// from main.py.
 async function save(suggestion: string, analysis: Record<string, string>) {
   return await rpc("submit_suggestion", {
     p_suggestion: suggestion,
@@ -190,7 +200,13 @@ async function save(suggestion: string, analysis: Record<string, string>) {
     p_category: analysis.category,
     p_reason: analysis.reason,
     p_summary: analysis.summary,
-  }) as { id: number; status: string };
+    p_topic: analysis.topic,
+  }) as {
+    id?: number;
+    status: string;
+    duplicate_of?: number;
+    existing?: string;
+  };
 }
 
 Deno.serve(async (req) => {
@@ -244,6 +260,16 @@ Deno.serve(async (req) => {
   try {
     const analysis = await moderate(suggestion, apiKey);
     const saved = await save(suggestion, analysis);
+
+    // Nothing was written -- the idea already exists. Send back the original
+    // so the student can see it rather than just being told "no".
+    if (saved.status === "duplicate") {
+      return json({
+        status: "duplicate",
+        duplicate_of: saved.duplicate_of,
+        existing: saved.existing,
+      });
+    }
 
     // `spam` and `feasibility` stay staff-only. `reason` is returned only when
     // the suggestion was rejected: at that point it is an explanation of the

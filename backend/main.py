@@ -28,7 +28,7 @@ MODEL = "gemini-3.6-flash"
 # `feasibility` to the exact values the staff review filters expect.
 ANALYSIS_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
-    required=["spam", "feasibility", "category", "reason", "summary"],
+    required=["spam", "feasibility", "category", "reason", "summary", "topic"],
     properties={
         "spam": types.Schema(type=types.Type.STRING, enum=["Yes", "No"]),
         "feasibility": types.Schema(
@@ -38,6 +38,7 @@ ANALYSIS_SCHEMA = types.Schema(
         "category": types.Schema(type=types.Type.STRING),
         "reason": types.Schema(type=types.Type.STRING),
         "summary": types.Schema(type=types.Type.STRING),
+        "topic": types.Schema(type=types.Type.STRING),
     },
 )
 
@@ -60,6 +61,14 @@ Fill every field:
   reason       One or two sentences justifying the verdict, citing the rule
                that applies.
   summary      The suggestion condensed to a single neutral sentence.
+  topic        The core request in 2-4 lowercase words, naming the thing being
+               asked for and nothing else. No verbs, no filler, no location
+               detail unless it is the point of the request. This is used to
+               spot duplicates, so two students asking for the same thing must
+               produce the same phrase.
+               "We need more bike racks near the gym" -> "bike racks"
+               "can we get a chess club on fridays"   -> "chess club"
+               "the canteen food is too watery"       -> "canteen food quality"
 """
 
 
@@ -135,6 +144,7 @@ def save_analysis(supabase, suggestion: str, analysis: dict) -> dict:
                 "p_category": analysis["category"],
                 "p_reason": analysis["reason"],
                 "p_summary": analysis["summary"],
+                "p_topic": analysis["topic"],
             },
         ).execute()
     except Exception as exc:
@@ -175,7 +185,10 @@ def main() -> int:
         print(f"\nNot saved: {exc}", file=sys.stderr)
         return 1
 
-    if saved["status"] == "rejected":
+    if saved["status"] == "duplicate":
+        print(f"\nNot saved - suggestion #{saved['duplicate_of']} already covers this:")
+        print(f"  {saved['existing']}")
+    elif saved["status"] == "rejected":
         why = "spam" if analysis["spam"] == "Yes" else "not feasible"
         print(f"\nSaved as suggestion #{saved['id']}, auto-rejected ({why}).")
         print("Staff can still see and reverse this under the Rejected filter.")

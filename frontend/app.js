@@ -188,6 +188,17 @@ els.form.addEventListener("submit", async (event) => {
     // Nothing appears publicly until staff approve it, so say so either way --
     // otherwise a student submits, sees no new entry in the list, and assumes
     // it failed.
+    if (payload.status === "duplicate") {
+      // Nothing was written. Show the existing suggestion so this reads as
+      // "already covered" rather than "rejected".
+      notice(
+        `Someone has already suggested this — #${payload.duplicate_of}: ` +
+        `“${payload.existing}”. Vote for that one below instead.`,
+        "warn",
+      );
+      return;
+    }
+
     if (payload.status === "rejected") {
       notice(
         `This doesn’t fit the school suggestion rules, so it wasn’t added. ` +
