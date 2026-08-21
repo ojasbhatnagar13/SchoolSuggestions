@@ -82,13 +82,29 @@ begin
     if new_status = 'pending' and p_topic is not null and length(trim(p_topic)) > 0 then
         select duplicate_threshold into threshold from public.app_config where id;
 
+        -- similarity() alone is not enough: it divides shared trigrams by the
+        -- union, so a short topic scores badly against a longer one even when
+        -- the short one appears inside it verbatim. "bike racks" vs
+        -- "facilities we need more bike racks near" scores only 0.25.
+        --
+        -- word_similarity() measures how well one string matches some run of
+        -- words within the other, which is exactly the containment case. It is
+        -- asymmetric, so both directions are tested.
         select s.id, s.suggestion
           into dup_id, dup_text
           from public.suggestions s
          where s.status in ('approved', 'pending')
            and s.topic is not null
-           and similarity(s.topic, p_topic) >= coalesce(threshold, 0.55)
-         order by similarity(s.topic, p_topic) desc
+           and greatest(
+                   similarity(s.topic, p_topic),
+                   word_similarity(p_topic, s.topic),
+                   word_similarity(s.topic, p_topic)
+               ) >= coalesce(threshold, 0.55)
+         order by greatest(
+                   similarity(s.topic, p_topic),
+                   word_similarity(p_topic, s.topic),
+                   word_similarity(s.topic, p_topic)
+               ) desc
          limit 1;
 
         if dup_id is not null then
@@ -122,17 +138,25 @@ notify pgrst, 'reload schema';
 -- =====================================================================
 -- SECTION 3 -- Backfill topics for existing suggestions
 -- =====================================================================
--- Existing rows have no topic, so they cannot be matched against. Rather than
--- re-running them through the AI, seed a rough topic from the category and
--- the first few words. Good enough for the ones already in the system; every
--- new submission gets a proper AI topic.
+-- Existing rows have no topic, so they cannot be matched against.
+--
+-- An earlier version of this seeded them from category + the first six words.
+-- That produced topics like "facilities we need more bike racks near", which
+-- scored only 0.25 against a real AI topic of "bike racks" -- long enough to
+-- never match anything. Do not do that.
+--
+-- Set them by hand instead. There are only a handful, and a topic is meant to
+-- be 2-4 words. Anything already rejected can be skipped: rejected rows are
+-- excluded from duplicate checks anyway.
 
-update public.suggestions
-   set topic = lower(
-           coalesce(category, '') || ' ' ||
-           array_to_string((string_to_array(suggestion, ' '))[1:6], ' ')
-       )
- where topic is null;
+update public.suggestions set topic = 'bike racks'         where id = 14;
+update public.suggestions set topic = 'school food quality' where id = 13;
+
+-- Anything still without a topic: give it one, keeping it short.
+select id, status, category, topic, left(suggestion, 45) as suggestion
+from public.suggestions
+where status in ('approved', 'pending')
+order by id;
 
 -- Expected: UPDATE <n>
 select id, status, category, topic from public.suggestions order by id;
