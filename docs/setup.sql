@@ -148,7 +148,14 @@ select public.vote_for_suggestion(14);   -- returns the new vote count
 -- Do not run this until sections 3 and 4 are confirmed working, or the
 -- frontend will have no read path.
 
-revoke insert, select, update, delete on public.suggestions from anon;
+-- Supabase grants ALL on new tables to anon by default, which in Postgres
+-- means more than INSERT/SELECT/UPDATE/DELETE: it also includes TRUNCATE,
+-- REFERENCES and TRIGGER. TRUNCATE matters most -- it bypasses RLS entirely
+-- (it empties the table at the storage level, not row by row), so anon
+-- retaining it would mean the public key could wipe every suggestion. All
+-- seven are revoked here in one statement so nothing is missed.
+revoke insert, select, update, delete, truncate, references, trigger
+    on public.suggestions from anon;
 
 -- The old INSERT policy is now inert -- the grant it depended on is gone.
 -- Dropping it keeps the policy list honest. It is reproduced here so you can
