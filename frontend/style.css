@@ -180,3 +180,33 @@ button.vote.voted { border-color: var(--accent); color: var(--accent); }
 .reason { font-style: italic; }
 
 .suggestion select { margin-left: 0.4rem; }
+
+/* --- branding --- */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+/* The supplied logo has a wide band of transparent padding below the artwork.
+   aspect-ratio crops the box to the artwork's real extent, and object-position
+   pins the image to the top so only that dead space is cut away.
+
+   The white plate is not decoration: "DPS International" is set in black, so
+   on a dark background the wordmark would disappear entirely. */
+.brand-logo {
+  height: 46px;
+  width: auto;
+  aspect-ratio: 670 / 232;
+  object-fit: cover;
+  object-position: top center;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 7px;
+}
+
+@media (max-width: 480px) {
+  .brand-logo { height: 36px; }
+}
