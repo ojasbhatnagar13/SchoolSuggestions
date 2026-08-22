@@ -1,0 +1,539 @@
+<title>DPSI Suggestion Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* Light palette. Green from the school crest, orange from the "edge"
+     wordmark. Neutrals carry a slight green bias so they read as chosen
+     rather than inherited. */
+  :root {
+    --ground:      #F7F9F7;
+    --surface:     #FFFFFF;
+    --ink:         #15241C;
+    --muted:       #5C6B62;
+    --line:        #DCE4DE;
+    --primary:     #1B5E3F;
+    --primary-dim: #E7F0EA;
+    --accent:      #C25E10;
+    --accent-dim:  #FBEEE1;
+    --flag:        #8A4B12;
+    --flag-dim:    #FAF0E4;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #101613;
+      --surface:     #17201B;
+      --ink:         #E6EDE8;
+      --muted:       #94A49A;
+      --line:        #26322B;
+      --primary:     #5FB98A;
+      --primary-dim: #16271E;
+      --accent:      #E89A56;
+      --accent-dim:  #2A1F14;
+      --flag:        #E0A96B;
+      --flag-dim:    #29200F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #101613;
+    --surface:     #17201B;
+    --ink:         #E6EDE8;
+    --muted:       #94A49A;
+    --line:        #26322B;
+    --primary:     #5FB98A;
+    --primary-dim: #16271E;
+    --accent:      #E89A56;
+    --accent-dim:  #2A1F14;
+    --flag:        #E0A96B;
+    --flag-dim:    #29200F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    display: grid;
+    gap: 3.25rem;
+  }
+
+  /* --- masthead --- */
+
+  .masthead { display: grid; gap: 1rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+
+  h1 {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+    max-width: 40rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--line);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .meta a { color: var(--primary); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  /* --- sections --- */
+
+  section { display: grid; gap: 1.1rem; }
+
+  h2 {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary);
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; max-width: 42rem; }
+
+  strong { font-weight: 600; }
+
+  /* --- pipeline: a real sequence, so the stages are numbered --- */
+
+  .pipeline {
+    display: grid;
+    gap: 0.5rem;
+    counter-reset: stage;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr;
+    gap: 1rem;
+    align-items: baseline;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--primary);
+    padding: 0.85rem 1.1rem;
+  }
+
+  .stage::before {
+    counter-increment: stage;
+    content: counter(stage, decimal-leading-zero);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--primary);
+  }
+
+  .stage-body { display: grid; gap: 0.2rem; }
+
+  .stage-note { font-size: 0.9rem; color: var(--muted); }
+
+  /* --- outcomes --- */
+
+  .outcomes { display: grid; gap: 0.6rem; }
+
+  .outcome {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .chip {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .chip-live  { background: var(--primary-dim); color: var(--primary); }
+  .chip-hold  { background: var(--accent-dim);  color: var(--accent); }
+  .chip-bin   { background: var(--flag-dim);    color: var(--flag); }
+
+  /* --- tables --- */
+
+  .scroller { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 30rem;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.6rem 0.9rem 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  td code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.85em;
+    color: var(--primary);
+  }
+
+  /* --- scene list for the video --- */
+
+  .scenes { display: grid; gap: 0.55rem; }
+
+  .scene {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--line);
+  }
+
+  .scene b { font-weight: 600; }
+  .scene span { font-size: 0.92rem; color: var(--muted); }
+
+  /* --- callout --- */
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--accent);
+    padding: 1.1rem 1.25rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .callout h3 { color: var(--accent); }
+
+  ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.4rem; max-width: 42rem; }
+  li::marker { color: var(--primary); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 1.25rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a { transition: color 120ms ease; }
+  }
+
+  a:focus-visible, :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">Project writeup · DPS International Edge</div>
+    <h1>A suggestion box that reads what students write</h1>
+    <p class="standfirst">
+      Students submit ideas anonymously. An AI reads each one against the school's
+      own rules, throws out what breaks them, spots ideas that already exist, and
+      passes the rest to staff. Nothing reaches the school until a person approves it.
+    </p>
+    <div class="meta">
+      <span>Built by Ojas Bhatnagar</span>
+      <span><a href="https://schoolsuggestions.ojasbhatnagar13.workers.dev/">Live site</a></span>
+      <span>Accompanies the demonstration video</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>The problem</h2>
+    <p>
+      A paper suggestion box has three failure modes. Ideas go in and nobody hears
+      what happened to them. The same suggestion arrives twenty times and looks like
+      twenty ideas. And someone has to read every slip, including the joke ones,
+      before any real work starts.
+    </p>
+    <p>
+      This system fixes all three without removing staff from the decision. The AI
+      sorts and filters; people still decide what the school actually does.
+    </p>
+  </section>
+
+  <section>
+    <h2>How a suggestion travels</h2>
+    <p>
+      Six stages, in order. Each one can stop the suggestion, and the earlier it
+      stops, the less it costs.
+    </p>
+
+    <div class="pipeline">
+      <div class="stage">
+        <div class="stage-body">
+          <h3>A student writes a suggestion</h3>
+          <div class="stage-note">No login, no name, no email. Nothing recorded identifies who submitted it.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-body">
+          <h3>Rate limit check</h3>
+          <div class="stage-note">Runs first, deliberately — a flood is rejected before it costs a single AI request.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-body">
+          <h3>The AI reads it against the school rules</h3>
+          <div class="stage-note">Returns a spam verdict, a feasibility judgement, a category, its reasoning, a summary, and a short topic phrase.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-body">
+          <h3>Duplicate check</h3>
+          <div class="stage-note">The topic phrase is compared against every live suggestion. A match means nothing new is written.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-body">
+          <h3>Automatic sorting</h3>
+          <div class="stage-note">Spam and rule-breaking ideas are binned. Everything else waits for a person.</div>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-body">
+          <h3>Staff approve, then students vote</h3>
+          <div class="stage-note">Only approved suggestions are ever visible to students, and only those can be voted on.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What a student sees</h2>
+    <p>Three outcomes, and the student is told which one happened and why.</p>
+
+    <div class="outcomes">
+      <div class="outcome">
+        <span class="chip chip-live">Queued</span>
+        <div>
+          <b>"We should have a chess club on Fridays"</b> — accepted, and told it will
+          appear once staff approve it. No silent disappearance.
+        </div>
+      </div>
+      <div class="outcome">
+        <span class="chip chip-hold">Already exists</span>
+        <div>
+          <b>"The canteen food is watery and bad"</b> — matched to an existing
+          suggestion about school food quality, and shown the original to vote on
+          instead. The wording barely overlaps; it is the <em>idea</em> that matched.
+        </div>
+      </div>
+      <div class="outcome">
+        <span class="chip chip-bin">Not added</span>
+        <div>
+          <b>"Give us cricket bats at recess"</b> — refused, quoting the school rule
+          it breaks. Staff can still see it and overturn the decision.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What the video shows</h2>
+    <div class="scenes">
+      <div class="scene">
+        <b>Submitting a new idea</b>
+        <span>Accepted and queued for staff. It does not appear in the public list yet.</span>
+      </div>
+      <div class="scene">
+        <b>Submitting an idea that already exists</b>
+        <span>Caught as a duplicate despite being worded completely differently.</span>
+      </div>
+      <div class="scene">
+        <b>Submitting something against school rules</b>
+        <span>Refused automatically, with the specific rule quoted back.</span>
+      </div>
+      <div class="scene">
+        <b>Signing in and voting</b>
+        <span>Voting requires a school account. Voting twice is refused.</span>
+      </div>
+      <div class="scene">
+        <b>The staff review page</b>
+        <span>Every suggestion, including the automatically binned ones, with the AI's verdict and reasoning. Staff can change any decision.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions worth explaining</h2>
+
+    <h3>Suggestions are anonymous, but votes are not</h3>
+    <p>
+      Suggestions carry no author at all — there is no column to hold one. Votes do
+      record who voted, because that is the only way to stop one person voting fifty
+      times. The two are stored in separate tables so a vote can never be traced back
+      to who suggested something.
+    </p>
+
+    <h3>The AI decides quickly; people decide finally</h3>
+    <p>
+      Spam and rule-breaking suggestions are removed without a human ever queueing
+      them. But "removed" means marked rejected, not deleted — every one stays visible
+      to staff and can be restored in a click. The model will occasionally be wrong,
+      and a design where its mistakes are unrecoverable would be the wrong design.
+    </p>
+
+    <h3>Duplicates are matched on meaning, not wording</h3>
+    <p>
+      Comparing raw text fails: "add bike racks" and "we need more bike racks near the
+      gym" share almost nothing. So the AI produces a short topic phrase for every
+      suggestion — <code>bike racks</code> — and matching happens on that. Two students
+      describing the same idea in different words produce the same phrase.
+    </p>
+
+    <h3>The rules live in the database, not the web page</h3>
+    <p>
+      Every rule that matters — who may vote, what is publicly visible, one vote per
+      person — is enforced inside the database. Hiding a button in the browser is not
+      security; anyone can reopen it. These checks hold even against someone
+      deliberately bypassing the page.
+    </p>
+  </section>
+
+  <section>
+    <h2>How it is built</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>Technology</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Moderation</td><td>Google Gemini</td>
+            <td>Reads suggestions against the school rules and returns a structured verdict</td>
+          </tr>
+          <tr>
+            <td>Database</td><td>Supabase (PostgreSQL)</td>
+            <td>Stores suggestions and votes; holds every access rule</td>
+          </tr>
+          <tr>
+            <td>Server logic</td><td>Supabase Edge Function</td>
+            <td>Calls the AI server-side, so the API key never reaches a browser</td>
+          </tr>
+          <tr>
+            <td>Website</td><td>HTML, CSS, JavaScript</td>
+            <td>No framework and no build step — fast to load, simple to maintain</td>
+          </tr>
+          <tr>
+            <td>Hosting</td><td>Cloudflare</td>
+            <td>Deploys automatically whenever the code is updated</td>
+          </tr>
+          <tr>
+            <td>Sign-in</td><td>Google, school accounts only</td>
+            <td>Confirms a voter belongs to the school without storing a password</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Limits, stated plainly</h2>
+    <ul>
+      <li>
+        <strong>The AI is not always right.</strong> It occasionally misjudges a
+        suggestion. That is why nothing is ever deleted and staff can overturn every
+        automatic decision.
+      </li>
+      <li>
+        <strong>Spam protection is a deterrent, not a wall.</strong> Submission limits
+        can be worked around by a determined person. They stop ordinary flooding, which
+        is what actually happens in practice.
+      </li>
+      <li>
+        <strong>Voting depends on school accounts.</strong> Until the app is approved
+        for the school's Google Workspace, students cannot sign in to vote. Submitting
+        works regardless.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What could come next</h2>
+    <ul>
+      <li>A summary for staff showing which categories students raise most often</li>
+      <li>Email alerts when suggestions are waiting for review</li>
+      <li>Filtering and search once there are enough suggestions to need it</li>
+      <li>Archiving by term, so each year starts fresh without losing the record</li>
+      <li>Letting staff post a short reply when a suggestion is actioned</li>
+    </ul>
+  </section>
+
+  <div class="callout">
+    <h3>To try it</h3>
+    <p>
+      Submitting a suggestion needs no account — visit the site and write one. The
+      AI's response arrives in a couple of seconds. Voting and the staff page require
+      a school Google account, which is pending approval from the school's IT
+      administrator.
+    </p>
+  </div>
+
+  <footer>
+    DPS International Edge · schoolsuggestions.ojasbhatnagar13.workers.dev
+  </footer>
+
+</div>
