@@ -31,7 +31,7 @@ function deviceToken() {
 const $ = (id) => document.getElementById(id);
 const els = {
   form: $("submit-form"), text: $("suggestion"), send: $("send"),
-  counter: $("counter"), result: $("result"), list: $("list"), sort: $("sort"),
+  counter: $("counter"), result: $("result"), list: $("list"),
   who: $("who"), signin: $("signin"), signout: $("signout"),
 };
 
@@ -49,7 +49,7 @@ function notice(message, kind = "info") {
 
 // Suggestion text is student-supplied, so it is only ever assigned via
 // textContent -- never innerHTML.
-function card({ id, suggestion, category, summary, votes, created_at }) {
+function card({ id, suggestion, category, summary, created_at }) {
   const el = document.createElement("article");
   el.className = "card suggestion";
 
@@ -74,18 +74,16 @@ function card({ id, suggestion, category, summary, votes, created_at }) {
   foot.className = "row";
   const btn = document.createElement("button");
   btn.className = "vote";
-  const count = votes ?? 0;
 
-  if (!session) {
-    btn.textContent = `▲ ${count}`;
-    btn.disabled = true;
-    btn.title = "Sign in to vote";
-  } else if (myVotes.has(id)) {
-    btn.textContent = `▲ ${count} · voted`;
+  // No running tally is shown. A visible count makes an already-popular
+  // suggestion collect more votes because it looks popular, rather than
+  // because more people independently agree. Staff still see the numbers.
+  if (myVotes.has(id)) {
+    btn.textContent = "Voted";
     btn.disabled = true;
     btn.classList.add("voted");
   } else {
-    btn.textContent = `▲ ${count}`;
+    btn.textContent = "Vote";
     btn.addEventListener("click", () => vote(id, btn));
   }
   foot.append(btn);
@@ -106,18 +104,30 @@ async function vote(id, btn) {
     return;
   }
   myVotes.add(id);
-  btn.textContent = `▲ ${data} · voted`;
+  btn.textContent = "Voted";
+  btn.disabled = true;
   btn.classList.add("voted");
 }
 
 async function refresh() {
-  const column = els.sort.value;
+  els.list.replaceChildren();
+
+  // The list is for signed-in school accounts only, so it cannot be browsed
+  // or forwarded by anyone with the link. Submitting stays anonymous.
+  if (!session) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = "Sign in with your school account to see what others have suggested.";
+    els.list.append(p);
+    return;
+  }
+
+  // Newest first, always. Ordering by popularity is the bandwagon mechanism,
+  // and the vote count is no longer sent to students anyway.
   const { data, error } = await sb
     .from("public_suggestions")
     .select("*")
-    .order(column, { ascending: false });
-
-  els.list.replaceChildren();
+    .order("created_at", { ascending: false });
 
   if (error) {
     const p = document.createElement("p");
@@ -242,8 +252,6 @@ function updateCounter() {
 }
 
 els.text.addEventListener("input", updateCounter);
-
-els.sort.addEventListener("change", refresh);
 
 els.signin.addEventListener("click", () =>
   sb.auth.signInWithOAuth({
