@@ -1,0 +1,73 @@
+name: Keep Supabase awake
+
+# Free Supabase projects pause after about 7 days without database activity.
+# Once paused there is a 90 day window to restore, after which the data is
+# download-only. This makes one tiny query on a schedule so that never starts.
+#
+# It calls auto_status(), which is `immutable`, writes nothing, takes no locks,
+# and is the only side-effect-free function anon can reach -- direct table
+# access was revoked during hardening, so a plain select would be denied.
+#
+# No repository secrets are needed. The Supabase URL and the anon key are
+# public by design and already committed in frontend/config.js, which is where
+# this reads them from so there is a single source of truth.
+
+on:
+  schedule:
+    # 06:00 UTC daily. Daily rather than weekly because GitHub delays scheduled
+    # runs under load and skips them entirely during outages -- a weekly ping
+    # that slips twice would cross the 7 day line.
+    - cron: "0 6 * * *"
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read Supabase config
+        id: cfg
+        run: |
+          CONFIG=frontend/config.js
+          URL=$(grep -oP 'SUPABASE_URL\s*=\s*"\K[^"]+' "$CONFIG")
+          KEY=$(grep -oP 'SUPABASE_ANON_KEY\s*=\s*"\K[^"]+' "$CONFIG")
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "Could not parse $CONFIG. Has it been renamed or reformatted?"
+            exit 1
+          fi
+
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          # Masked so it never appears in logs, even though it is public-safe.
+          echo "::add-mask::$KEY"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "Config parsed. Project: $URL"
+
+      - name: Ping the database
+        run: |
+          URL="${{ steps.cfg.outputs.url }}"
+          KEY="${{ steps.cfg.outputs.key }}"
+
+          STATUS=$(curl -s -o /tmp/body -w '%{http_code}' \
+            -X POST "$URL/rest/v1/rpc/auto_status" \
+            -H "Content-Type: application/json" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -d '{"p_spam":"No","p_feasibility":"Feasible"}')
+
+          echo "HTTP $STATUS"
+          echo "Response: $(cat /tmp/body)"
+
+          if [ "$STATUS" != "200" ]; then
+            echo ""
+            echo "Ping failed. Likely causes:"
+            echo "  401/403  the anon key changed, or auto_status lost its grant to anon"
+            echo "  404      auto_status was renamed or dropped"
+            echo "  5xx      the project is already paused -- unpause it in the dashboard"
+            exit 1
+          fi
+
+          echo "Database is awake."
