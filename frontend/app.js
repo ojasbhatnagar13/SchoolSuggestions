@@ -31,6 +31,7 @@ function deviceToken() {
 const $ = (id) => document.getElementById(id);
 const els = {
   form: $("submit-form"), text: $("suggestion"), send: $("send"),
+  sendLabel: document.querySelector("#send .btn-label"),
   counter: $("counter"), result: $("result"), list: $("list"),
   who: $("who"), signin: $("signin"), signout: $("signout"),
 };
@@ -47,33 +48,31 @@ function notice(message, kind = "info") {
   els.result.hidden = false;
 }
 
-// Suggestion text is student-supplied, so it is only ever assigned via
-// textContent -- never innerHTML.
+// Small DOM helper. Every string goes through textContent, never innerHTML --
+// suggestion text is student-supplied and must never be parsed as markup.
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
 function card({ id, suggestion, category, summary, created_at }) {
-  const el = document.createElement("article");
-  el.className = "card suggestion";
+  const article = el("article", "s-card");
 
-  const head = document.createElement("div");
-  head.className = "row";
-  const tag = document.createElement("span");
-  tag.className = "tag";
-  tag.textContent = category || "Uncategorised";
-  const when = document.createElement("span");
-  when.className = "hint";
-  when.textContent = new Date(created_at).toLocaleDateString();
-  head.append(tag, when);
+  const meta = el("div", "s-meta");
+  meta.append(
+    el("span", "s-cat", category || "Uncategorised"),
+    el("span", "mono s-date", new Date(created_at).toLocaleDateString(undefined, {
+      day: "numeric", month: "short", year: "numeric",
+    })),
+  );
 
-  const body = document.createElement("p");
-  body.textContent = suggestion;
+  const body = el("p", "s-text", suggestion);
 
-  const gist = document.createElement("p");
-  gist.className = "hint";
-  gist.textContent = summary || "";
-
-  const foot = document.createElement("div");
-  foot.className = "row";
-  const btn = document.createElement("button");
-  btn.className = "vote";
+  const foot = el("div", "s-foot");
+  const btn = el("button", "vote");
+  btn.type = "button";
 
   // No running tally is shown. A visible count makes an already-popular
   // suggestion collect more votes because it looks popular, rather than
@@ -86,20 +85,49 @@ function card({ id, suggestion, category, summary, created_at }) {
     btn.textContent = "Vote";
     btn.addEventListener("click", () => vote(id, btn));
   }
-  foot.append(btn);
+  foot.append(el("span", "mono", "One vote each"), btn);
 
-  el.append(head, body);
-  if (summary) el.append(gist);
-  el.append(foot);
-  return el;
+  article.append(meta, body);
+  if (summary && summary !== suggestion) article.append(el("p", "s-summary", summary));
+  article.append(foot);
+  return article;
+}
+
+// A full-width panel for the signed-out, empty and error states, so the board
+// never collapses to a stray line of text with a hole underneath it.
+function boardState({ title, body, points = [], action = null, isError = false }) {
+  const panel = el("div", "board-state" + (isError ? " is-error" : ""));
+
+  const left = el("div");
+  left.append(el("h3", null, title), el("p", null, body));
+  if (action) left.append(action);
+
+  const right = el("ul", "spec");
+  points.forEach((point) => right.append(el("li", null, point)));
+
+  panel.append(left);
+  if (points.length) panel.append(right);
+  return panel;
+}
+
+function signIn() {
+  return sb.auth.signInWithOAuth({
+    provider: "google",
+    // No #fragment on the return URL: Supabase can hand the session back in the
+    // hash, and an existing fragment would collide with it.
+    options: { redirectTo: window.location.href.split("#")[0] },
+  });
 }
 
 async function vote(id, btn) {
   btn.disabled = true;
-  const { data, error } = await sb.rpc("vote_for_suggestion", { p_id: id });
+  const { error } = await sb.rpc("vote_for_suggestion", { p_id: id });
   if (error) {
-    // The database owns these rules, so just surface what it said.
-    notice(error.message, "error");
+    // The database owns these rules, so just surface what it said -- on the
+    // card that was clicked, not in the form notice at the top of the page.
+    const status = btn.parentElement.querySelector(".mono");
+    status.textContent = error.message;
+    status.classList.add("vote-error");
     btn.disabled = false;
     return;
   }
@@ -110,15 +138,23 @@ async function vote(id, btn) {
 }
 
 async function refresh() {
-  els.list.replaceChildren();
-
   // The list is for signed-in school accounts only, so it cannot be browsed
   // or forwarded by anyone with the link. Submitting stays anonymous.
   if (!session) {
-    const p = document.createElement("p");
-    p.className = "hint";
-    p.textContent = "Sign in with your school account to see what others have suggested.";
-    els.list.append(p);
+    const button = el("button", "btn btn-ghost", "Sign in with Google");
+    button.type = "button";
+    button.addEventListener("click", signIn);
+    els.list.replaceChildren(boardState({
+      title: "The board is visible to signed-in students.",
+      body: "It keeps the list inside the school instead of being shared " +
+        "around online. You don't need an account to submit a suggestion.",
+      action: button,
+      points: [
+        "Ideas approved by staff, newest first",
+        "One vote per student per idea",
+        "Vote counts stay private, so nothing snowballs",
+      ],
+    }));
     return;
   }
 
@@ -130,23 +166,29 @@ async function refresh() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    const p = document.createElement("p");
-    p.className = "notice error";
-    p.textContent =
-      error.message.includes("public_suggestions")
-        ? "The public_suggestions view does not exist yet — run docs/setup.sql."
-        : error.message;
-    els.list.append(p);
+    els.list.replaceChildren(boardState({
+      title: "The board couldn't load.",
+      body: error.message,
+      isError: true,
+    }));
     return;
   }
   if (!data.length) {
-    const p = document.createElement("p");
-    p.className = "hint";
-    p.textContent = "No suggestions yet. Be the first.";
-    els.list.append(p);
+    const link = el("a", "btn btn-primary", "Make a suggestion →");
+    link.href = "#suggest";
+    els.list.replaceChildren(boardState({
+      title: "Nothing approved yet.",
+      body: "Ideas appear here once a member of staff has read and approved " +
+        "them. Yours could be the first.",
+      action: link,
+      points: [
+        "Submitted ideas wait for staff review",
+        "Approved ones appear here, newest first",
+      ],
+    }));
     return;
   }
-  data.forEach((row) => els.list.append(card(row)));
+  els.list.replaceChildren(...data.map(card));
 }
 
 async function loadMyVotes() {
@@ -173,7 +215,8 @@ els.form.addEventListener("submit", async (event) => {
   if (!suggestion) return;
 
   els.send.disabled = true;
-  notice("Checking your suggestion against the school rules…");
+  els.sendLabel.textContent = "Checking…";
+  notice("Checking your suggestion against the school guidelines. This usually takes a few seconds.");
 
   try {
     const res = await fetch(MODERATE_URL, {
@@ -202,14 +245,22 @@ els.form.addEventListener("submit", async (event) => {
       // Nothing was written. Show the existing suggestion so this reads as
       // "already covered" rather than "rejected".
       notice(
-        `Someone has already suggested this — #${payload.duplicate_of}: ` +
-        `“${payload.existing}”. Vote for that one below instead.`,
+        `Someone has already suggested this, so it wasn't filed twice. ` +
+        `The original (#${payload.duplicate_of}): “${payload.existing}”`,
         "warn",
       );
       return;
     }
 
-    if (payload.status === "rejected") {
+    if (payload.unchecked) {
+      // Every AI model was busy. The suggestion was still saved -- it goes
+      // straight to a person instead of being screened first.
+      notice(
+        `Submitted as #${payload.id}. The automatic check is busy right now, ` +
+        `so a member of staff will review it directly.`,
+        "ok",
+      );
+    } else if (payload.status === "rejected") {
       notice(
         `This doesn’t fit the school suggestion rules, so it wasn’t added. ` +
         (payload.reason ? `Reason: ${payload.reason} ` : "") +
@@ -219,7 +270,7 @@ els.form.addEventListener("submit", async (event) => {
     } else {
       notice(
         `Submitted as #${payload.id} under “${payload.category}”. ` +
-        `It will appear below once staff have approved it.`,
+        `It will appear on the board once staff have approved it.`,
         "ok",
       );
     }
@@ -232,13 +283,14 @@ els.form.addEventListener("submit", async (event) => {
     // a student, so say something actionable instead.
     notice(
       err instanceof TypeError
-        ? "Could not reach the moderation service. If you are the site owner, " +
-          "check the moderate-suggestion Edge Function is deployed."
+        ? "Couldn't reach the suggestion service. Check your internet " +
+          "connection and try again. Your text is still in the box."
         : err.message,
       "error",
     );
   } finally {
     els.send.disabled = false;
+    els.sendLabel.textContent = "Submit suggestion";
   }
 });
 
@@ -253,12 +305,7 @@ function updateCounter() {
 
 els.text.addEventListener("input", updateCounter);
 
-els.signin.addEventListener("click", () =>
-  sb.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.href },
-  }),
-);
+els.signin.addEventListener("click", signIn);
 
 els.signout.addEventListener("click", async () => {
   await sb.auth.signOut();

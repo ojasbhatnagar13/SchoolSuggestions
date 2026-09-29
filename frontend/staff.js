@@ -168,13 +168,26 @@ async function onAuthChange(newSession) {
   els.who.hidden = !email;
   els.signin.hidden = !!session;
   els.signout.hidden = !session;
+  heroSignIns.forEach((b) => (b.hidden = !!session));
 
   if (!session) {
-    gate("Sign in with your school account to review suggestions.");
+    gate("Sign in with your staff Google account to review suggestions.");
     return;
   }
   await load();
 }
+
+function signIn() {
+  return sb.auth.signInWithOAuth({
+    provider: "google",
+    // No #fragment: Supabase can return the session in the hash.
+    options: { redirectTo: window.location.href.split("#")[0] },
+  });
+}
+
+// Extra sign-in buttons in the page body (the hero), alongside the nav one.
+const heroSignIns = [...document.querySelectorAll("[data-signin]")];
+heroSignIns.forEach((b) => b.addEventListener("click", signIn));
 
 for (const chip of document.querySelectorAll(".chip")) {
   chip.addEventListener("click", () => {
@@ -185,12 +198,7 @@ for (const chip of document.querySelectorAll(".chip")) {
   });
 }
 
-els.signin.addEventListener("click", () =>
-  sb.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.href },
-  }),
-);
+els.signin.addEventListener("click", signIn);
 
 els.signout.addEventListener("click", async () => {
   await sb.auth.signOut();

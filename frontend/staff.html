@@ -4,42 +4,99 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Staff Review — DPSI School Suggestions</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <img class="brand-logo" src="logo.png"
-           alt="DPS International Edge — preparing global citizens of tomorrow">
-      <h1>Staff Review</h1>
-    </div>
-    <div id="account">
-      <span id="who" hidden></span>
-      <a href="index.html" class="ghost-link">Student view</a>
-      <button id="signin" class="ghost" hidden>Sign in</button>
-      <button id="signout" class="ghost" hidden>Sign out</button>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, student page">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <div class="nav-actions" id="account">
+        <span id="who" class="who" hidden></span>
+        <a class="link-btn" href="index.html">Student page</a>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
     </div>
   </header>
 
   <main>
-    <div id="gate" class="notice" hidden></div>
-
-    <section id="board" hidden>
-      <div class="row toolbar">
-        <div class="filters" role="group" aria-label="Filter by status">
-          <button class="chip is-on" data-filter="all">All</button>
-          <button class="chip" data-filter="pending">Pending</button>
-          <button class="chip" data-filter="approved">Approved</button>
-          <button class="chip" data-filter="rejected">Rejected</button>
-          <button class="chip" data-filter="actioned">Actioned</button>
-          <button class="chip" data-filter="flagged">Flagged</button>
+    <section class="band band-dark hero hero-compact">
+      <div class="wrap">
+        <p class="eyebrow">Staff only</p>
+        <h1 class="display">Staff review.</h1>
+        <p class="lede">
+          Every suggestion, including the ones the AI declined, with its verdict
+          and reasoning. Nothing reaches students until you approve it.
+        </p>
+        <div class="gate-row">
+          <div id="gate" class="notice" role="status" hidden></div>
+          <button class="btn btn-primary" type="button" data-signin hidden>
+            Sign in with Google <span aria-hidden="true">→</span>
+          </button>
         </div>
-        <span id="count" class="hint"></span>
       </div>
-      <div id="list" aria-live="polite"></div>
+    </section>
+
+    <section class="band band-cream staff-band" id="board" hidden>
+      <div class="wrap">
+        <div class="toolbar">
+          <div class="filters" role="group" aria-label="Filter by status">
+            <button class="chip is-on" type="button" data-filter="all">All</button>
+            <button class="chip" type="button" data-filter="pending">Pending</button>
+            <button class="chip" type="button" data-filter="approved">Approved</button>
+            <button class="chip" type="button" data-filter="rejected">Rejected</button>
+            <button class="chip" type="button" data-filter="actioned">Actioned</button>
+            <button class="chip" type="button" data-filter="flagged">Flagged</button>
+          </div>
+          <span id="count" class="hint"></span>
+        </div>
+        <div id="list" class="staff-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="band band-cream-2">
+      <div class="wrap">
+        <p class="eyebrow">How to review</p>
+        <h2 class="h2">Four states.<br>You set every one.</h2>
+        <div class="four-col">
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-neutral" aria-hidden="true"></span>Pending</div>
+            <p>Waiting for a decision. Anything the AI rated Feasible or Needs Review lands here.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Approved</div>
+            <p>Shown on the student board, where students can back it with one vote each.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-bad" aria-hidden="true"></span>Rejected</div>
+            <p>Hidden from students. AI-declined suggestions arrive here. Move one back if the AI got it wrong.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-warn" aria-hidden="true"></span>Actioned</div>
+            <p>The school has acted on it. Stays on record so nothing is quietly forgotten.</p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
-  <script type="module" src="staff.js"></script>
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · Staff review</span>
+        <span>Vote counts and AI reasoning are visible to staff only</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="staff.js?v=4"></script>
 </body>
 </html>
