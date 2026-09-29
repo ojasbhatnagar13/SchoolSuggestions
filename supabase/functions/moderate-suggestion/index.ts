@@ -14,7 +14,21 @@
 // anon key deliberately, not service_role: submit_suggestion is `security
 // definer`, so anon is enough, and nothing here needs RLS-bypassing power.
 
-const MODEL = "gemini-3.6-flash";
+// Tried in order. Google's flash models regularly return 503 "high demand" at
+// busy times -- on 2026-09-29 every non-lite flash model was down at once while
+// the lite models answered in ~1.5s, so the fallbacks are deliberately from the
+// lite tier, which runs on separate capacity. Each name was confirmed to exist
+// for this API key and to support structured output before being listed here.
+const MODELS = [
+  "gemini-3.6-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-flash-lite-latest",
+];
+
+// Per-model ceiling. A 503 comes back in about a second, but an overloaded
+// model can also just hang, and a student is watching a spinner meanwhile.
+const MODEL_TIMEOUT_MS = 10_000;
+
 const MAX_LENGTH = 2000;
 
 // Keep in sync with backend/rules.txt. Edge Functions are bundled without the
@@ -98,9 +112,13 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function moderate(suggestion: string, apiKey: string) {
+// Every model in MODELS failed. Not a bug in the suggestion -- the caller
+// saves it for manual review instead of losing it.
+class ModerationUnavailable extends Error {}
+
+async function callModel(model: string, suggestion: string, apiKey: string) {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
       method: "POST",
       headers: {
@@ -116,25 +134,58 @@ async function moderate(suggestion: string, apiKey: string) {
           temperature: 0,
         },
       }),
+      signal: AbortSignal.timeout(MODEL_TIMEOUT_MS),
     },
   );
 
   if (!res.ok) {
-    throw new Error(`Gemini returned ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    throw new Error(`${res.status} ${(await res.text()).slice(0, 120)}`);
   }
 
   const payload = await res.json();
   const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) {
     // Usually a safety block, which comes back with no parts at all.
-    throw new Error("Gemini returned no content (possibly a safety block)");
+    throw new Error("no content (possibly a safety block)");
   }
 
   const analysis = JSON.parse(text);
   for (const field of RESPONSE_SCHEMA.required) {
-    if (!analysis[field]) throw new Error(`Gemini reply is missing "${field}"`);
+    if (!analysis[field]) throw new Error(`reply is missing "${field}"`);
   }
   return analysis as Record<string, string>;
+}
+
+async function moderate(suggestion: string, apiKey: string) {
+  const failures: string[] = [];
+  for (const model of MODELS) {
+    try {
+      return await callModel(model, suggestion, apiKey);
+    } catch (err) {
+      // Any failure -- 503, timeout, 404, malformed reply -- moves on to the
+      // next model rather than failing the student's submission.
+      failures.push(`${model}: ${(err as Error).message}`);
+      console.warn(`moderation fell through ${model}:`, (err as Error).message);
+    }
+  }
+  throw new ModerationUnavailable(failures.join(" | "));
+}
+
+// What gets stored when no model could screen the suggestion. It lands in the
+// staff queue as Needs Review rather than being auto-sorted, and the reason
+// says plainly that nothing checked it. spam is 'No' only so that, if staff
+// approve it after reading it, the public view (which filters on spam='No')
+// will actually show it. No topic, so it skips duplicate matching.
+function uncheckedAnalysis(suggestion: string): Record<string, string | null> {
+  return {
+    spam: "No",
+    feasibility: "Needs Review",
+    category: "Unsorted",
+    reason: "The automatic check was unavailable when this was submitted, " +
+      "so it has not been screened. Please review it manually.",
+    summary: suggestion.length > 200 ? suggestion.slice(0, 197) + "..." : suggestion,
+    topic: null,
+  };
 }
 
 // Salted SHA-256 of an identifier. The raw IP and device token never leave
@@ -192,7 +243,7 @@ async function rpc(name: string, body: unknown) {
 // existing } when this idea already exists. The database owns both decisions
 // -- auto-rejection and duplicate matching -- so this function cannot drift
 // from main.py.
-async function save(suggestion: string, analysis: Record<string, string>) {
+async function save(suggestion: string, analysis: Record<string, string | null>) {
   return await rpc("submit_suggestion", {
     p_suggestion: suggestion,
     p_spam: analysis.spam,
@@ -258,7 +309,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const analysis = await moderate(suggestion, apiKey);
+    let analysis: Record<string, string | null>;
+    try {
+      analysis = await moderate(suggestion, apiKey);
+    } catch (err) {
+      if (!(err instanceof ModerationUnavailable)) throw err;
+      // Every model is down. Save it for a person to screen rather than
+      // telling the student to try again later -- most never would.
+      console.error("all moderation models unavailable:", err.message);
+      const saved = await save(suggestion, uncheckedAnalysis(suggestion));
+      return json({
+        id: saved.id,
+        status: saved.status,
+        category: "Unsorted",
+        unchecked: true,
+      });
+    }
+
     const saved = await save(suggestion, analysis);
 
     // Nothing was written -- the idea already exists. Send back the original

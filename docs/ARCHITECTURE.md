@@ -106,6 +106,15 @@ Notes worth carrying over:
   and unrecoverable mistakes are the wrong default.
 - Keep the rules text in one place. Ours is duplicated between the edge function
   and the CLI tool, which is a known wart — a config table would be better.
+- **Plan for the model being down, because it will be.** On 2026-09-29 every
+  non-lite Gemini flash model returned `503 high demand` at once, while the lite
+  models answered in ~1.5s — they run on separate capacity. The function now
+  tries a chain (`3.6-flash` → `3.5-flash-lite` → `flash-lite-latest`) with a
+  10s timeout each, and if all fail it **saves the submission unscreened as
+  Needs Review** instead of erroring. A person reviews it; nothing is lost.
+  Before this, a busy model meant the student's suggestion was simply gone.
+  List the models your key can actually use (`GET /v1beta/models`) rather than
+  guessing names: two plausible-looking ones returned 404.
 
 ---
 
