@@ -407,6 +407,7 @@ textarea:focus {
 }
 
 .counter { color: var(--faint-d); }
+.form-note { margin: 16px 0 0; color: var(--faint-d); }
 #counter.low { color: var(--warn); }
 
 /* ------------------------------------------------------------------ notices */

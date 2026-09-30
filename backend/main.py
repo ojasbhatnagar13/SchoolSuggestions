@@ -160,7 +160,14 @@ def save_analysis(supabase, suggestion: str, analysis: dict, benefit: str = "") 
     spam goes to 'spam', Not Feasible to 'rejected', anything else waits for
     staff as 'pending'.
     """
+    # The database refuses writes without the secret shared with the Edge
+    # Function (docs/setup-signin-submit.sql). Copy it into backend/.env.
+    secret = os.getenv("SUBMIT_SECRET")
+    if not secret:
+        raise RuntimeError("SUBMIT_SECRET is missing from backend/.env")
+
     params = {
+        "p_secret": secret,
         "p_suggestion": suggestion,
         "p_spam": analysis["spam"],
         "p_feasibility": analysis["feasibility"],

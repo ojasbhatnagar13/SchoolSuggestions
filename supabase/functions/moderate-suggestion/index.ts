@@ -7,12 +7,18 @@
 // Deploy:
 //   npx supabase functions deploy moderate-suggestion
 //
-// The Gemini key must be set as a secret first:
-//   npx supabase secrets set GEMINI_API_KEY=...
+// Secrets it needs (npx supabase secrets set NAME=...):
+//   GEMINI_API_KEY  the AI key
+//   THROTTLE_SALT   salts the account hash used for rate limiting
+//   SUBMIT_SECRET   must equal app_config.submit_secret; see
+//                   docs/setup-signin-submit.sql for copying it across
+//
+// The caller must be signed in: the browser sends the student's session
+// token, not the anon key.
 //
 // SUPABASE_URL and SUPABASE_ANON_KEY are injected automatically. This uses the
-// anon key deliberately, not service_role: submit_suggestion is `security
-// definer`, so anon is enough, and nothing here needs RLS-bypassing power.
+// anon key deliberately, not service_role: the write functions are `security
+// definer` and check SUBMIT_SECRET, so nothing here needs RLS-bypassing power.
 
 // Tried in order. Google's flash models regularly return 503 "high demand" at
 // busy times -- on 2026-09-29 every non-lite flash model was down at once while
@@ -212,9 +218,9 @@ function uncheckedAnalysis(suggestion: string): Record<string, string | null> {
   };
 }
 
-// Salted SHA-256 of an identifier. The raw IP and device token never leave
-// this function -- only these hashes reach the database, so the throttle log
-// cannot be tied back to a person or to their suggestions.
+// Salted SHA-256 of the account id. Only this hash reaches the quota table,
+// and the salt lives here rather than in the database, so the quota log alone
+// cannot be turned back into a list of who submitted.
 async function hash(value: string): Promise<string> {
   const salt = Deno.env.get("THROTTLE_SALT") ?? "schoolsuggestions-default-salt";
   const bytes = new TextEncoder().encode(`${value}:${salt}`);
@@ -224,22 +230,17 @@ async function hash(value: string): Promise<string> {
     .join("");
 }
 
-function clientIp(req: Request): string {
-  return req.headers.get("cf-connecting-ip")
-    ?? req.headers.get("x-forwarded-for")?.split(",")[0].trim()
-    ?? "unknown";
-}
-
 class RpcError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
   }
 }
 
-// Every database call goes through here. submit_suggestion and
-// claim_submission_slot are both `security definer`, so the anon key is
-// enough -- nothing in this function needs RLS-bypassing power.
-async function rpc(name: string, body: unknown) {
+// Every database call goes through here. By default it runs as anon: the
+// write functions are `security definer` and demand SUBMIT_SECRET, so anon
+// plus the secret is enough and nothing here needs RLS-bypassing power.
+// Pass a user's token to run a call as that user instead.
+async function rpc(name: string, body: unknown, token?: string) {
   const url = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
@@ -248,7 +249,7 @@ async function rpc(name: string, body: unknown) {
     headers: {
       "Content-Type": "application/json",
       apikey: anonKey,
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${token ?? anonKey}`,
     },
     body: JSON.stringify(body),
   });
@@ -263,6 +264,21 @@ async function rpc(name: string, body: unknown) {
   return await res.json();
 }
 
+// Who is submitting. The browser sends the student's own session token;
+// Supabase Auth says whose it is. The anon key is a valid token too, but it
+// belongs to nobody, so it is turned away here.
+async function currentUser(req: Request): Promise<{ id: string; token: string } | null> {
+  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  if (!token || token === Deno.env.get("SUPABASE_ANON_KEY")) return null;
+
+  const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/auth/v1/user`, {
+    headers: { apikey: Deno.env.get("SUPABASE_ANON_KEY")!, Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  const user = await res.json();
+  return user?.id ? { id: user.id, token } : null;
+}
+
 // Returns { id, status } normally, or { status: "duplicate", duplicate_of,
 // existing } when this idea already exists. The database owns both decisions
 // -- auto-rejection and duplicate matching -- so this function cannot drift
@@ -272,7 +288,8 @@ async function save(
   benefit: string,
   analysis: Record<string, string | null>,
 ) {
-  const params = {
+  return await rpc("submit_suggestion", {
+    p_secret: SUBMIT_SECRET,
     p_suggestion: suggestion,
     p_spam: analysis.spam,
     p_feasibility: analysis.feasibility,
@@ -280,41 +297,35 @@ async function save(
     p_reason: analysis.reason,
     p_summary: analysis.summary,
     p_topic: analysis.topic,
-  };
-  type Saved = { id?: number; status: string; duplicate_of?: number; existing?: string };
-
-  // p_benefit is only sent when there is one. PostgREST matches functions by
-  // argument name, so against a database that has not had
-  // docs/setup-review-v2.sql run, a p_benefit call fails to resolve -- in
-  // that case save the suggestion without the explanation rather than lose it.
-  try {
-    return await rpc("submit_suggestion", benefit ? { ...params, p_benefit: benefit } : params) as Saved;
-  } catch (err) {
-    if (benefit && err instanceof RpcError && /Could not find the function|PGRST202/.test(err.message)) {
-      console.warn("submit_suggestion has no p_benefit yet; saved without the explanation");
-      return await rpc("submit_suggestion", params) as Saved;
-    }
-    throw err;
-  }
+    p_benefit: benefit || null,
+  }) as { id?: number; status: string; duplicate_of?: number; existing?: string };
 }
+
+// Shared with the database (app_config.submit_secret) and never sent to a
+// browser. Without it the write functions refuse every call, which is what
+// stops anyone skipping this function by calling the database directly.
+const SUBMIT_SECRET = Deno.env.get("SUBMIT_SECRET") ?? "";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) {
-    return json({ error: "GEMINI_API_KEY secret is not set on this function" }, 500);
+  if (!apiKey || !SUBMIT_SECRET) {
+    return json({ error: "The suggestion box is not fully set up (missing a server secret)." }, 500);
+  }
+
+  const user = await currentUser(req);
+  if (!user) {
+    return json({ error: "Please sign in to send an idea.", signin: true }, 401);
   }
 
   let suggestion: string;
   let benefit: string;
-  let deviceToken: string;
   try {
     const body = await req.json();
     suggestion = String(body?.suggestion ?? "").trim();
     benefit = String(body?.benefit ?? "").trim();
-    deviceToken = String(body?.deviceToken ?? "").trim();
   } catch {
     return json({ error: "Body must be JSON like {\"suggestion\": \"...\"}" }, 400);
   }
@@ -336,22 +347,28 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Rate limit BEFORE calling Gemini, so a flood costs no AI quota.
-    // A missing device token is not fatal -- it just falls back to the IP,
-    // which means an old cached page still works, just with a shared bucket.
-    await rpc("claim_submission_slot", {
-      p_device_hash: await hash(deviceToken || `nodevice:${clientIp(req)}`),
-      p_network_hash: await hash(clientIp(req)),
+    // Same rule as the board and voting: verified, and from the school
+    // domain unless demo mode is on. Asked as the student, so the database
+    // sees their account.
+    const blocked = await rpc("board_access_error", {}, user.token);
+    if (blocked) return json({ error: blocked }, 403);
+
+    // Rate limit BEFORE calling Gemini, so a flood costs no AI quota. Counted
+    // per account, so incognito, VPNs and shared school Wi-Fi make no
+    // difference.
+    await rpc("claim_account_slot", {
+      p_secret: SUBMIT_SECRET,
+      p_account_hash: await hash(user.id),
     });
   } catch (err) {
-    if (err instanceof RpcError) {
+    if (err instanceof RpcError && err.status !== 403 && err.status !== 401) {
       // The database owns the limits and writes the student-facing wording,
       // so pass its message straight through. 429 lets the browser tell a
       // rate limit apart from a real failure.
       return json({ error: err.message }, 429);
     }
     console.error(err);
-    return json({ error: "Could not check submission limit." }, 502);
+    return json({ error: "Could not check your account. Please try again." }, 502);
   }
 
   try {

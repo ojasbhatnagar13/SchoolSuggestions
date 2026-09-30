@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -41,7 +41,7 @@
           <h1 class="headline">Have an idea to improve DPSI? <span class="accent">Share it anonymously.</span></h1>
           <ul class="promise">
             <li><b>No name.</b> <span>Nothing links an idea to you.</span></li>
-            <li><b>No sign-in.</b> <span>Just type it and send.</span></li>
+            <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
             <li><b>Read by staff.</b> <span>A real person decides.</span></li>
           </ul>
         </div>
@@ -61,11 +61,12 @@
             <div class="form-foot">
               <span id="counter" class="mono counter" aria-live="polite"></span>
               <button id="send" type="submit" class="btn btn-primary">
-                <span class="btn-label">Send idea</span>
+                <span class="btn-label">Sign in to send</span>
                 <span aria-hidden="true">→</span>
               </button>
             </div>
           </form>
+          <p id="signed-as" class="mono form-note"></p>
           <div id="result" class="notice" role="status" hidden></div>
         </article>
       </div>
@@ -78,7 +79,7 @@
           <li>
             <span class="mono n">01</span>
             <b>You send it</b>
-            <span>Takes a minute. No name is attached.</span>
+            <span>Sign in, write it, send. No name is attached.</span>
           </li>
           <li>
             <span class="mono n">02</span>
@@ -117,6 +118,6 @@
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=5"></script>
+  <script type="module" src="submit.js?v=6"></script>
 </body>
 </html>

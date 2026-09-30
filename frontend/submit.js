@@ -1,38 +1,24 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
-import { watchSession } from "./common.js";
+import { sb, signIn, watchSession } from "./common.js";
 
 // Must match maxlength in index.html and the limits in the Edge Function.
 const MAX_LENGTH = 2000;
 
-// A random per-browser id used only for submission rate limiting. It is not
-// an identity: it is never tied to a suggestion, the server only ever sees a
-// salted hash of it, and clearing site data resets it. That last part means
-// it stops casual repeat-spam, not a determined attacker -- the per-network
-// limit in the Edge Function is what backstops that.
-function deviceToken() {
-  const KEY = "suggestion-device-token";
-  let token = null;
-  try {
-    token = localStorage.getItem(KEY);
-    if (!token) {
-      token = crypto.randomUUID();
-      localStorage.setItem(KEY, token);
-    }
-  } catch {
-    // Private browsing or blocked storage. The request still works, it just
-    // shares the network bucket.
-    token = "";
-  }
-  return token;
-}
+// Signing in leaves the page for Google and comes back, which would wipe what
+// the student typed. Keep it in this browser until they're back. Only a
+// convenience: if storage is blocked, the draft is simply not kept.
+const DRAFT_KEY = "suggestion-draft";
 
 const $ = (id) => document.getElementById(id);
 const els = {
   form: $("submit-form"), text: $("suggestion"), benefit: $("benefit"),
   send: $("send"), sendLabel: document.querySelector("#send .btn-label"),
-  counter: $("counter"), result: $("result"),
+  counter: $("counter"), result: $("result"), signedAs: $("signed-as"),
 };
+
+let session = null;
+let busy = false;
 
 function notice(message, kind = "info") {
   els.result.textContent = message;
@@ -49,6 +35,37 @@ function updateCounter() {
   els.counter.classList.toggle("low", left <= 100);
 }
 
+function idleLabel() {
+  return session ? "Send idea" : "Sign in to send";
+}
+
+function showAccount() {
+  if (!busy) els.sendLabel.textContent = idleLabel();
+  els.signedAs.textContent = session
+    ? `Sending as a signed-in student. Your name is never attached to the idea.`
+    : `You'll sign in with Google first. Your name is never attached to the idea.`;
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      suggestion: els.text.value, benefit: els.benefit.value,
+    }));
+  } catch { /* not kept */ }
+}
+
+function restoreDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    localStorage.removeItem(DRAFT_KEY);
+    if (draft && !els.text.value) {
+      els.text.value = draft.suggestion ?? "";
+      els.benefit.value = draft.benefit ?? "";
+    }
+  } catch { /* nothing to restore */ }
+  updateCounter();
+}
+
 function clearForm() {
   els.text.value = "";
   els.benefit.value = "";
@@ -61,26 +78,49 @@ els.form.addEventListener("submit", async (event) => {
   const benefit = els.benefit.value.trim();
   if (!suggestion) return;
 
+  // Signed out: keep what they wrote and go to Google. They send it when they
+  // come back.
+  if (!session) {
+    saveDraft();
+    signIn();
+    return;
+  }
+
+  busy = true;
   els.send.disabled = true;
   els.sendLabel.textContent = "Checking…";
   notice("Checking your idea against the school guidelines. This usually takes a few seconds.");
 
   try {
+    // getSession() refreshes an expired token, so this is always current.
+    const { data } = await sb.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      saveDraft();
+      notice("Your sign-in has expired. Please sign in again to send this.", "warn");
+      return;
+    }
+
     const res = await fetch(MODERATE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit, deviceToken: deviceToken() }),
+      body: JSON.stringify({ suggestion, benefit }),
     });
     const payload = await res.json();
 
-    if (res.status === 429) {
-      // Rate limited. The database writes this wording, so show it as-is and
-      // treat it as a warning rather than an error -- nothing broke.
+    if (res.status === 429 || res.status === 403) {
+      // Rate limit, or an account that isn't allowed (e.g. not a school
+      // address). The database writes this wording, so show it as-is.
       notice(payload.error, "warn");
+      return;
+    }
+    if (res.status === 401) {
+      saveDraft();
+      notice("Please sign in again to send this. Your text will be kept.", "warn");
       return;
     }
     if (!res.ok) throw new Error(payload.error || `Request failed (${res.status})`);
@@ -141,13 +181,16 @@ els.form.addEventListener("submit", async (event) => {
       "error",
     );
   } finally {
+    busy = false;
     els.send.disabled = false;
-    els.sendLabel.textContent = "Send idea";
+    els.sendLabel.textContent = idleLabel();
   }
 });
 
 els.text.addEventListener("input", updateCounter);
-updateCounter();
+restoreDraft();
 
-// Only for the nav's sign-in state. Submitting never needs an account.
-watchSession();
+watchSession((newSession) => {
+  session = newSession;
+  showAccount();
+});

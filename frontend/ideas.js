@@ -134,7 +134,7 @@ function signedOut() {
   list.replaceChildren(boardState({
     title: "Sign in to see what everyone's suggested.",
     body: "The board stays inside the school instead of being shared around " +
-      "online. You don't need to sign in to send an idea.",
+      "online. The same sign-in lets you send ideas of your own.",
     action: button,
     points: [
       "Ideas approved by staff, newest first",
@@ -146,7 +146,7 @@ function signedOut() {
 
 async function refresh(session) {
   // The list is for signed-in school accounts only, so it cannot be browsed
-  // or forwarded by anyone with the link. Submitting stays anonymous.
+  // or forwarded by anyone with the link.
   if (!session) return signedOut();
 
   // Ask the database whether this account may see the board, so a personal
