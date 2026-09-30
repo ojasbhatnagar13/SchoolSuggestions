@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ideas — DPSI School Suggestions</title>
+  <meta name="description" content="Suggestions approved by DPSI staff. Back the ones you agree with, one vote each.">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Pages">
+        <a href="index.html">Suggest</a>
+        <a href="ideas.html" aria-current="page">Ideas</a>
+        <a href="how.html">How it works</a>
+      </nav>
+      <div class="nav-actions">
+        <span id="who" class="who" hidden></span>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="band band-dark page-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">Approved ideas</p>
+          <h1 class="headline headline-md">Ideas the school<br>is considering.</h1>
+        </div>
+        <p class="page-head-note">
+          Every idea here was read and approved by staff. Vote for the ones
+          you agree with. <b>One vote each, and counts stay private.</b>
+        </p>
+      </div>
+    </section>
+
+    <section class="band band-dark board-band">
+      <div class="wrap">
+        <div id="categories" class="filters filters-dark" role="group" aria-label="Filter by category" hidden></div>
+        <div id="list" class="board" aria-live="polite">
+          <div class="board-state"><p class="mono">Loading…</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-cream cta-band">
+      <div class="wrap cta-inner">
+        <h2 class="headline headline-md">Got one of your own?</h2>
+        <div class="cta-side">
+          <p>It takes a minute and no name is attached.</p>
+          <a class="btn btn-primary" href="index.html">Send an idea <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · 2026</span>
+        <span>Newest first · Vote counts are visible to staff only</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="ideas.js?v=5"></script>
+</body>
+</html>

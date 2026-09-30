@@ -1,139 +1,342 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { sb, el, signIn, watchSession } from "./common.js";
 
 const $ = (id) => document.getElementById(id);
 const els = {
   gate: $("gate"), board: $("board"), list: $("list"), count: $("count"),
-  who: $("who"), signin: $("signin"), signout: $("signout"),
+  fStatus: $("f-status"), fCategory: $("f-category"), fSource: $("f-source"),
+  refresh: $("refresh"), toast: $("toast"),
 };
 
-const STATUSES = ["pending", "approved", "rejected", "actioned"];
+// Display order, which is also the sort order: pending first, because it is
+// the only group that needs someone to act.
+const GROUPS = [
+  { key: "pending",  label: "Pending" },
+  { key: "approved", label: "Approved" },
+  { key: "actioned", label: "Actioned" },
+  { key: "rejected", label: "Rejected" },
+  { key: "spam",     label: "Spam" },
+];
+const LABEL = Object.fromEntries(GROUPS.map((g) => [g.key, g.label]));
+const ORDER = Object.fromEntries(GROUPS.map((g, i) => [g.key, i]));
+
+const SOURCES = [
+  { key: "any",   label: "Anyone" },
+  { key: "ai",    label: "AI" },
+  { key: "staff", label: "Staff" },
+];
+
+// Rejected and spam are hidden until asked for, so they don't bury the queue.
+const DEFAULT_STATUSES = ["pending", "approved", "actioned"];
+const FILTER_KEY = "staff-filters-v1";
 
 let session = null;
 let rows = [];
-let filter = "all";
+const filters = loadFilters();
+
+function loadFilters() {
+  const fresh = { statuses: new Set(DEFAULT_STATUSES), categories: new Set(), source: "any" };
+  try {
+    const saved = JSON.parse(localStorage.getItem(FILTER_KEY));
+    if (saved) {
+      return {
+        statuses: new Set(saved.statuses ?? DEFAULT_STATUSES),
+        categories: new Set(saved.categories ?? []),
+        source: saved.source ?? "any",
+      };
+    }
+  } catch { /* storage blocked or corrupt -- use the defaults */ }
+  return fresh;
+}
+
+function saveFilters() {
+  try {
+    localStorage.setItem(FILTER_KEY, JSON.stringify({
+      statuses: [...filters.statuses],
+      categories: [...filters.categories],
+      source: filters.source,
+    }));
+  } catch { /* a convenience only */ }
+}
+
+// Before docs/setup-review-v2.sql, spam was stored as 'rejected' with
+// spam='Yes'. Reading it as spam keeps this page right either way.
+function group(row) {
+  if (row.status === "rejected" && row.spam === "Yes" && row.decided_by !== "staff") {
+    return "spam";
+  }
+  return row.status;
+}
+
+const category = (row) => row.category || "Uncategorised";
+
+// `except` names the filter being counted, so each row of chips shows how
+// many you would get by changing that filter alone.
+function matches(row, except = null) {
+  if (except !== "status" && !filters.statuses.has(group(row))) return false;
+  if (except !== "category" && filters.categories.size && !filters.categories.has(category(row))) return false;
+  if (except !== "source" && filters.source !== "any" && row.decided_by !== filters.source) return false;
+  return true;
+}
+
+function when(iso) {
+  return new Date(iso).toLocaleString(undefined, {
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function aiVerdict(row) {
+  if (row.spam === "Yes") return "Spam";
+  return row.feasibility || "No verdict";
+}
+
+function decisionText(row) {
+  const label = LABEL[group(row)] ?? row.status;
+  if (row.decided_by === "ai") {
+    return `${label} automatically by the AI` + (row.decided_at ? ` · ${when(row.decided_at)}` : "");
+  }
+  if (row.decided_by === "staff") {
+    const who = row.reviewer || "a member of staff";
+    const what = row.status === "pending" ? "Moved back to Pending" : label;
+    return `${what} by ${who}` + (row.decided_at ? ` · ${when(row.decided_at)}` : "");
+  }
+  return row.status === "pending" ? "Waiting for a staff decision" : "Who decided was not recorded";
+}
+
+// ------------------------------------------------------------------ cards
+
+// Suggestion text, the student's explanation and the AI's reason are all
+// untrusted input -- a student can put anything in them, and the model
+// echoes parts back. el() only ever uses textContent.
+function card(row) {
+  const g = group(row);
+  const article = el("article", `card suggestion is-${g}`);
+
+  const head = el("div", "row");
+  const badges = el("div", "tags");
+  badges.append(el("span", `pill pill-${g}`, LABEL[g] ?? row.status));
+  if (row.decided_by) {
+    badges.append(el("span", `by by-${row.decided_by}`, row.decided_by === "ai" ? "by AI" : "by staff"));
+  }
+  badges.append(el("span", "tag", category(row)));
+  head.append(
+    badges,
+    el("span", "hint", `#${row.id} · ${row.votes ?? 0} votes · ${new Date(row.created_at).toLocaleDateString()}`),
+  );
+
+  article.append(head, el("p", "body", row.suggestion));
+
+  if (row.benefit) {
+    const why = el("p", "why");
+    why.append(el("span", "mono", "Why it helps"), el("span", null, row.benefit));
+    article.append(why);
+  }
+
+  const ai = el("div", `ai-box ai-${aiVerdict(row).toLowerCase().replace(/\s+/g, "-")}`);
+  ai.append(el("span", "mono", `AI verdict · ${aiVerdict(row)}`));
+  if (row.reason) ai.append(el("p", null, row.reason));
+  article.append(ai);
+
+  article.append(el("p", "decision mono", decisionText(row)));
+
+  const foot = el("div", "row foot");
+
+  const label = el("label", "hint", "Move to");
+  const select = el("select");
+  select.setAttribute("aria-label", `Status for suggestion ${row.id}`);
+  for (const { key, label: text } of GROUPS) {
+    const opt = el("option", null, text);
+    opt.value = key;
+    if (key === row.status) opt.selected = true;
+    select.append(opt);
+  }
+  select.addEventListener("change", () => setStatus(row, select.value, select));
+  label.append(" ", select);
+  foot.append(label);
+
+  // The three decisions a pending suggestion almost always needs, one click
+  // each. Everything else goes through the menu.
+  if (row.status === "pending") {
+    const quick = el("div", "quick");
+    for (const [key, text, cls] of [
+      ["approved", "Approve", "q-approve"],
+      ["rejected", "Reject", "q-reject"],
+      ["spam", "Spam", "q-spam"],
+    ]) {
+      const b = el("button", `qbtn ${cls}`, text);
+      b.type = "button";
+      b.addEventListener("click", () => setStatus(row, key, b));
+      quick.append(b);
+    }
+    foot.append(quick);
+  }
+
+  article.append(foot);
+  return article;
+}
+
+// ------------------------------------------------------------------ actions
+
+let toastTimer = null;
+
+function toast(message, undo = null, isError = false) {
+  clearTimeout(toastTimer);
+  els.toast.replaceChildren(el("span", null, message));
+  els.toast.classList.toggle("is-error", isError);
+  if (undo) {
+    const b = el("button", "toast-undo", "Undo");
+    b.type = "button";
+    b.addEventListener("click", () => {
+      els.toast.hidden = true;
+      undo();
+    });
+    els.toast.append(b);
+  }
+  els.toast.hidden = false;
+  toastTimer = setTimeout(() => (els.toast.hidden = true), 7000);
+}
+
+async function setStatus(row, wanted, control) {
+  if (wanted === row.status) return;
+  const previous = row.status;
+  control.disabled = true;
+
+  const { data, error } = await sb.rpc("staff_set_status", { p_id: row.id, p_status: wanted });
+  control.disabled = false;
+
+  if (error) {
+    toast(error.message, null, true);
+    render(); // puts the menu back to what the database still holds
+    return;
+  }
+
+  Object.assign(row, {
+    status: data,
+    decided_by: "staff",
+    decided_at: new Date().toISOString(),
+    reviewer: session?.user?.email ?? null,
+  });
+  render();
+
+  const g = group(row);
+  const hidden = !filters.statuses.has(g);
+  toast(
+    `#${row.id} moved to ${LABEL[g]}.` + (hidden ? ` Tick ${LABEL[g]} above to see it.` : ""),
+    async () => {
+      const { error: undoError } = await sb.rpc("staff_set_status", { p_id: row.id, p_status: previous });
+      if (undoError) return toast(undoError.message, null, true);
+      await load(); // reload so the card shows what the database now records
+      toast(`#${row.id} is back in ${LABEL[previous] ?? previous}.`);
+    },
+  );
+}
+
+// ------------------------------------------------------------------ filters
+
+function chip(text, n, on, onClick) {
+  const b = el("button", "chip" + (on ? " is-on" : ""));
+  b.type = "button";
+  b.setAttribute("aria-pressed", String(on));
+  b.append(text);
+  if (n !== null) b.append(" ", el("span", "n", String(n)));
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function renderFilters() {
+  const countBy = (except, fn) => {
+    const counts = new Map();
+    rows.filter((r) => matches(r, except)).forEach((r) => {
+      const k = fn(r);
+      counts.set(k, (counts.get(k) || 0) + 1);
+    });
+    return counts;
+  };
+
+  // Status: multi-select. Toggle any combination.
+  const byStatus = countBy("status", group);
+  els.fStatus.replaceChildren(...GROUPS.map(({ key, label }) =>
+    chip(label, byStatus.get(key) || 0, filters.statuses.has(key), () => {
+      filters.statuses.has(key) ? filters.statuses.delete(key) : filters.statuses.add(key);
+      changed();
+    }),
+  ));
+
+  // Category: multi-select, where nothing selected means every category.
+  const byCategory = countBy("category", category);
+  const all = rows.filter((r) => matches(r, "category")).length;
+  // Only categories with something to show, plus any already ticked so they
+  // can always be unticked.
+  const names = [...new Set(rows.map(category))]
+    .filter((name) => byCategory.get(name) || filters.categories.has(name))
+    .sort((a, b) => a.localeCompare(b));
+  els.fCategory.replaceChildren(
+    chip("All", all, filters.categories.size === 0, () => {
+      filters.categories.clear();
+      changed();
+    }),
+    ...names.map((name) =>
+      chip(name, byCategory.get(name) || 0, filters.categories.has(name), () => {
+        filters.categories.has(name) ? filters.categories.delete(name) : filters.categories.add(name);
+        changed();
+      }),
+    ),
+  );
+
+  // Decided by: one at a time.
+  const bySource = countBy("source", (r) => r.decided_by || "none");
+  els.fSource.replaceChildren(...SOURCES.map(({ key, label }) =>
+    chip(label, key === "any" ? null : bySource.get(key) || 0, filters.source === key, () => {
+      filters.source = key;
+      changed();
+    }),
+  ));
+}
+
+function changed() {
+  saveFilters();
+  render();
+}
+
+// ------------------------------------------------------------------ render
+
+function render() {
+  renderFilters();
+
+  const shown = rows
+    .filter((r) => matches(r))
+    .sort((a, b) =>
+      (ORDER[group(a)] ?? 9) - (ORDER[group(b)] ?? 9) ||
+      new Date(b.created_at) - new Date(a.created_at));
+
+  const hiddenBin = rows.filter((r) =>
+    ["rejected", "spam"].includes(group(r)) && !filters.statuses.has(group(r))).length;
+  els.count.textContent =
+    `Showing ${shown.length} of ${rows.length}` +
+    (hiddenBin ? ` · ${hiddenBin} rejected or spam hidden` : "");
+
+  if (shown.length) {
+    els.list.replaceChildren(...shown.map(card));
+    return;
+  }
+
+  const pending = rows.filter((r) => r.status === "pending").length;
+  const empty = el("div", "empty-state");
+  empty.append(
+    el("h3", null, filters.statuses.has("pending") && pending === 0
+      ? "Queue clear. Nothing is waiting for a decision."
+      : "Nothing matches these filters."),
+    el("p", "hint", "Change the filters above, or press Refresh to check for new suggestions."),
+  );
+  els.list.replaceChildren(empty);
+}
+
+// ------------------------------------------------------------------ loading
 
 function gate(message, kind = "info") {
   els.gate.textContent = message;
   els.gate.className = `notice ${kind}`;
   els.gate.hidden = false;
   els.board.hidden = true;
-}
-
-// Suggestion text and the AI's reason are untrusted input -- a student can put
-// anything in a suggestion, and the model echoes parts of it back. Both are
-// only ever set via textContent.
-function card(row) {
-  const el = document.createElement("article");
-  el.className = "card suggestion";
-  if (row.spam === "Yes") el.classList.add("is-flagged");
-
-  const head = document.createElement("div");
-  head.className = "row";
-
-  const tags = document.createElement("div");
-  tags.className = "tags";
-
-  const cat = document.createElement("span");
-  cat.className = "tag";
-  cat.textContent = row.category || "Uncategorised";
-  tags.append(cat);
-
-  if (row.spam === "Yes") {
-    const flag = document.createElement("span");
-    flag.className = "tag tag-flag";
-    flag.textContent = "Flagged";
-    tags.append(flag);
-  }
-
-  if (row.feasibility) {
-    const feas = document.createElement("span");
-    feas.className = "tag";
-    feas.textContent = row.feasibility;
-    tags.append(feas);
-  }
-
-  const meta = document.createElement("span");
-  meta.className = "hint";
-  meta.textContent = `#${row.id} · ${row.votes ?? 0} votes · ${new Date(row.created_at).toLocaleDateString()}`;
-  head.append(tags, meta);
-
-  const body = document.createElement("p");
-  body.textContent = row.suggestion;
-
-  const reason = document.createElement("p");
-  reason.className = "hint reason";
-  reason.textContent = row.reason ? `AI: ${row.reason}` : "";
-
-  const foot = document.createElement("div");
-  foot.className = "row";
-
-  const label = document.createElement("label");
-  label.className = "hint";
-  label.textContent = "Status";
-  const select = document.createElement("select");
-  select.setAttribute("aria-label", `Status for suggestion ${row.id}`);
-  for (const s of STATUSES) {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
-    if (s === row.status) opt.selected = true;
-    select.append(opt);
-  }
-  label.append(" ", select);
-
-  const saved = document.createElement("span");
-  saved.className = "hint";
-
-  select.addEventListener("change", async () => {
-    const wanted = select.value;
-    select.disabled = true;
-    saved.textContent = "saving…";
-    const { data, error } = await sb.rpc("staff_set_status", {
-      p_id: row.id,
-      p_status: wanted,
-    });
-    select.disabled = false;
-    if (error) {
-      saved.textContent = error.message;
-      select.value = row.status; // roll back to what the database still holds
-      return;
-    }
-    row.status = data;
-    saved.textContent = "saved";
-    setTimeout(() => (saved.textContent = ""), 1500);
-    render();
-  });
-
-  foot.append(label, saved);
-
-  el.append(head, body);
-  if (row.reason) el.append(reason);
-  el.append(foot);
-  return el;
-}
-
-function matches(row) {
-  if (filter === "all") return true;
-  if (filter === "flagged") return row.spam === "Yes";
-  return row.status === filter;
-}
-
-function render() {
-  const shown = rows.filter(matches);
-  els.list.replaceChildren();
-  els.count.textContent = `${shown.length} of ${rows.length}`;
-
-  if (!shown.length) {
-    const p = document.createElement("p");
-    p.className = "hint";
-    p.textContent = "Nothing here.";
-    els.list.append(p);
-    return;
-  }
-  shown.forEach((row) => els.list.append(card(row)));
 }
 
 async function load() {
@@ -161,49 +364,22 @@ async function load() {
   render();
 }
 
-async function onAuthChange(newSession) {
-  session = newSession;
-  const email = session?.user?.email;
-  els.who.textContent = email || "";
-  els.who.hidden = !email;
-  els.signin.hidden = !!session;
-  els.signout.hidden = !session;
-  heroSignIns.forEach((b) => (b.hidden = !!session));
+// Extra sign-in buttons in the page body, alongside the nav one.
+const heroSignIns = [...document.querySelectorAll("[data-signin]")];
+heroSignIns.forEach((b) => b.addEventListener("click", signIn));
 
+els.refresh.addEventListener("click", async () => {
+  els.refresh.disabled = true;
+  await load();
+  els.refresh.disabled = false;
+});
+
+watchSession(async (newSession) => {
+  session = newSession;
+  heroSignIns.forEach((b) => (b.hidden = !!session));
   if (!session) {
     gate("Sign in with your staff Google account to review suggestions.");
     return;
   }
   await load();
-}
-
-function signIn() {
-  return sb.auth.signInWithOAuth({
-    provider: "google",
-    // No #fragment: Supabase can return the session in the hash.
-    options: { redirectTo: window.location.href.split("#")[0] },
-  });
-}
-
-// Extra sign-in buttons in the page body (the hero), alongside the nav one.
-const heroSignIns = [...document.querySelectorAll("[data-signin]")];
-heroSignIns.forEach((b) => b.addEventListener("click", signIn));
-
-for (const chip of document.querySelectorAll(".chip")) {
-  chip.addEventListener("click", () => {
-    filter = chip.dataset.filter;
-    document.querySelectorAll(".chip").forEach((c) => c.classList.remove("is-on"));
-    chip.classList.add("is-on");
-    render();
-  });
-}
-
-els.signin.addEventListener("click", signIn);
-
-els.signout.addEventListener("click", async () => {
-  await sb.auth.signOut();
 });
-
-sb.auth.onAuthStateChange((_event, newSession) => onAuthChange(newSession));
-const { data: { session: initial } } = await sb.auth.getSession();
-await onAuthChange(initial);

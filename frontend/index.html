@@ -4,368 +4,119 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DPSI School Suggestions</title>
-  <meta name="description" content="An anonymous suggestion box for DPS International Edge. Every idea is checked against the school guidelines, then read by a member of staff.">
+  <meta name="description" content="Have an idea to improve DPS International Edge? Share it anonymously. Every idea is checked against the school guidelines, then read by a member of staff.">
   <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-  <a class="skip" href="#suggest">Skip to the suggestion form</a>
+  <a class="skip" href="#suggestion">Skip to the suggestion box</a>
 
   <header class="nav">
     <div class="wrap nav-inner">
-      <a class="brand" href="#top" aria-label="DPSI School Suggestions, back to top">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
         <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
-      <nav class="nav-links" aria-label="Sections">
-        <a href="#how">How it works</a>
-        <a href="#rules">Guidelines</a>
-        <a href="#board">Approved ideas</a>
-        <a href="#faq">FAQ</a>
+      <nav class="nav-links" aria-label="Pages">
+        <a href="index.html" aria-current="page">Suggest</a>
+        <a href="ideas.html">Ideas</a>
+        <a href="how.html">How it works</a>
       </nav>
-      <div class="nav-actions" id="account">
+      <div class="nav-actions">
         <span id="who" class="who" hidden></span>
         <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
         <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
-        <a class="btn btn-primary btn-sm" href="#suggest">
-          <span class="long">Make a suggestion</span><span class="short">Suggest</span>
-          <span aria-hidden="true">→</span>
-        </a>
       </div>
     </div>
   </header>
 
-  <main id="top">
+  <main>
+    <section class="band band-dark home">
+      <div class="wrap home-grid">
+        <div class="home-copy">
+          <p class="eyebrow">DPS International Edge · Suggestion box</p>
+          <h1 class="headline">Have an idea to improve DPSI? <span class="accent">Share it anonymously.</span></h1>
+          <ul class="promise">
+            <li><b>No name.</b> <span>Nothing links an idea to you.</span></li>
+            <li><b>No sign-in.</b> <span>Just type it and send.</span></li>
+            <li><b>Read by staff.</b> <span>A real person decides.</span></li>
+          </ul>
+        </div>
 
-    <!-- ============================================================ hero -->
-    <section class="band band-dark hero">
-      <div class="wrap">
-        <p class="eyebrow">DPS International Edge · Student voice</p>
-        <h1 class="display">Say what would<br>make DPSI better.</h1>
-        <p class="lede">
-          Every idea is checked against the school guidelines in seconds, then
-          read by a member of staff. No login, no name, and a real answer
-          about what happens next.
-        </p>
-        <p class="mono hero-meta">Anonymous · Checked against school rules · Read by staff</p>
+        <article class="panel panel-dark compose" id="suggest">
+          <form id="submit-form" class="form">
+            <label for="suggestion" class="field-label">Your idea</label>
+            <textarea id="suggestion" maxlength="2000" rows="4" required
+              placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
 
-        <div class="hero-grid">
-          <article class="panel panel-dark" id="suggest">
-            <p class="eyebrow">For students</p>
-            <h2 class="panel-title">Make a suggestion</h2>
-            <p class="panel-copy">
-              Say what should change and why. The more specific you are, the
-              easier it is for staff to act on.
-            </p>
+            <label for="benefit" class="field-label">
+              How would it help? <span class="opt">Optional</span>
+            </label>
+            <textarea id="benefit" class="short-box" maxlength="1000" rows="2"
+              placeholder="e.g. More students would eat a proper lunch instead of skipping it."></textarea>
 
-            <form id="submit-form" class="form">
-              <label for="suggestion" class="sr-only">Your suggestion</label>
-              <textarea id="suggestion" maxlength="2000" rows="6" required
-                placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
-              <div class="form-foot">
-                <span id="counter" class="mono counter" aria-live="polite"></span>
-                <button id="send" type="submit" class="btn btn-primary">
-                  <span class="btn-label">Submit suggestion</span>
-                  <span aria-hidden="true">→</span>
-                </button>
-              </div>
-            </form>
-            <div id="result" class="notice" role="status" hidden></div>
-
-            <p class="mono panel-meta">No account needed · No name stored · 2,000 characters max</p>
-          </article>
-
-          <article class="panel panel-light">
-            <p class="eyebrow">What happens next</p>
-            <h2 class="panel-title">Where your idea goes</h2>
-            <p class="panel-copy">
-              Four stages, in order. You see the result of the first two
-              straight away.
-            </p>
-
-            <div class="console" aria-label="How a suggestion is processed">
-              <div class="console-bar mono">
-                <span>suggestion.pipeline</span>
-                <span class="live"><i aria-hidden="true"></i>live</span>
-              </div>
-              <ol class="stages">
-                <li>
-                  <span class="mono n">01</span>
-                  <div><b>Rules check</b><span class="d">The AI reads it against the school guidelines.</span></div>
-                  <span class="mono t">seconds</span>
-                </li>
-                <li>
-                  <span class="mono n">02</span>
-                  <div><b>Duplicate check</b><span class="d">Matched by meaning, so the same idea is never filed twice.</span></div>
-                  <span class="mono t">instant</span>
-                </li>
-                <li>
-                  <span class="mono n">03</span>
-                  <div><b>Staff review</b><span class="d">A member of staff reads it and decides what happens.</span></div>
-                  <span class="mono t">person</span>
-                </li>
-                <li>
-                  <span class="mono n">04</span>
-                  <div><b>On the board</b><span class="d">Approved ideas are shown to students, who can back them.</span></div>
-                  <span class="mono t">public</span>
-                </li>
-              </ol>
-              <div class="console-foot mono">
-                <span>Nothing is public until a person approves it</span>
-              </div>
+            <div class="form-foot">
+              <span id="counter" class="mono counter" aria-live="polite"></span>
+              <button id="send" type="submit" class="btn btn-primary">
+                <span class="btn-label">Send idea</span>
+                <span aria-hidden="true">→</span>
+              </button>
             </div>
-          </article>
-        </div>
+          </form>
+          <div id="result" class="notice" role="status" hidden></div>
+        </article>
       </div>
     </section>
 
-    <!-- ============================================================ statement -->
-    <section class="band band-cream">
-      <div class="wrap statement-grid">
-        <h2 class="h2">Anonymous by design.<br>Decided by people.</h2>
-        <div class="statement-copy">
-          <p>
-            A paper suggestion box has three problems. Ideas go in and nobody
-            hears back. The same request arrives twenty times. And someone has
-            to read every slip before any real work can start.
-          </p>
-          <p>
-            This fixes all three <strong>without taking people out of the
-            decision</strong>. The AI sorts and filters. Staff decide what the
-            school actually does.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ how it works -->
-    <section class="band band-dark" id="how">
+    <section class="band band-cream next">
       <div class="wrap">
-        <p class="eyebrow">How it works</p>
-        <h2 class="h2">The AI sorts.<br>People decide.</h2>
+        <p class="eyebrow">What happens next</p>
+        <ol class="steps">
+          <li>
+            <span class="mono n">01</span>
+            <b>You send it</b>
+            <span>Takes a minute. No name is attached.</span>
+          </li>
+          <li>
+            <span class="mono n">02</span>
+            <b>The AI checks it</b>
+            <span>Against the school guidelines, in seconds.</span>
+          </li>
+          <li>
+            <span class="mono n">03</span>
+            <b>Staff decide</b>
+            <span>Approved ideas go on the Ideas page for everyone to back.</span>
+          </li>
+        </ol>
 
-        <div class="two-col">
-          <div>
-            <h3 class="h3">What the AI checks</h3>
-            <ul class="spec">
-              <li>Whether it breaks a school guideline, with the guideline quoted back to you</li>
-              <li>Whether it's spam, abuse, or an attempt to trick the system</li>
-              <li>Whether the same idea has already been suggested, however it's worded</li>
-              <li>A category and a one-line summary, so staff can read the queue quickly</li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="h3">What only people decide</h3>
-            <ul class="spec spec-people">
-              <li>Whether an idea is approved and shown to other students</li>
-              <li>Overturning any automatic decision the AI got wrong</li>
-              <li>What the school actually acts on, and when</li>
-              <li>Anything that needs judgement the guidelines don't cover</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="legend mono">
-          <span><i aria-hidden="true"></i>Handled automatically</span>
-          <span class="people"><i aria-hidden="true"></i>Decided by staff</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ guidelines -->
-    <section class="band band-cream" id="rules">
-      <div class="wrap">
-        <p class="eyebrow">Guidelines</p>
-        <h2 class="h2">What gets through,<br>and what doesn't.</h2>
-        <p class="section-lede">
-          These are the school's own guidelines, and exactly what the AI checks
-          every suggestion against.
-        </p>
-
-        <div class="three-col rules">
-          <div class="rule-card">
-            <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Usually approved</div>
-            <ul>
-              <li>New clubs and societies</li>
-              <li>Events and activities</li>
-              <li>Improvements to school facilities</li>
-              <li>Anything that gets students involved</li>
-            </ul>
-            <p class="rule-note">Good fits for a suggestion. These go straight to staff.</p>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-head mono"><span class="sq sq-warn" aria-hidden="true"></span>Needs special review</div>
-            <ul>
-              <li>Projects with a large budget</li>
-              <li>Changes to school policy</li>
-              <li>Changes to the timetable</li>
-            </ul>
-            <p class="rule-note">Welcome, but staff will look closely at cost and impact.</p>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-head mono"><span class="sq sq-bad" aria-hidden="true"></span>Not accepted</div>
-            <ul>
-              <li>Changing the curriculum</li>
-              <li>Removing mandatory classes</li>
-              <li>Changing exam requirements</li>
-              <li>Anything against safety rules</li>
-              <li>Sporting equipment at recess</li>
-            </ul>
-            <p class="rule-note">Declined automatically, and you're told which guideline it broke.</p>
-          </div>
+        <div class="tiles">
+          <a class="tile tile-dark" href="ideas.html">
+            <span class="eyebrow">Ideas</span>
+            <span class="tile-title">See what others suggested</span>
+            <span class="tile-go" aria-hidden="true">→</span>
+          </a>
+          <a class="tile" href="how.html#rules">
+            <span class="eyebrow">Guidelines</span>
+            <span class="tile-title">What gets through, and what doesn't</span>
+            <span class="tile-go" aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
     </section>
-
-    <!-- ============================================================ stats -->
-    <section class="band-cream-2 stats">
-      <div class="wrap three-col">
-        <div class="stat">
-          <span class="num">0</span>
-          <p>names stored with a suggestion. There is nowhere to put one.</p>
-        </div>
-        <div class="stat">
-          <span class="num">1</span>
-          <p>vote per student per idea, enforced by the database itself.</p>
-        </div>
-        <div class="stat">
-          <span class="num">100%</span>
-          <p>of ideas on the board were read and approved by a person first.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ board -->
-    <section class="band band-dark" id="board">
-      <div class="wrap">
-        <div class="board-head">
-          <div>
-            <p class="eyebrow">Approved ideas</p>
-            <h2 class="h2">What the school<br>is considering.</h2>
-          </div>
-          <p class="mono board-note">Newest first · Vote counts stay private to staff</p>
-        </div>
-
-        <div id="list" class="board" aria-live="polite">
-          <div class="board-state"><p class="mono">Loading…</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ faq -->
-    <section class="band band-cream" id="faq">
-      <div class="wrap">
-        <p class="eyebrow">Questions</p>
-        <h2 class="h2">Before you submit.</h2>
-
-        <div class="faq">
-          <div class="faq-item">
-            <h3 class="h3">Is it really anonymous?</h3>
-            <p>
-              Yes. Suggestions are stored with no name, email or account. To stop
-              spam, the site keeps a scrambled fingerprint of your connection for
-              two days, and it can't be linked back to what you wrote.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="h3">Why was my suggestion declined?</h3>
-            <p>
-              It broke one of the guidelines above, and you'll have been told
-              which one. If you think the AI got it wrong, reword it or speak to a
-              teacher. Staff can see declined suggestions and overturn them.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="h3">Why can't I see my suggestion yet?</h3>
-            <p>
-              Nothing appears on the board until a member of staff approves it.
-              That's deliberate: every public idea has been read by a person
-              first.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="h3">It said my idea already exists.</h3>
-            <p>
-              Someone suggested the same thing, possibly in different words.
-              Rather than filing it twice, you're shown the original, which you
-              can back once it's on the board.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="h3">Why sign in to see the board?</h3>
-            <p>
-              So the list stays inside the school instead of being shared around
-              online. Submitting never needs an account.
-            </p>
-          </div>
-          <div class="faq-item">
-            <h3 class="h3">Is there a limit on how many I can send?</h3>
-            <p>
-              A few an hour from each device, to stop spam. If you reach it,
-              wait a while and try again. It resets on its own.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ cta -->
-    <section class="band band-dark">
-      <div class="wrap cta-inner">
-        <h2 class="display">Got an idea?<br>Say it.</h2>
-        <div class="cta-side">
-          <p>It takes a minute, it's anonymous, and a real person will read it.</p>
-          <a class="btn btn-primary" href="#suggest">Make a suggestion <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-    </section>
-
   </main>
 
-  <footer class="footer">
-    <div class="wrap footer-grid">
-      <div class="footer-brand">
-        <a class="brand" href="#top" aria-label="Back to top">
-          <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
-          <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
-        </a>
-        <p>An anonymous suggestion box for DPS International Edge, designed and built by a student.</p>
-      </div>
-      <div>
-        <p class="eyebrow">Suggest</p>
-        <ul>
-          <li><a href="#suggest">Make a suggestion</a></li>
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#rules">Guidelines</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="eyebrow">Students</p>
-        <ul>
-          <li><a href="#board">Approved ideas</a></li>
-          <li><a href="#faq">FAQ</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="eyebrow">Staff</p>
-        <ul>
-          <li><a href="staff.html">Staff review</a></li>
-        </ul>
-      </div>
-    </div>
+  <footer class="footer footer-min">
     <div class="wrap">
       <div class="footer-bar mono">
         <span>DPSI Student Suggestions · 2026</span>
-        <span>Built by Ojas Bhatnagar</span>
+        <span><a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="submit.js?v=5"></script>
 </body>
 </html>

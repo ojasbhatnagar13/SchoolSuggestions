@@ -171,17 +171,51 @@ A per-IP limit tight enough to stop one abuser locks out everyone.
   then cannot be linked back to a person.
 - Check the limit **before** the AI call. A flood should cost no API quota.
 
+Known gaps, stated plainly because a teacher asked:
+
+- **Incognito or cleared storage** mints a fresh device token, so a determined
+  person gets another 5/hour each time. Only the IP cap stops them.
+- **VPN or mobile data** changes the IP, which resets the IP cap too.
+- **School Wi-Fi is one IP.** The 300/hour IP cap is shared by the entire
+  school. The device limit is not shared, but one person scripting fresh
+  tokens could use up the school's 300 and lock everyone out for an hour.
+- **The write RPC is callable directly.** `submit_suggestion` is granted to
+  anon because the edge function calls it with the anon key, so anyone with
+  the public key can skip both the AI and the limit and drop rows straight
+  into the pending queue. Staff approval still stops anything reaching
+  readers, but the queue can be flooded.
+
+The real fix for the first three is a per-account limit (sign in to submit,
+store only a salted hash of the account id with an hour bucket, never the
+exact time, so an idea still cannot be matched to its author). The fix for the
+last is a shared secret between the edge function and the database that anon
+never sees. Both were deferred as policy decisions, not technical ones.
+
 ---
 
 ## 6. Approval workflow
 
-- `status` column: `pending | approved | rejected | actioned`, with a check
-  constraint so an invalid value cannot be written even by a bug.
-- The public view filters on `status = 'approved'` **and** the spam flag. The
-  second condition is redundant but cheap insurance against a mis-click.
+- `status` column: `pending | approved | rejected | spam | actioned`, with a
+  check constraint so an invalid value cannot be written even by a bug.
+  **Spam and rejected are different things** — junk versus a real idea the
+  rules do not allow — and reviewers wanted them apart. The model is told
+  explicitly that a genuine idea that breaks a rule is never spam.
+- **Record who decided.** `decided_by` (`ai` | `staff`), `decided_at` and
+  `reviewed_by`. Without it, reviewers could not tell an automatic rejection
+  from a colleague's, which was the first thing they asked.
+- **A person overrides the AI.** The public view once also required the AI's
+  spam flag to be `No`, as insurance against a mis-click. The side effect was
+  that a suggestion the AI wrongly called spam stayed hidden even after staff
+  approved it. The AI verdict is still stored and shown to reviewers; it just
+  no longer outranks them.
 - Reviewers are an **explicit table of user ids**, not an email pattern — staff
   and students shared a domain, so nothing in the address distinguished them.
-- Rejected items stay visible to reviewers and can be restored.
+- Rejected and spam items stay visible to reviewers and can be restored, but
+  are **hidden by default** in the review list so they do not bury the queue.
+  Pending sorts first.
+- Readers must be **verified** accounts from the organisation's domain, checked
+  by one database function used by both the view and voting. OAuth providers
+  verify the address already; the check stops accounts created some other way.
 
 Two behavioural findings from staff feedback, both worth pre-empting next time:
 

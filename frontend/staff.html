@@ -8,19 +8,19 @@
   <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header class="nav">
     <div class="wrap nav-inner">
-      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, student page">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, student site">
         <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
       <div class="nav-actions" id="account">
         <span id="who" class="who" hidden></span>
-        <a class="link-btn" href="index.html">Student page</a>
+        <a class="link-btn" href="index.html">Student site</a>
         <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
         <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
       </div>
@@ -28,14 +28,19 @@
   </header>
 
   <main>
-    <section class="band band-dark hero hero-compact">
-      <div class="wrap">
-        <p class="eyebrow">Staff only</p>
-        <h1 class="display">Staff review.</h1>
-        <p class="lede">
-          Every suggestion, including the ones the AI declined, with its verdict
-          and reasoning. Nothing reaches students until you approve it.
+    <section class="band band-dark page-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">Staff only</p>
+          <h1 class="headline headline-md">Staff review.</h1>
+        </div>
+        <p class="page-head-note">
+          Every suggestion, including the ones the AI turned down, with its
+          verdict and reasoning. <b>Nothing reaches students until you approve
+          it.</b>
         </p>
+      </div>
+      <div class="wrap">
         <div class="gate-row">
           <div id="gate" class="notice" role="status" hidden></div>
           <button class="btn btn-primary" type="button" data-signin hidden>
@@ -48,15 +53,24 @@
     <section class="band band-cream staff-band" id="board" hidden>
       <div class="wrap">
         <div class="toolbar">
-          <div class="filters" role="group" aria-label="Filter by status">
-            <button class="chip is-on" type="button" data-filter="all">All</button>
-            <button class="chip" type="button" data-filter="pending">Pending</button>
-            <button class="chip" type="button" data-filter="approved">Approved</button>
-            <button class="chip" type="button" data-filter="rejected">Rejected</button>
-            <button class="chip" type="button" data-filter="actioned">Actioned</button>
-            <button class="chip" type="button" data-filter="flagged">Flagged</button>
+          <div class="filter-rows">
+            <div class="filter-row">
+              <span class="filter-label mono">Status</span>
+              <div id="f-status" class="filters" role="group" aria-label="Show these statuses"></div>
+            </div>
+            <div class="filter-row">
+              <span class="filter-label mono">Category</span>
+              <div id="f-category" class="filters" role="group" aria-label="Show these categories"></div>
+            </div>
+            <div class="filter-row">
+              <span class="filter-label mono">Decided by</span>
+              <div id="f-source" class="filters" role="group" aria-label="Who made the decision"></div>
+            </div>
           </div>
-          <span id="count" class="hint"></span>
+          <div class="toolbar-side">
+            <span id="count"></span>
+            <button id="refresh" class="chip" type="button">Refresh</button>
+          </div>
         </div>
         <div id="list" class="staff-list" aria-live="polite"></div>
       </div>
@@ -65,28 +79,40 @@
     <section class="band band-cream-2">
       <div class="wrap">
         <p class="eyebrow">How to review</p>
-        <h2 class="h2">Four states.<br>You set every one.</h2>
-        <div class="four-col">
+        <h2 class="h2">Five states.<br>You can change every one.</h2>
+        <div class="five-col">
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-neutral" aria-hidden="true"></span>Pending</div>
-            <p>Waiting for a decision. Anything the AI rated Feasible or Needs Review lands here.</p>
+            <p>Waiting for you. Anything the AI rated Feasible or Needs Review lands here, and it's shown first.</p>
           </div>
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Approved</div>
-            <p>Shown on the student board, where students can back it with one vote each.</p>
-          </div>
-          <div class="status-card">
-            <div class="rule-head mono"><span class="sq sq-bad" aria-hidden="true"></span>Rejected</div>
-            <p>Hidden from students. AI-declined suggestions arrive here. Move one back if the AI got it wrong.</p>
+            <p>On the students' Ideas page, where they can back it with one vote each.</p>
           </div>
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-warn" aria-hidden="true"></span>Actioned</div>
-            <p>The school has acted on it. Stays on record so nothing is quietly forgotten.</p>
+            <p>The school has acted on it. Kept on record so nothing is quietly forgotten.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-bad" aria-hidden="true"></span>Rejected</div>
+            <p>A real idea that breaks a guideline. Hidden from students, and from this page unless you tick it.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-spam" aria-hidden="true"></span>Spam</div>
+            <p>Not a genuine suggestion: jokes, nonsense, abuse, tricks. Hidden the same way.</p>
           </div>
         </div>
+        <p class="source-note">
+          Every card says who made the call. <b>AI</b> means it was sorted
+          automatically when it arrived. <b>Staff</b> means a person chose the
+          status, and the card names the account. The AI's own verdict is always
+          shown too, so you can see where you and it disagreed.
+        </p>
       </div>
     </section>
   </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
 
   <footer class="footer footer-min">
     <div class="wrap">
@@ -97,6 +123,6 @@
     </div>
   </footer>
 
-  <script type="module" src="staff.js?v=4"></script>
+  <script type="module" src="staff.js?v=5"></script>
 </body>
 </html>
