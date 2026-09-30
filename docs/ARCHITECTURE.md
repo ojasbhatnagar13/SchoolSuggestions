@@ -156,42 +156,39 @@ existing list to the browser to compare — would leak unapproved content.
 
 ## 5. Rate limiting
 
-Two tiers, because **an organisation is usually behind one or two public IPs**.
-A per-IP limit tight enough to stop one abuser locks out everyone.
+**Version 1 (retired): per device + per IP.** A random UUID in `localStorage`
+(5/hour) plus a per-IP cap (300/hour), both stored as salted hashes. It failed
+in four ways, all raised by a teacher:
 
-| Bucket | Limit | Purpose |
-|---|---|---|
-| device token | 5/hour, 20/day | the real limit |
-| IP | 300/hour | flood backstop only |
+- **Incognito or cleared storage** minted a fresh device token.
+- **VPN or mobile data** changed the IP.
+- **School Wi-Fi is one IP**, so the IP cap was shared by the entire school,
+  and one person scripting fresh tokens could lock everyone out.
+- **The write RPC was callable directly** with the public key, skipping the AI
+  and the limit entirely.
 
-- The device token is a random UUID in `localStorage`. It is **not** an identity:
-  never tied to content, and defeated by clearing site data. That is accepted —
-  it stops casual repeat-spam, and the IP cap catches scripted floods.
-- Store **salted SHA-256 hashes**, never raw IPs or tokens. The throttle log
-  then cannot be linked back to a person.
+**Version 2 (current): sign in to submit, limit per account, shared secret.**
+
+- The browser sends the student's session token. The edge function asks
+  Supabase Auth who it belongs to, then runs the same access check as the
+  reader view (verified, school domain) as that user.
+- The limit is per account (5/hour, 20/day, in the config table). Incognito,
+  VPNs and shared networks stop mattering because the limit follows the
+  account, which cannot be multiplied.
+- **Anonymity survives because the quota and the content never meet.** The
+  quota table holds a salted hash of the account id (salt in the function, not
+  the database), the **hour** rather than the exact time, and a count, and is
+  purged after two days. The suggestion row still has no author column.
+- The write functions (`submit_suggestion`, `claim_account_slot`) require a
+  secret stored in the config table and in the function's environment, never
+  in the browser. They stay granted to anon (the function calls them with the
+  anon key) but refuse every call without it. This closes the direct route
+  without a service-role key.
 - Check the limit **before** the AI call. A flood should cost no API quota.
 
-Known gaps, stated plainly because a teacher asked:
-
-- **Incognito or cleared storage** mints a fresh device token, so a determined
-  person gets another 5/hour each time. Only the IP cap stops them.
-- **VPN or mobile data** changes the IP, which resets the IP cap too.
-- **School Wi-Fi is one IP.** The 300/hour IP cap is shared by the entire
-  school. The device limit is not shared, but one person scripting fresh
-  tokens could use up the school's 300 and lock everyone out for an hour.
-- **The write RPC is callable directly.** `submit_suggestion` is granted to
-  anon because the edge function calls it with the anon key, so anyone with
-  the public key can skip both the AI and the limit and drop rows straight
-  into the pending queue. Staff approval still stops anything reaching
-  readers, but the queue can be flooded.
-
-The real fix for the first three is a per-account limit (sign in to submit,
-store only a salted hash of the account id with an hour bucket, never the
-exact time, so an idea still cannot be matched to its author). The fix for the
-last is a shared secret between the edge function and the database that anon
-never sees. Both were deferred as policy decisions, not technical ones.
-
----
+Honest limit on the anonymity claim: whoever holds both the salt and database
+access could hash every account id and, if only one student submitted in a
+given hour, match that hour to that suggestion. Nobody using the staff page can.
 
 ## 6. Approval workflow
 
