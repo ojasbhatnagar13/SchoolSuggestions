@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <header class="nav">
@@ -55,7 +55,20 @@
       </div>
     </section>
 
-    <section class="band band-cream cta-band">
+    <section class="band band-cream done-band" id="done-section" hidden>
+      <div class="wrap">
+        <div class="done-head">
+          <div>
+            <p class="eyebrow">Done</p>
+            <h2 class="h2">Ideas the school<br>has acted on.</h2>
+          </div>
+          <p class="mono done-note"><span id="done-count"></span> · started as student suggestions</p>
+        </div>
+        <div id="done-list" class="board"></div>
+      </div>
+    </section>
+
+    <section class="band band-dark cta-band">
       <div class="wrap cta-inner">
         <h2 class="headline headline-md">Got one of your own?</h2>
         <div class="cta-side">
@@ -75,6 +88,6 @@
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=7"></script>
+  <script type="module" src="ideas.js?v=8"></script>
 </body>
 </html>

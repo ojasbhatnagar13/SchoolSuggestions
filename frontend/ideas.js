@@ -1,8 +1,15 @@
-// The Ideas page: approved suggestions, with one vote each.
+// The Ideas page: approved suggestions, with one vote each, and below them
+// the ones the school has acted on, labelled Done.
 import { sb, el, signIn, watchSession } from "./common.js";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
+const doneSection = document.getElementById("done-section");
+const doneList = document.getElementById("done-list");
+const doneCount = document.getElementById("done-count");
+
+// 'actioned' in the database. Students see it as Done.
+const isDone = (idea) => idea.status === "actioned";
 
 // Suggestion ids the signed-in student has already voted for, so the UI can
 // disable those buttons instead of waiting for the database to reject a
@@ -11,12 +18,17 @@ let myVotes = new Set();
 let ideas = [];
 let category = "all";
 
-function card({ id, suggestion, benefit, category, summary, created_at }) {
-  const article = el("article", "s-card");
+function card(idea) {
+  const { id, suggestion, benefit, category, summary, created_at } = idea;
+  const done = isDone(idea);
+  const article = el("article", "s-card" + (done ? " is-done" : ""));
 
   const meta = el("div", "s-meta");
+  const left = el("span", "s-meta-left");
+  if (done) left.append(el("span", "done-badge", "Done"));
+  left.append(el("span", "s-cat", category || "Uncategorised"));
   meta.append(
-    el("span", "s-cat", category || "Uncategorised"),
+    left,
     el("span", "mono s-date", new Date(created_at).toLocaleDateString(undefined, {
       day: "numeric", month: "short", year: "numeric",
     })),
@@ -33,6 +45,26 @@ function card({ id, suggestion, benefit, category, summary, created_at }) {
   }
 
   const foot = el("div", "s-foot");
+
+  // A Done idea no longer takes votes (the database refuses them), but a
+  // student who backed it can still take that vote back.
+  if (done) {
+    const voted = myVotes.has(id);
+    foot.append(el("span", "mono", voted ? "You backed this" : "The school acted on this"));
+    if (voted) {
+      const btn = el("button", "vote");
+      btn.type = "button";
+      showVote(btn, true);
+      btn.addEventListener("click", async () => {
+        await toggleVote(id, btn);
+        if (!myVotes.has(id)) btn.remove();
+      });
+      foot.append(btn);
+    }
+    article.append(foot);
+    return article;
+  }
+
   const btn = el("button", "vote");
   btn.type = "button";
 
@@ -131,11 +163,29 @@ function render() {
   const shown = category === "all"
     ? ideas
     : ideas.filter((i) => (i.category || "Uncategorised") === category);
-  list.replaceChildren(...shown.map(card));
+  const open = shown.filter((i) => !isDone(i));
+  const done = shown.filter(isDone);
+
+  list.replaceChildren(...(open.length ? open.map(card) : [boardState({
+    title: category === "all"
+      ? "Nothing open for votes right now."
+      : `Nothing in ${category} is open for votes right now.`,
+    body: "Everything here has already been done, and it's listed below. " +
+      "New ideas appear here once staff approve them.",
+  })]));
+
+  doneSection.hidden = !done.length;
+  doneList.replaceChildren(...done.map(card));
+  doneCount.textContent = done.length === 1 ? "1 idea" : `${done.length} ideas`;
+}
+
+function hideBoard() {
+  filterBar.hidden = true;
+  doneSection.hidden = true;
 }
 
 function signedOut() {
-  filterBar.hidden = true;
+  hideBoard();
   const button = el("button", "btn btn-primary", "Sign in with Google");
   button.type = "button";
   button.addEventListener("click", signIn);
@@ -162,7 +212,7 @@ async function refresh(session) {
   // If the function is not installed yet, carry on to the list.
   const { data: blocked, error: accessError } = await sb.rpc("board_access_error");
   if (!accessError && blocked) {
-    filterBar.hidden = true;
+    hideBoard();
     const button = el("button", "btn btn-ghost", "Sign out");
     button.type = "button";
     button.addEventListener("click", () => sb.auth.signOut());
@@ -184,7 +234,7 @@ async function refresh(session) {
   myVotes = new Set(votesRes.error ? [] : votesRes.data ?? []);
 
   if (listRes.error) {
-    filterBar.hidden = true;
+    hideBoard();
     list.replaceChildren(boardState({
       title: "The board couldn't load.",
       body: listRes.error.message,
@@ -195,7 +245,7 @@ async function refresh(session) {
 
   ideas = listRes.data ?? [];
   if (!ideas.length) {
-    filterBar.hidden = true;
+    hideBoard();
     const link = el("a", "btn btn-primary", "Send an idea →");
     link.href = "index.html";
     list.replaceChildren(boardState({
@@ -206,6 +256,7 @@ async function refresh(session) {
       points: [
         "Sent ideas wait for staff review",
         "Approved ones appear here, newest first",
+        "Ones the school acts on are marked Done",
       ],
     }));
     return;
