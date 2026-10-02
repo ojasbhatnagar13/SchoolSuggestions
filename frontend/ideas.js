@@ -39,14 +39,8 @@ function card({ id, suggestion, benefit, category, summary, created_at }) {
   // No running tally is shown. A visible count makes an already-popular
   // suggestion collect more votes because it looks popular, rather than
   // because more people independently agree. Staff still see the numbers.
-  if (myVotes.has(id)) {
-    btn.textContent = "Voted";
-    btn.disabled = true;
-    btn.classList.add("voted");
-  } else {
-    btn.textContent = "Vote";
-    btn.addEventListener("click", () => vote(id, btn));
-  }
+  showVote(btn, myVotes.has(id));
+  btn.addEventListener("click", () => toggleVote(id, btn));
   foot.append(el("span", "mono", "One vote each"), btn);
 
   article.append(foot);
@@ -70,22 +64,36 @@ function boardState({ title, body, points = [], action = null, isError = false }
   return panel;
 }
 
-async function vote(id, btn) {
+// The button is a toggle: "Vote" adds one, "Voted" takes it back. The label
+// switches to "Remove vote" on hover/focus (via CSS) so it's clear a second
+// click undoes it.
+function showVote(btn, voted) {
+  btn.textContent = voted ? "Voted" : "Vote";
+  btn.classList.toggle("voted", voted);
+  btn.setAttribute("aria-pressed", String(voted));
+  btn.setAttribute("aria-label", voted ? "Remove your vote" : "Vote for this idea");
+}
+
+async function toggleVote(id, btn) {
+  const voted = myVotes.has(id);
+  const status = btn.parentElement.querySelector(".mono");
   btn.disabled = true;
-  const { error } = await sb.rpc("vote_for_suggestion", { p_id: id });
+
+  const { error } = await sb.rpc(voted ? "unvote_suggestion" : "vote_for_suggestion", { p_id: id });
+  btn.disabled = false;
+
   if (error) {
     // The database owns these rules, so just surface what it said, on the
     // card that was clicked.
-    const status = btn.parentElement.querySelector(".mono");
     status.textContent = error.message;
     status.classList.add("vote-error");
-    btn.disabled = false;
     return;
   }
-  myVotes.add(id);
-  btn.textContent = "Voted";
-  btn.disabled = true;
-  btn.classList.add("voted");
+
+  voted ? myVotes.delete(id) : myVotes.add(id);
+  status.textContent = voted ? "Vote removed" : "One vote each";
+  status.classList.remove("vote-error");
+  showVote(btn, !voted);
 }
 
 function renderFilters() {

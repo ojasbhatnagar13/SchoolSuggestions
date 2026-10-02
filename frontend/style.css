@@ -855,8 +855,24 @@ button.vote {
 button.vote:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 button.vote.voted {
   border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+button.vote:disabled { opacity: 0.6; cursor: progress; }
+/* Fixed width so the label swap below doesn't make the button jump. */
+button.vote { min-width: 132px; }
+/* A voted button says what a click will do. On touch screens there is no
+   hover, so the card's status line confirms "Vote removed" instead. */
+button.vote.voted:hover:not(:disabled),
+button.vote.voted:focus-visible {
+  font-size: 0;
+  background: transparent;
   color: var(--accent);
-  cursor: default;
+}
+button.vote.voted:hover:not(:disabled)::after,
+button.vote.voted:focus-visible::after {
+  content: "Remove vote";
+  font-size: 14px;
 }
 .vote-error { color: var(--warn); }
 
