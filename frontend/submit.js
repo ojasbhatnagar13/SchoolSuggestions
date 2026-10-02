@@ -1,6 +1,12 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
+import { newReceipt, rememberReceipt, showReceiptUpdates } from "./receipts.js";
+
+// PLACEHOLDERS -- the school must replace these with its real wellbeing
+// contacts before launch. Also in the "Not for personal problems" note in
+// index.html; tests/test_static.py checks the two match.
+const HELP = { phone: "+91 XXXXX XXXXX", email: "help@dpsiedge.edu.in" };
 
 // Must match maxlength in index.html and the limits in the Edge Function.
 const MAX_LENGTH = 2000;
@@ -101,6 +107,7 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
 
+    const receipt = newReceipt();
     const res = await fetch(MODERATE_URL, {
       method: "POST",
       headers: {
@@ -108,7 +115,7 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit }),
+      body: JSON.stringify({ suggestion, benefit, receipt }),
     });
     const payload = await res.json();
 
@@ -136,27 +143,36 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
 
+    // A receipt lets this browser hear back about the idea later. Not kept for
+    // wellbeing concerns, which are never reported back on.
+    if (payload.id && !payload.support) {
+      rememberReceipt(receipt, payload.id, suggestion, payload.status);
+    }
+
     // Nothing appears on the Ideas page until staff approve it, so say so
     // either way -- otherwise a student submits, sees nothing new, and
-    // assumes it failed.
-    if (payload.unchecked) {
+    // assumes it failed. Checked first: a student asking for help must get
+    // the help message even when the AI is down.
+    if (payload.support) {
+      // Someone reaching out about bullying, safety or wellbeing. Not an idea,
+      // so not "it will appear on the Ideas page".
+      notice(
+        `Thank you for telling us. ${payload.reason ?? ""} ` +
+        `If you or someone else is in danger right now, tell a teacher or any ` +
+        `adult straight away. You can also call ${HELP.phone} or email ` +
+        `${HELP.email}. A member of staff will read what you wrote and pass it ` +
+        `to the pastoral care team, but because this box is anonymous they ` +
+        `cannot reply to you. It will not be shown to other students.`,
+        "warn",
+      );
+    } else if (payload.unchecked) {
       // Every AI model was busy. The suggestion was still saved -- it goes
       // straight to a person instead of being screened first.
       notice(
         `Sent as #${payload.id}. The automatic check is busy right now, ` +
-        `so a member of staff will read it directly.`,
+        `so a member of staff will read it directly. You'll see a note here ` +
+        `when staff decide.`,
         "ok",
-      );
-    } else if (payload.support) {
-      // Someone reaching out about bullying, safety or wellbeing. Not an idea,
-      // so not "it will appear on the Ideas page".
-      notice(
-        `Thank you for telling us. ${payload.reason} ` +
-        `If you or someone else is in danger right now, tell a teacher or any ` +
-        `adult straight away. A member of staff will also read what you wrote ` +
-        `and pass it to the pastoral care team, but because this box is ` +
-        `anonymous they cannot reply to you. It will not be shown to other students.`,
-        "warn",
       );
     } else if (payload.status === "spam") {
       notice(
@@ -175,7 +191,8 @@ els.form.addEventListener("submit", async (event) => {
     } else {
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
-        `It will appear on the Ideas page once staff approve it.`,
+        `It will appear on the Ideas page once staff approve it, and you'll ` +
+        `see a note on this site, on this laptop, when they do.`,
         "ok",
       );
     }
@@ -200,6 +217,8 @@ els.form.addEventListener("submit", async (event) => {
 
 els.text.addEventListener("input", updateCounter);
 restoreDraft();
+
+showReceiptUpdates();
 
 watchSession((newSession) => {
   session = newSession;

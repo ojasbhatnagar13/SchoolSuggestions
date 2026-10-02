@@ -408,7 +408,8 @@ function render() {
     .filter((r) => matches(r))
     .sort((a, b) =>
       (ORDER[group(a)] ?? 9) - (ORDER[group(b)] ?? 9) ||
-      new Date(b.created_at) - new Date(a.created_at));
+      new Date(b.created_at) - new Date(a.created_at) ||
+      b.id - a.id); // times are rounded to the hour; id breaks ties
 
   const hiddenBin = rows.filter((r) => !r.concern &&
     ["rejected", "spam"].includes(group(r)) && !filters.statuses.has(group(r))).length;

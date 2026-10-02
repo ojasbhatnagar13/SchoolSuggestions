@@ -1,6 +1,7 @@
 // How it works: shows the guidelines staff have set, straight from the
 // database, so the page never disagrees with what the AI is checking.
 import { sb, el, watchSession } from "./common.js";
+import { showReceiptUpdates } from "./receipts.js";
 
 const cards = document.getElementById("rules-cards");
 
@@ -65,4 +66,5 @@ async function loadRules() {
 }
 
 loadRules();
+showReceiptUpdates();
 watchSession();

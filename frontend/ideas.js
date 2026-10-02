@@ -1,6 +1,7 @@
 // The Ideas page: approved suggestions, with one vote each, and below them
 // the ones the school has acted on, labelled Done.
 import { sb, el, signIn, watchSession } from "./common.js";
+import { showReceiptUpdates } from "./receipts.js";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
@@ -228,7 +229,9 @@ async function refresh(session) {
     sb.rpc("my_votes"),
     // Newest first, always. Ordering by popularity is the bandwagon
     // mechanism, and the vote count is not sent to students anyway.
-    sb.from("public_suggestions").select("*").order("created_at", { ascending: false }),
+    sb.from("public_suggestions").select("*").order("created_at", { ascending: false })
+      // Times are rounded to the hour, so the id breaks ties within one.
+      .order("id", { ascending: false }),
   ]);
 
   myVotes = new Set(votesRes.error ? [] : votesRes.data ?? []);
@@ -265,4 +268,5 @@ async function refresh(session) {
   render();
 }
 
+showReceiptUpdates();
 watchSession(refresh);

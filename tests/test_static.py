@@ -101,6 +101,23 @@ class TestPages(unittest.TestCase):
         self.assertIn(f"const MAX_LENGTH = {server_max};", submit)
 
 
+class TestHelpContacts(unittest.TestCase):
+    def test_same_contacts_in_the_notice_and_the_reply(self):
+        """The wellbeing contacts appear in two places; they must not drift."""
+        submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
+        index = (FRONTEND / "index.html").read_text(encoding="utf-8")
+        phone, email = re.search(r'const HELP = \{ phone: "([^"]+)", email: "([^"]+)" \}', submit).groups()
+        self.assertIn(phone, index)
+        self.assertIn(email, index)
+
+    @unittest.expectedFailure
+    def test_placeholders_replaced(self):
+        """Expected to fail until the school supplies real contacts -- then
+        remove the decorator so it guards against the placeholder returning."""
+        submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
+        self.assertNotIn("XXXXX", submit)
+
+
 class TestConcernWords(unittest.TestCase):
     """The keyword safety net that flags a report even when the AI is down."""
 

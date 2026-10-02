@@ -90,6 +90,14 @@ class TestPublicSurface(unittest.TestCase):
         self.assertIn(":", res.json["rules"])
         self.assertNotIn("school_context", res.json, "background notes must stay staff/AI-only")
 
+    def test_receipts_reveal_nothing_without_the_code(self):
+        """Receipt lookups are public, so a guessed or malformed code must find nothing."""
+        for codes in (["0" * 64], ["a" * 64, "f" * 64], ["not-a-code"], ["' or 1=1 --"]):
+            with self.subTest(codes=codes):
+                res = rpc("receipt_statuses", {"p_receipts": codes})
+                self.assertEqual(res.status, 200, res)
+                self.assertEqual(res.json, [])
+
     def test_keepalive_function(self):
         """The GitHub keep-alive workflow depends on this answering."""
         res = rpc("auto_status", {"p_spam": "No", "p_feasibility": "Feasible"})

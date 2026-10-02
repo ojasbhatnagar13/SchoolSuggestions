@@ -26,7 +26,7 @@ EXPECTED = {("public_suggestions", "authenticated", "SELECT")}
 # anon can execute is a mistake.
 ANON_FUNCTIONS = {
     "auto_status", "public_rules", "submit_suggestion", "claim_account_slot",
-    "moderation_config",
+    "moderation_config", "receipt_statuses",
 }
 
 

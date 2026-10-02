@@ -298,6 +298,7 @@ async function save(
   benefit: string,
   analysis: Record<string, string | null>,
   concern: boolean,
+  receipt: string,
 ) {
   return await rpc("submit_suggestion", {
     p_secret: SUBMIT_SECRET,
@@ -310,6 +311,8 @@ async function save(
     p_topic: analysis.topic,
     p_benefit: benefit || null,
     p_concern: concern,
+    // The student's private receipt code. The database keeps only its hash.
+    p_receipt: receipt || null,
   }) as { id?: number; status: string; duplicate_of?: number; existing?: string };
 }
 
@@ -358,10 +361,12 @@ Deno.serve(async (req) => {
 
   let suggestion: string;
   let benefit: string;
+  let receipt: string;
   try {
     const body = await req.json();
     suggestion = String(body?.suggestion ?? "").trim();
     benefit = String(body?.benefit ?? "").trim();
+    receipt = String(body?.receipt ?? "").trim().slice(0, 64);
   } catch {
     return json({ error: "Body must be JSON like {\"suggestion\": \"...\"}" }, 400);
   }
@@ -426,7 +431,7 @@ Deno.serve(async (req) => {
       // With no AI, the word check is all there is, so a match also gets the
       // student the counsellor reply.
       const flagged = mentionsConcern(suggestion, benefit);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt);
       return json({
         id: saved.id,
         status: saved.status,
@@ -446,7 +451,7 @@ Deno.serve(async (req) => {
     // the normal reply while staff check the red section.
     const concern = support || mentionsConcern(suggestion, benefit);
 
-    const saved = await save(suggestion, benefit, analysis, concern);
+    const saved = await save(suggestion, benefit, analysis, concern, receipt);
 
     // Nothing was written -- the idea already exists. Send back the original
     // so the student can see it rather than just being told "no".
