@@ -84,8 +84,10 @@ Use the background like this:
   - Clashes with an established way the school works (for example the
     all-vegetarian menu, no tiffin boxes, fixed bus routes): Needs Review,
     and name the practice it touches in the reason.
-  - Reports bullying, harm, a safety or wellbeing concern, or a personal
-    problem rather than suggesting an idea: never spam. Use Needs Review,
+  - Reports bullying, self-harm or suicidal thoughts, abuse, feeling unsafe,
+    or any other personal or wellbeing problem
+    rather than suggesting an idea: never spam, even if it is short, angry
+    or badly written. Use Needs Review,
     category Wellbeing, and this exact reason: "This sounds like a personal
     concern rather than an idea for the school. Please talk to a school
     counsellor or the pastoral care team, who are there to help."

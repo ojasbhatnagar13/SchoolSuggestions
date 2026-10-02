@@ -1354,3 +1354,120 @@ textarea.code-box {
   .rules-grid { grid-template-columns: 1fr; }
   textarea.code-box { min-height: 260px; }
 }
+
+/* ------------------------------------------------------------------ wellbeing concerns (staff) */
+
+/* Deliberately loud. This is the one thing on the staff page that must not be
+   scrolled past, so it breaks the calm palette on purpose. */
+.concerns { margin-bottom: 40px; }
+.concerns.is-open {
+  padding: 28px;
+  background: #FCE8E4;
+  border: 2px solid var(--bad-l);
+  border-left: 10px solid var(--bad-l);
+  box-shadow: 0 0 0 4px rgba(178, 59, 38, 0.12);
+}
+.concerns-head { display: flex; align-items: center; gap: 16px; }
+.concerns-head h2 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--bad-l);
+}
+.concerns-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  background: var(--bad-l);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 800;
+  animation: concern-pulse 1.6s ease-in-out infinite;
+}
+@keyframes concern-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(178, 59, 38, 0.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(178, 59, 38, 0); }
+}
+.concerns-guide {
+  margin: 18px 0 22px;
+  padding-left: 20px;
+  color: #5A1A0E;
+  font-size: 16px;
+}
+.concerns-guide li { margin-bottom: 4px; }
+
+.concern-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 22px 24px;
+  background: var(--paper);
+  border: 1px solid #E9B4A8;
+  border-left: 4px solid var(--bad-l);
+  color: var(--text-l);
+}
+.concern-card.is-handled { border-left-color: var(--line-l2); border-color: var(--line-l); }
+.concern-meta { display: flex; gap: 16px; color: var(--muted-l); }
+.concern-text {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.concern-more { display: grid; gap: 4px; margin: 0; color: var(--muted-l); overflow-wrap: anywhere; }
+.concern-more .mono { font-size: 11px; text-transform: uppercase; }
+.concern-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-l);
+  color: var(--muted-l);
+}
+.cbtn {
+  padding: 10px 16px;
+  border: 1px solid var(--bad-l);
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cbtn:disabled { opacity: 0.6; cursor: progress; }
+.c-primary { background: var(--bad-l); color: #fff; }
+.c-primary:hover { background: #8E2C1B; }
+.c-ghost { background: transparent; color: var(--bad-l); }
+.c-ghost:hover { background: #FBEDEA; }
+.concern-card.is-handled .c-ghost { border-color: var(--line-l2); color: var(--muted-l); }
+
+.concerns-handled { margin-top: 18px; }
+.concerns:not(.is-open) .concerns-handled { margin-top: 0; }
+.concerns-handled summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted-l);
+}
+
+@media (max-width: 600px) {
+  .concerns.is-open { padding: 20px 16px; border-left-width: 6px; }
+  .concern-foot .cbtn { width: 100%; }
+}
+
+/* ------------------------------------------------------------------ "not for" notice (students) */
+
+.not-for {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #6E3A2E;
+  border-left: 3px solid var(--bad);
+  background: rgba(226, 116, 96, 0.08);
+  font-size: 15px;
+  color: var(--text-d);
+}
+.not-for b { color: #F2A291; }

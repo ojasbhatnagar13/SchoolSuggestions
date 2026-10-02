@@ -72,6 +72,8 @@ const category = (row) => row.category || "Uncategorised";
 // `except` names the filter being counted, so each row of chips shows how
 // many you would get by changing that filter alone.
 function matches(row, except = null) {
+  // Wellbeing concerns live only in the red section, never in the queue.
+  if (row.concern) return false;
   if (except !== "status" && !filters.statuses.has(group(row))) return false;
   if (except !== "category" && filters.categories.size && !filters.categories.has(category(row))) return false;
   if (except !== "source" && filters.source !== "any" && row.decided_by !== filters.source) return false;
@@ -297,9 +299,109 @@ function changed() {
   render();
 }
 
+// ------------------------------------------------------------------ concerns
+
+const concernsEl = $("concerns");
+const PAGE_TITLE = document.title;
+
+function concernCard(row, handled) {
+  const article = el("article", "concern-card" + (handled ? " is-handled" : ""));
+
+  const head = el("div", "concern-meta mono");
+  head.append(el("span", null, `#${row.id}`), el("span", null, `Sent ${when(row.created_at)}`));
+  article.append(head, el("p", "concern-text", row.suggestion));
+
+  if (row.benefit) {
+    const more = el("p", "concern-more");
+    more.append(el("span", "mono", "They also wrote"), el("span", null, row.benefit));
+    article.append(more);
+  }
+
+  const foot = el("div", "concern-foot");
+  if (handled) {
+    foot.append(el("span", "mono", `Handled by ${row.concern_handled_by || "a member of staff"} · ${when(row.concern_handled_at)}`));
+    foot.append(concernButton(row, "reopen", "Reopen", "c-ghost"));
+  } else {
+    foot.append(
+      concernButton(row, "handled", "Passed to pastoral care — mark handled", "c-primary"),
+      concernButton(row, "not_concern", "Not a concern — move to normal queue", "c-ghost"),
+    );
+  }
+  article.append(foot);
+  return article;
+}
+
+function concernButton(row, outcome, text, cls) {
+  const b = el("button", `cbtn ${cls}`, text);
+  b.type = "button";
+  b.addEventListener("click", async () => {
+    if (outcome === "not_concern" && !confirm(
+      "Move this to the normal queue? Only do this if it is clearly an idea, " +
+      "not a student asking for help.")) return;
+    b.disabled = true;
+    const { error } = await sb.rpc("staff_resolve_concern", { p_id: row.id, p_outcome: outcome });
+    if (error) {
+      b.disabled = false;
+      toast(error.message, null, true);
+      return;
+    }
+    await load();
+    toast({
+      handled: `#${row.id} marked handled.`,
+      not_concern: `#${row.id} moved to the normal queue.`,
+      reopen: `#${row.id} is open again.`,
+    }[outcome]);
+  });
+  return b;
+}
+
+function renderConcerns() {
+  const open = rows.filter((r) => r.concern && !r.concern_handled_at);
+  const handled = rows.filter((r) => r.concern && r.concern_handled_at);
+
+  // The browser tab shows it too, so it is seen even from another tab.
+  document.title = open.length
+    ? `⚠ ${open.length} wellbeing concern${open.length === 1 ? "" : "s"} — ${PAGE_TITLE}`
+    : PAGE_TITLE;
+
+  concernsEl.hidden = !open.length && !handled.length;
+  concernsEl.classList.toggle("is-open", open.length > 0);
+  if (concernsEl.hidden) return;
+
+  const parts = [];
+  if (open.length) {
+    concernsEl.setAttribute("role", "alert");
+    const head = el("div", "concerns-head");
+    head.append(
+      el("span", "concerns-icon", "!"),
+      el("h2", null, open.length === 1
+        ? "1 student may need help"
+        : `${open.length} students may need help`),
+    );
+    const guide = el("ul", "concerns-guide");
+    for (const line of [
+      "This looks like a report of bullying, self-harm, abuse or feeling unsafe, not an idea.",
+      "Pass it to the Head of Pastoral Care today. If anyone may be in danger, follow the safeguarding procedure now.",
+      "It is anonymous: the student cannot be identified or contacted from here. Act on what is written (year, place, time).",
+      "It is never shown to students and cannot be approved.",
+    ]) guide.append(el("li", null, line));
+    parts.push(head, guide, ...open.map((r) => concernCard(r, false)));
+  } else {
+    concernsEl.removeAttribute("role");
+  }
+
+  if (handled.length) {
+    const details = el("details", "concerns-handled");
+    details.append(el("summary", null, `Handled concerns (${handled.length})`), ...handled.map((r) => concernCard(r, true)));
+    parts.push(details);
+  }
+  concernsEl.replaceChildren(...parts);
+}
+
 // ------------------------------------------------------------------ render
 
 function render() {
+  renderConcerns();
   renderFilters();
 
   const shown = rows
@@ -308,10 +410,10 @@ function render() {
       (ORDER[group(a)] ?? 9) - (ORDER[group(b)] ?? 9) ||
       new Date(b.created_at) - new Date(a.created_at));
 
-  const hiddenBin = rows.filter((r) =>
+  const hiddenBin = rows.filter((r) => !r.concern &&
     ["rejected", "spam"].includes(group(r)) && !filters.statuses.has(group(r))).length;
   els.count.textContent =
-    `Showing ${shown.length} of ${rows.length}` +
+    `Showing ${shown.length} of ${rows.filter((r) => !r.concern).length}` +
     (hiddenBin ? ` · ${hiddenBin} rejected or spam hidden` : "");
 
   if (shown.length) {
@@ -319,7 +421,7 @@ function render() {
     return;
   }
 
-  const pending = rows.filter((r) => r.status === "pending").length;
+  const pending = rows.filter((r) => !r.concern && r.status === "pending").length;
   const empty = el("div", "empty-state");
   empty.append(
     el("h3", null, filters.statuses.has("pending") && pending === 0

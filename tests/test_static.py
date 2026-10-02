@@ -101,6 +101,37 @@ class TestPages(unittest.TestCase):
         self.assertIn(f"const MAX_LENGTH = {server_max};", submit)
 
 
+class TestConcernWords(unittest.TestCase):
+    """The keyword safety net that flags a report even when the AI is down."""
+
+    def pattern(self):
+        edge = (ROOT / "supabase/functions/moderate-suggestion/index.ts").read_text(encoding="utf-8")
+        # Up to "].join", not the first "]": the words contain [character classes].
+        block = re.search(r"const CONCERN_WORDS = new RegExp\(\s*\[(.*?)\]\.join", edge, re.S).group(1)
+        words = re.findall(r'"([^"]+)"', block)
+        return re.compile("|".join(words), re.I)
+
+    def test_catches_reports(self):
+        for text in [
+            "I'm being bullied in grade 8",
+            "I keep thinking about self harm",
+            "sometimes I want to die",
+            "a boy keeps threatening me after school",
+            "I feel unsafe in the changing rooms",
+        ]:
+            with self.subTest(text=text):
+                self.assertTrue(self.pattern().search(text))
+
+    def test_leaves_ordinary_ideas_alone(self):
+        for text in [
+            "Add more healthy options to the canteen menu",
+            "Start a robotics club on Thursdays",
+            "Put more benches near the basketball court",
+        ]:
+            with self.subTest(text=text):
+                self.assertFalse(self.pattern().search(text))
+
+
 class TestPromptsInStep(unittest.TestCase):
     def test_edge_function_and_main_py_use_the_same_prompt(self):
         """The two copies of the moderator instructions must not drift."""

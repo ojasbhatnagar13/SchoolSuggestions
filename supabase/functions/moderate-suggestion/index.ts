@@ -86,8 +86,10 @@ Use the background like this:
   - Clashes with an established way the school works (for example the
     all-vegetarian menu, no tiffin boxes, fixed bus routes): Needs Review,
     and name the practice it touches in the reason.
-  - Reports bullying, harm, a safety or wellbeing concern, or a personal
-    problem rather than suggesting an idea: never spam. Use Needs Review,
+  - Reports bullying, self-harm or suicidal thoughts, abuse, feeling unsafe,
+    or any other personal or wellbeing problem
+    rather than suggesting an idea: never spam, even if it is short, angry
+    or badly written. Use Needs Review,
     category Wellbeing, and this exact reason: "This sounds like a personal
     concern rather than an idea for the school. Please talk to a school
     counsellor or the pastoral care team, who are there to help."
@@ -295,6 +297,7 @@ async function save(
   suggestion: string,
   benefit: string,
   analysis: Record<string, string | null>,
+  concern: boolean,
 ) {
   return await rpc("submit_suggestion", {
     p_secret: SUBMIT_SECRET,
@@ -306,7 +309,32 @@ async function save(
     p_summary: analysis.summary,
     p_topic: analysis.topic,
     p_benefit: benefit || null,
+    p_concern: concern,
   }) as { id?: number; status: string; duplicate_of?: number; existing?: string };
+}
+
+// What the student is told when they seem to be reporting a problem rather
+// than suggesting an idea. The AI is instructed to use exactly this reason
+// (see systemInstruction), which is how it is recognised below.
+const SUPPORT_REASON = "This sounds like a personal concern rather than an idea for the " +
+  "school. Please talk to a school counsellor or the pastoral care team, who are there to help.";
+
+// A safety net under the AI: words that mean a person should look, even if
+// the AI is down or misreads it. Deliberately broad -- a false alarm costs a
+// staff member one click ("Not a concern"); a missed report could cost far
+// more. Matches go to the staff page's red section.
+const CONCERN_WORDS = new RegExp(
+  [
+    "bull(y|ies|ied|ying)", "harass", "self[- ]?harm", "suicid", "kill(ing)? myself",
+    "end(ing)? my life", "want to die", "hurt(ing)? myself", "cut(ting)? myself",
+    "abus(e|ed|ing)", "touched me", "threaten", "feel unsafe", "not safe at",
+    "scared to come", "beat(s|ing)? me", "hits? me",
+  ].join("|"),
+  "i",
+);
+
+function mentionsConcern(...texts: string[]): boolean {
+  return texts.some((t) => CONCERN_WORDS.test(t));
 }
 
 // Shared with the database (app_config.submit_secret) and never sent to a
@@ -395,16 +423,30 @@ Deno.serve(async (req) => {
       // Every model is down. Save it for a person to screen rather than
       // telling the student to try again later -- most never would.
       console.error("all moderation models unavailable:", err.message);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion));
+      // With no AI, the word check is all there is, so a match also gets the
+      // student the counsellor reply.
+      const flagged = mentionsConcern(suggestion, benefit);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged);
       return json({
         id: saved.id,
         status: saved.status,
         category: "Unsorted",
         unchecked: true,
+        reason: flagged ? SUPPORT_REASON : undefined,
+        support: flagged || undefined,
       });
     }
 
-    const saved = await save(suggestion, benefit, analysis);
+    // The AI recognised a personal concern (it uses SUPPORT_REASON's exact
+    // opening when it does). The student is pointed to the counsellors
+    // straight away instead of being told to wait for the Ideas page.
+    const support = (analysis.reason ?? "").startsWith("This sounds like a personal concern");
+    // Either signal puts it in front of staff. Only the AI's reading decides
+    // what the student is told, so "start an anti-bullying club" still gets
+    // the normal reply while staff check the red section.
+    const concern = support || mentionsConcern(suggestion, benefit);
+
+    const saved = await save(suggestion, benefit, analysis, concern);
 
     // Nothing was written -- the idea already exists. Send back the original
     // so the student can see it rather than just being told "no".
@@ -421,11 +463,6 @@ Deno.serve(async (req) => {
     // it is an explanation of the student's own submission, and telling them
     // why is better than letting it vanish silently.
     const turnedAway = saved.status === "rejected" || saved.status === "spam";
-    // A personal concern (bullying, safety, wellbeing) rather than an idea.
-    // The prompt gives the model this exact opening, so matching it is
-    // reliable. The student is pointed to the counsellors straight away
-    // instead of being told to wait for the Ideas page.
-    const support = (analysis.reason ?? "").startsWith("This sounds like a personal concern");
     return json({
       id: saved.id,
       status: saved.status,

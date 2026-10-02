@@ -19,6 +19,7 @@ STAFF_ONLY = {
     "staff_set_status": {"p_id": 1, "p_status": "approved"},
     "staff_get_rules": {},
     "staff_set_rules": {"p_rules": "Usually acceptable:\n- anything", "p_school_context": ""},
+    "staff_resolve_concern": {"p_id": 1, "p_outcome": "not_concern"},
 }
 
 SIGNED_IN_ONLY = {

@@ -152,9 +152,11 @@ els.form.addEventListener("submit", async (event) => {
       // so not "it will appear on the Ideas page".
       notice(
         `Thank you for telling us. ${payload.reason} ` +
-        `A member of staff will also read what you wrote (#${payload.id}). ` +
-        `It will not be shown to other students.`,
-        "ok",
+        `If you or someone else is in danger right now, tell a teacher or any ` +
+        `adult straight away. A member of staff will also read what you wrote ` +
+        `and pass it to the pastoral care team, but because this box is ` +
+        `anonymous they cannot reply to you. It will not be shown to other students.`,
+        "warn",
       );
     } else if (payload.status === "spam") {
       notice(
