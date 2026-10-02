@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suggest an Idea — DPSI School Suggestions</title>
+  <meta name="description" content="Have an idea to improve DPS International Edge? Share it anonymously. Every idea is checked against the school guidelines, then read by a member of staff.">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=15">
+</head>
+<body>
+  <a class="skip" href="#suggestion">Skip to the suggestion box</a>
+
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Pages">
+        <a href="index.html">Ideas</a>
+        <a href="suggest.html" aria-current="page">Suggest</a>
+        <a href="how.html">How it works</a>
+      </nav>
+      <div class="nav-actions">
+        <span id="who" class="who" hidden></span>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="band band-dark home">
+      <div class="wrap home-grid">
+        <div class="home-copy">
+          <p class="eyebrow">DPS International Edge · Suggestion box</p>
+          <h1 class="headline">Have an idea to improve DPSI? <span class="accent">Share it anonymously.</span></h1>
+          <ul class="promise">
+            <li><b>No name.</b> <span>Nothing links an idea to you.</span></li>
+            <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
+            <li><b>Read by staff.</b> <span>A real person decides.</span></li>
+          </ul>
+        </div>
+
+        <article class="panel panel-dark compose" id="suggest">
+          <!-- Above the form, where the student is already looking: both the
+               "checking..." message and the result appear here. -->
+          <div id="result" class="notice" role="status" hidden></div>
+          <form id="submit-form" class="form">
+            <label for="suggestion" class="field-label">Your idea</label>
+            <textarea id="suggestion" maxlength="2000" rows="4" required
+              placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
+
+            <label for="benefit" class="field-label">
+              How would it help? <span class="opt">Optional</span>
+            </label>
+            <textarea id="benefit" class="short-box" maxlength="1000" rows="2"
+              placeholder="e.g. More students would eat a proper lunch instead of skipping it."></textarea>
+
+            <div class="form-foot">
+              <span id="counter" class="mono counter" aria-live="polite"></span>
+              <button id="send" type="submit" class="btn btn-primary">
+                <span class="btn-label">Sign in to send</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+          <p id="signed-as" class="mono form-note"></p>
+          <p class="not-for">
+            <b>Not for personal problems.</b> If you're being bullied, feel
+            unsafe, or are going through something hard, please talk to a
+            teacher or a school counsellor in person. This box is anonymous, so
+            nobody can reply to you or help you through it.
+            <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
+            You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="band band-cream next">
+      <div class="wrap">
+        <p class="eyebrow">What happens next</p>
+        <ol class="steps">
+          <li>
+            <span class="mono n">01</span>
+            <b>You send it</b>
+            <span>Sign in, write it, send. No name is attached.</span>
+          </li>
+          <li>
+            <span class="mono n">02</span>
+            <b>The AI checks it</b>
+            <span>Against the school guidelines, in seconds.</span>
+          </li>
+          <li>
+            <span class="mono n">03</span>
+            <b>Staff decide</b>
+            <span>Approved ideas go on the Ideas page for everyone to back.</span>
+          </li>
+        </ol>
+
+        <div class="tiles">
+          <a class="tile tile-dark" href="index.html">
+            <span class="eyebrow">Ideas</span>
+            <span class="tile-title">See what others suggested</span>
+            <span class="tile-go" aria-hidden="true">→</span>
+          </a>
+          <a class="tile" href="how.html#rules">
+            <span class="eyebrow">Guidelines</span>
+            <span class="tile-title">What gets through, and what doesn't</span>
+            <span class="tile-go" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · 2026</span>
+        <span><a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="submit.js?v=15"></script>
+</body>
+</html>

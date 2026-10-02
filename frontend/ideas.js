@@ -11,6 +11,30 @@ const doneCount = document.getElementById("done-count");
 // 'actioned' in the database. Students see it as Done.
 const isDone = (idea) => idea.status === "actioned";
 
+// "New since your last visit". The last visit is remembered only in this
+// browser -- nothing about visits is sent anywhere. Read once per page load,
+// so labels stay put while the student is here; the next visit starts fresh.
+const VISIT_KEY = "ideas-last-visit";
+const lastVisit = (() => {
+  try {
+    const saved = localStorage.getItem(VISIT_KEY);
+    return saved ? new Date(saved) : null;
+  } catch {
+    return null;
+  }
+})();
+
+function rememberVisit() {
+  try {
+    localStorage.setItem(VISIT_KEY, new Date().toISOString());
+  } catch { /* a convenience only */ }
+}
+
+// On a first visit nothing is "new" -- everything would be, which says nothing.
+const isNew = (idea) =>
+  lastVisit !== null && !isDone(idea) && idea.decided_at && new Date(idea.decided_at) > lastVisit;
+const newNote = document.getElementById("new-note");
+
 // Suggestion ids the signed-in student has already voted for, so the UI can
 // disable those buttons instead of waiting for the database to reject a
 // duplicate.
@@ -26,6 +50,10 @@ function card(idea) {
   const meta = el("div", "s-meta");
   const left = el("span", "s-meta-left");
   if (done) left.append(el("span", "done-badge", "Done"));
+  if (isNew(idea)) {
+    left.append(el("span", "new-badge", "New"));
+    article.classList.add("is-new");
+  }
   left.append(el("span", "s-cat", category || "Uncategorised"));
   meta.append(
     left,
@@ -163,8 +191,17 @@ function render() {
   const shown = category === "all"
     ? ideas
     : ideas.filter((i) => (i.category || "Uncategorised") === category);
-  const open = shown.filter((i) => !isDone(i));
+  // New ones first, so a returning student sees what they haven't voted on
+  // yet. Otherwise the order from the database (newest first) is kept.
+  const open = shown.filter((i) => !isDone(i))
+    .sort((a, b) => Number(isNew(b)) - Number(isNew(a)));
   const done = shown.filter(isDone);
+
+  const fresh = ideas.filter(isNew).length;
+  newNote.hidden = !fresh;
+  newNote.textContent = fresh === 1
+    ? "1 new idea since your last visit"
+    : `${fresh} new ideas since your last visit`;
 
   list.replaceChildren(...(open.length ? open.map(card) : [boardState({
     title: category === "all"
@@ -182,6 +219,7 @@ function render() {
 function hideBoard() {
   filterBar.hidden = true;
   doneSection.hidden = true;
+  newNote.hidden = true;
 }
 
 function signedOut() {
@@ -249,7 +287,7 @@ async function refresh(session) {
   if (!ideas.length) {
     hideBoard();
     const link = el("a", "btn btn-primary", "Send an idea →");
-    link.href = "index.html";
+    link.href = "suggest.html";
     list.replaceChildren(boardState({
       title: "Nothing approved yet.",
       body: "Ideas appear here once a member of staff has read and approved " +
@@ -265,6 +303,8 @@ async function refresh(session) {
   }
 
   render();
+  // Only a visit that actually showed the list counts as a visit.
+  rememberVisit();
 }
 
 watchSession(refresh);

@@ -29,6 +29,13 @@ function notice(message, kind = "info") {
   els.result.textContent = message;
   els.result.className = `notice ${kind}`;
   els.result.hidden = false;
+  // It sits above the form, so if the student has scrolled down to the
+  // button, bring it back into view (below the sticky nav).
+  const top = els.result.getBoundingClientRect().top;
+  const navBottom = document.querySelector(".nav")?.getBoundingClientRect().bottom ?? 0;
+  if (top < navBottom || top > window.innerHeight * 0.6) {
+    window.scrollTo({ top: window.scrollY + top - navBottom - 16, behavior: "smooth" });
+  }
 }
 
 // Counts down, so the number people watch is the one that matters: how much

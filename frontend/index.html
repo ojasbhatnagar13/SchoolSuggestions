@@ -4,16 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DPSI School Suggestions</title>
-  <meta name="description" content="Have an idea to improve DPS International Edge? Share it anonymously. Every idea is checked against the school guidelines, then read by a member of staff.">
+  <meta name="description" content="Vote for the student ideas you want at DPS International Edge, or share your own anonymously.">
   <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
-  <a class="skip" href="#suggestion">Skip to the suggestion box</a>
-
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
@@ -21,8 +19,8 @@
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
       <nav class="nav-links" aria-label="Pages">
-        <a href="index.html" aria-current="page">Suggest</a>
-        <a href="ideas.html">Ideas</a>
+        <a href="index.html" aria-current="page">Ideas</a>
+        <a href="suggest.html">Suggest</a>
         <a href="how.html">How it works</a>
       </nav>
       <div class="nav-actions">
@@ -34,84 +32,53 @@
   </header>
 
   <main>
-    <section class="band band-dark home">
-      <div class="wrap home-grid">
-        <div class="home-copy">
-          <p class="eyebrow">DPS International Edge · Suggestion box</p>
-          <h1 class="headline">Have an idea to improve DPSI? <span class="accent">Share it anonymously.</span></h1>
-          <ul class="promise">
-            <li><b>No name.</b> <span>Nothing links an idea to you.</span></li>
-            <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
-            <li><b>Read by staff.</b> <span>A real person decides.</span></li>
-          </ul>
-        </div>
-
-        <article class="panel panel-dark compose" id="suggest">
-          <form id="submit-form" class="form">
-            <label for="suggestion" class="field-label">Your idea</label>
-            <textarea id="suggestion" maxlength="2000" rows="4" required
-              placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
-
-            <label for="benefit" class="field-label">
-              How would it help? <span class="opt">Optional</span>
-            </label>
-            <textarea id="benefit" class="short-box" maxlength="1000" rows="2"
-              placeholder="e.g. More students would eat a proper lunch instead of skipping it."></textarea>
-
-            <div class="form-foot">
-              <span id="counter" class="mono counter" aria-live="polite"></span>
-              <button id="send" type="submit" class="btn btn-primary">
-                <span class="btn-label">Sign in to send</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
-          </form>
-          <p id="signed-as" class="mono form-note"></p>
-          <p class="not-for">
-            <b>Not for personal problems.</b> If you're being bullied, feel
-            unsafe, or are going through something hard, please talk to a
-            teacher or a school counsellor in person. This box is anonymous, so
-            nobody can reply to you or help you through it.
-            <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
-            You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
+    <section class="band band-dark page-head home-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">DPS International Edge · Student ideas</p>
+          <h1 class="headline headline-md">Vote for the ideas<br><span class="accent">you want at DPSI.</span></h1>
+          <p class="page-head-note home-note">
+            Every idea here was approved by staff. <b>One vote each, which you
+            can take back any time.</b> Counts stay private.
           </p>
-          <div id="result" class="notice" role="status" hidden></div>
-        </article>
+        </div>
+        <a class="suggest-card" href="suggest.html">
+          <span class="eyebrow">Have an idea?</span>
+          <span class="suggest-card-title">Share it anonymously</span>
+          <span class="suggest-card-go">Suggest an idea <span aria-hidden="true">→</span></span>
+        </a>
       </div>
     </section>
 
-    <section class="band band-cream next">
+    <section class="band band-dark board-band">
       <div class="wrap">
-        <p class="eyebrow">What happens next</p>
-        <ol class="steps">
-          <li>
-            <span class="mono n">01</span>
-            <b>You send it</b>
-            <span>Sign in, write it, send. No name is attached.</span>
-          </li>
-          <li>
-            <span class="mono n">02</span>
-            <b>The AI checks it</b>
-            <span>Against the school guidelines, in seconds.</span>
-          </li>
-          <li>
-            <span class="mono n">03</span>
-            <b>Staff decide</b>
-            <span>Approved ideas go on the Ideas page for everyone to back.</span>
-          </li>
-        </ol>
+        <p id="new-note" class="mono new-note" hidden></p>
+        <div id="categories" class="filters filters-dark" role="group" aria-label="Filter by category" hidden></div>
+        <div id="list" class="board" aria-live="polite">
+          <div class="board-state"><p class="mono">Loading…</p></div>
+        </div>
+      </div>
+    </section>
 
-        <div class="tiles">
-          <a class="tile tile-dark" href="ideas.html">
-            <span class="eyebrow">Ideas</span>
-            <span class="tile-title">See what others suggested</span>
-            <span class="tile-go" aria-hidden="true">→</span>
-          </a>
-          <a class="tile" href="how.html#rules">
-            <span class="eyebrow">Guidelines</span>
-            <span class="tile-title">What gets through, and what doesn't</span>
-            <span class="tile-go" aria-hidden="true">→</span>
-          </a>
+    <section class="band band-cream done-band" id="done-section" hidden>
+      <div class="wrap">
+        <div class="done-head">
+          <div>
+            <p class="eyebrow">Done</p>
+            <h2 class="h2">Ideas the school<br>has acted on.</h2>
+          </div>
+          <p class="mono done-note"><span id="done-count"></span> · started as student suggestions</p>
+        </div>
+        <div id="done-list" class="board"></div>
+      </div>
+    </section>
+
+    <section class="band band-dark cta-band">
+      <div class="wrap cta-inner">
+        <h2 class="headline headline-md">Got one of your own?</h2>
+        <div class="cta-side">
+          <p>It takes a minute and no name is attached.</p>
+          <a class="btn btn-primary" href="suggest.html">Send an idea <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </section>
@@ -121,11 +88,11 @@
     <div class="wrap">
       <div class="footer-bar mono">
         <span>DPSI Student Suggestions · 2026</span>
-        <span><a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
+        <span>Newest first · Vote counts are visible to staff only</span>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=13"></script>
+  <script type="module" src="ideas.js?v=14"></script>
 </body>
 </html>

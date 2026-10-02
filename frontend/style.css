@@ -1471,3 +1471,54 @@ textarea.code-box {
   color: var(--text-d);
 }
 .not-for b { color: #F2A291; }
+
+/* ------------------------------------------------------------------ home = ideas (voting first) */
+
+.home-head .page-head-grid { align-items: center; }
+.home-note { margin-top: 24px; }
+
+/* The way to suggest, kept one tap away on the voting page. */
+.suggest-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 28px 30px;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.suggest-card:hover { background: var(--accent-2); }
+.suggest-card .eyebrow { margin: 0; color: rgba(255, 255, 255, 0.8); }
+.suggest-card-title {
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.suggest-card-go { margin-top: 10px; font-weight: 700; }
+
+.new-note {
+  margin: 0 0 18px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.new-badge {
+  padding: 3px 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.s-card.is-new { border-color: var(--accent); }
+
+@media (max-width: 900px) {
+  .suggest-card { padding: 22px 22px; }
+}
+
+/* The result sits above the form now (see suggest.html), so it needs space
+   below it rather than above. */
+.compose > #result { margin: 0 0 20px; }

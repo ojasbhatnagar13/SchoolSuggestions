@@ -13,8 +13,8 @@ import unittest
 
 from helpers import FRONTEND, ROOT, public_config
 
-PAGES = ["index.html", "ideas.html", "how.html", "staff.html"]
-STUDENT_TABS = {"index.html": "Suggest", "ideas.html": "Ideas", "how.html": "How it works"}
+PAGES = ["index.html", "suggest.html", "how.html", "staff.html"]
+STUDENT_TABS = {"index.html": "Ideas", "suggest.html": "Suggest", "how.html": "How it works"}
 
 
 def jwt_payload(token: str) -> dict:
@@ -91,7 +91,7 @@ class TestPages(unittest.TestCase):
         self.assertEqual(len(versions), 1, f"style.css versions differ between pages: {versions}")
 
     def test_form_limits_match_the_server(self):
-        index = self.read("index.html")
+        index = self.read("suggest.html")
         edge = (ROOT / "supabase/functions/moderate-suggestion/index.ts").read_text(encoding="utf-8")
         submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
         server_max = re.search(r"const MAX_LENGTH = (\d[\d_]*)", edge).group(1).replace("_", "")
@@ -105,7 +105,7 @@ class TestHelpContacts(unittest.TestCase):
     def test_same_contacts_in_the_notice_and_the_reply(self):
         """The wellbeing contacts appear in two places; they must not drift."""
         submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
-        index = (FRONTEND / "index.html").read_text(encoding="utf-8")
+        index = (FRONTEND / "suggest.html").read_text(encoding="utf-8")
         phone, email = re.search(r'const HELP = \{ phone: "([^"]+)", email: "([^"]+)" \}', submit).groups()
         self.assertIn(phone, index)
         self.assertIn(email, index)
