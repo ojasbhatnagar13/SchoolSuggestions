@@ -267,6 +267,19 @@ Platform behaviours that cost hours here.
   `TRUNCATE`, `REFERENCES` and `TRIGGER`. Revoking only
   INSERT/SELECT/UPDATE/DELETE leaves TRUNCATE — which bypasses RLS entirely and
   can empty the table. Revoke all seven.
+- **The same applies to views, and it is worse there.** `create view` picks up
+  the default ALL grant. A simple single-table view is automatically
+  writable, and writes through it run with the *view owner's* rights, so they
+  skip RLS on the table underneath. Here, signed-in users could have edited,
+  deleted or inserted "approved" suggestions through the student view for
+  about a month before a test caught it. Grant views `select` only, and add
+  `with check option`.
+- **"200, []" from the API does not mean locked.** RLS with no policies hides
+  every row, so a table the API role holds full privileges on looks exactly
+  like a closed one from outside. Test the grants themselves
+  (`information_schema.role_table_grants`), not just the responses.
+- `alter default privileges in schema public revoke all on tables from anon,
+  authenticated;` stops new tables inheriting the problem.
 - `security definer` without `set search_path` is hijackable via a
   caller-controlled schema. Always pin it.
 - **Free projects pause after ~7 days** of inactivity. Once paused you have 90

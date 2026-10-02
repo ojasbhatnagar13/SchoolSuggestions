@@ -37,7 +37,7 @@ Supabase project ref: `ywyjhgpcokrtzibcrqes`
 backend/
   .env              secrets, not in version control
   main.py           the pipeline: prompt -> Gemini -> Supabase
-  verify_setup.py   checks the DB matches docs/setup.sql
+  (tests live in tests/ -- see tests/run_tests.py)
   requirements.txt
   venv/
 docs/
@@ -56,11 +56,14 @@ cd "C:\Users\Ojas Bhatnagar\Desktop\SchoolSuggestions\backend"
 .\venv\Scripts\python.exe main.py
 ```
 
-Check the database is set up correctly:
+Run the tests (from the project root). Add `--ai` to also check how the AI
+sorts sample ideas, which uses Gemini quota:
 
 ```powershell
-.\venv\Scripts\python.exe verify_setup.py
+backend\venv\Scripts\python.exe tests\run_tests.py
 ```
+
+They also run on GitHub after every push (`.github/workflows/tests.yml`).
 
 ## Security model
 

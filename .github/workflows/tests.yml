@@ -1,0 +1,37 @@
+name: Tests
+
+# Runs the test suite on every push to main and once a week, so a change that
+# opens a hole or breaks a page shows up as a red X on GitHub (and an email).
+#
+# What runs here:
+#   test_static    code checks, no network
+#   test_security  everything the public key must NOT be able to do, live
+#   test_database  rate limit, duplicates, guidelines -- only if the
+#                  SUBMIT_SECRET repository secret is set
+#
+# Not here: test_grants (needs the Supabase CLI logged in) and test_ai (spends
+# Gemini quota). Run those on your machine:
+#   backend\venv\Scripts\python.exe tests\run_tests.py --ai
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1"   # Mondays 06:30 UTC: catches changes made in the dashboard
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        env:
+          SUBMIT_SECRET: ${{ secrets.SUBMIT_SECRET }}
+        run: python tests/run_tests.py
