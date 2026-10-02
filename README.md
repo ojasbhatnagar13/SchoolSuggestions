@@ -11,7 +11,9 @@ prioritise; they are not automatic rejections.
 
 ```
 Student submits suggestion
-    -> Gemini analyses it against rules.txt (structured JSON out)
+    -> Gemini judges it against the staff-edited guidelines in the
+       database (public.moderation_rules), plus school background
+       taken from dpsiedge.edu.in (structured JSON out)
     -> spam / feasibility / category / reason / summary
     -> stored in Supabase via submit_suggestion() RPC
     -> students browse + vote     staff review + action
@@ -25,7 +27,7 @@ Student submits suggestion
 | AI | Google Gemini via `google-genai` |
 | Database | Supabase (Postgres + PostgREST) |
 | DB client | `supabase-py` (sync) |
-| Frontend | not started |
+| Frontend | vanilla HTML/CSS/JS on Cloudflare Workers (frontend/) |
 
 Supabase project ref: `ywyjhgpcokrtzibcrqes`
 
@@ -36,13 +38,12 @@ backend/
   .env              secrets, not in version control
   main.py           the pipeline: prompt -> Gemini -> Supabase
   verify_setup.py   checks the DB matches docs/setup.sql
-  rules.txt         school rules, injected into the moderator prompt
   requirements.txt
   venv/
 docs/
   rls-fix-options.md   the 42501 RLS blocker: cause and all 8 fixes
   setup.sql            DB setup + hardening, run in the SQL editor
-frontend/            empty
+frontend/            the site: Suggest, Ideas, How it works, Staff review
 ```
 
 ## Running

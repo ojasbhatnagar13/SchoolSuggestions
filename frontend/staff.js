@@ -337,6 +337,7 @@ function gate(message, kind = "info") {
   els.gate.className = `notice ${kind}`;
   els.gate.hidden = false;
   els.board.hidden = true;
+  rulesEls.section.hidden = true;
 }
 
 async function load() {
@@ -362,7 +363,72 @@ async function load() {
   els.gate.hidden = true;
   els.board.hidden = false;
   render();
+  if (!rulesDirty) await loadRules();
 }
+
+// ------------------------------------------------------------------ guidelines
+
+const rulesEls = {
+  section: $("rules-editor"), form: $("rules-form"), rules: $("rules-text"),
+  context: $("context-text"), status: $("rules-status"), save: $("rules-save"),
+};
+let rulesDirty = false;
+
+function rulesStatus(text, kind = "") {
+  rulesEls.status.textContent = text;
+  rulesEls.status.className = `mono ${kind}`;
+}
+
+function describeSaved(data) {
+  const when = data.updated_at ? new Date(data.updated_at).toLocaleString(undefined, {
+    day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }) : "";
+  return `Last changed ${when}` + (data.updated_by ? ` by ${data.updated_by}` : "");
+}
+
+async function loadRules() {
+  const { data, error } = await sb.rpc("staff_get_rules");
+  if (error) {
+    // Not installed yet (docs/setup-rules.sql) -- keep the editor hidden
+    // rather than showing an empty box someone might save.
+    rulesEls.section.hidden = true;
+    return;
+  }
+  rulesEls.rules.value = data.rules ?? "";
+  rulesEls.context.value = data.school_context ?? "";
+  rulesDirty = false;
+  rulesStatus(describeSaved(data));
+  rulesEls.section.hidden = false;
+}
+
+for (const box of [rulesEls.rules, rulesEls.context]) {
+  box.addEventListener("input", () => {
+    rulesDirty = true;
+    rulesStatus("Unsaved changes", "dirty");
+  });
+}
+
+rulesEls.form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  rulesEls.save.disabled = true;
+  rulesStatus("Saving…");
+  const { data, error } = await sb.rpc("staff_set_rules", {
+    p_rules: rulesEls.rules.value,
+    p_school_context: rulesEls.context.value,
+  });
+  rulesEls.save.disabled = false;
+  if (error) {
+    rulesStatus(error.message, "error");
+    return;
+  }
+  rulesDirty = false;
+  rulesStatus("Saved. The next suggestion uses these. " + describeSaved(data));
+});
+
+// Losing an edit to a stray click is easy with boxes this long.
+window.addEventListener("beforeunload", (event) => {
+  if (rulesDirty) event.preventDefault();
+});
 
 // Extra sign-in buttons in the page body, alongside the nav one.
 const heroSignIns = [...document.querySelectorAll("[data-signin]")];

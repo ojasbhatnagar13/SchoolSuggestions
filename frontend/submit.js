@@ -147,6 +147,15 @@ els.form.addEventListener("submit", async (event) => {
         `so a member of staff will read it directly.`,
         "ok",
       );
+    } else if (payload.support) {
+      // Someone reaching out about bullying, safety or wellbeing. Not an idea,
+      // so not "it will appear on the Ideas page".
+      notice(
+        `Thank you for telling us. ${payload.reason} ` +
+        `A member of staff will also read what you wrote (#${payload.id}). ` +
+        `It will not be shown to other students.`,
+        "ok",
+      );
     } else if (payload.status === "spam") {
       notice(
         `This doesn't look like a real suggestion, so it wasn't added. ` +

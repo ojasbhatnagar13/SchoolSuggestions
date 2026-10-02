@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <header class="nav">
@@ -137,7 +137,7 @@
           every suggestion against.
         </p>
 
-        <div class="three-col rules">
+        <div class="three-col rules" id="rules-cards">
           <div class="rule-card">
             <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Usually approved</div>
             <ul>
@@ -273,9 +273,6 @@
     </div>
   </footer>
 
-  <script type="module">
-    import { watchSession } from "./common.js";
-    watchSession();
-  </script>
+  <script type="module" src="how.js?v=9"></script>
 </body>
 </html>

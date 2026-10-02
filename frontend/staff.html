@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <header class="nav">
@@ -76,6 +76,47 @@
       </div>
     </section>
 
+    <section class="band band-dark rules-band" id="rules-editor" hidden>
+      <div class="wrap">
+        <div class="page-head-grid">
+          <div>
+            <p class="eyebrow">Guidelines</p>
+            <h2 class="h2">What the AI<br>checks against.</h2>
+          </div>
+          <p class="page-head-note">
+            Change these and the very next suggestion is judged by the new
+            version. <b>The guidelines are shown to students</b> on the How it
+            works page. The background is only for the AI.
+          </p>
+        </div>
+
+        <form id="rules-form" class="rules-grid">
+          <div class="panel panel-dark">
+            <label for="rules-text" class="field-label">Guidelines <span class="opt">Shown to students</span></label>
+            <p class="hint-d">
+              A heading ending in a colon, then one rule per line starting with
+              "- ". Headings containing "not" show red, "review" amber, anything
+              else green. Only these can make the AI turn an idea down.
+            </p>
+            <textarea id="rules-text" class="code-box" rows="16" maxlength="8000" spellcheck="true"></textarea>
+          </div>
+          <div class="panel panel-dark">
+            <label for="context-text" class="field-label">School background <span class="opt">AI only</span></label>
+            <p class="hint-d">
+              Facts that help the AI judge ideas: facilities, food, transport,
+              how things work here. It flags clashes for you to review, but
+              never turns an idea down on these alone.
+            </p>
+            <textarea id="context-text" class="code-box" rows="16" maxlength="12000" spellcheck="true"></textarea>
+          </div>
+          <div class="rules-foot">
+            <span id="rules-status" class="mono" aria-live="polite"></span>
+            <button id="rules-save" class="btn btn-primary" type="submit">Save guidelines</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <section class="band band-cream-2">
       <div class="wrap">
         <p class="eyebrow">How to review</p>
@@ -123,6 +164,6 @@
     </div>
   </footer>
 
-  <script type="module" src="staff.js?v=5"></script>
+  <script type="module" src="staff.js?v=9"></script>
 </body>
 </html>
