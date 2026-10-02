@@ -23,7 +23,7 @@ from supabase import create_client
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
-MODEL = "gemini-3.6-flash"
+MODEL = "gemini-3.5-flash-lite"  # same first choice as MODELS in the Edge Function
 
 # Mirrors the columns of public.suggestions. The enums keep `spam` and
 # `feasibility` to the exact values the staff review filters expect.

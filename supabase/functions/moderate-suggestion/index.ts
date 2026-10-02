@@ -20,14 +20,17 @@
 // anon key deliberately, not service_role: the write functions are `security
 // definer` and check SUBMIT_SECRET, so nothing here needs RLS-bypassing power.
 
-// Tried in order. Google's flash models regularly return 503 "high demand" at
-// busy times -- on 2026-09-29 every non-lite flash model was down at once while
-// the lite models answered in ~1.5s, so the fallbacks are deliberately from the
-// lite tier, which runs on separate capacity. Each name was confirmed to exist
-// for this API key and to support structured output before being listed here.
+// Tried in order. Flash-Lite leads (decided 2026-10-02): it sorted every case
+// in tests/test_ai.py correctly, costs about a fifth of Flash per idea
+// (~$0.0007 vs ~$0.0067 at 2027 prices), and does no billed "thinking".
+// Flash is the fallback: it runs on separate capacity, which matters because
+// Google's models regularly return 503 "high demand" -- on 2026-09-29 every
+// non-lite flash model was down at once while lite answered in ~1.5s, and
+// the reverse can happen too. Each name was confirmed to exist for this API
+// key and to support structured output before being listed here.
 const MODELS = [
-  "gemini-3.6-flash",
   "gemini-3.5-flash-lite",
+  "gemini-3.6-flash",
   "gemini-flash-lite-latest",
 ];
 

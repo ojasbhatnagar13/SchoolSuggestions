@@ -109,12 +109,19 @@ Notes worth carrying over:
 - **Plan for the model being down, because it will be.** On 2026-09-29 every
   non-lite Gemini flash model returned `503 high demand` at once, while the lite
   models answered in ~1.5s — they run on separate capacity. The function now
-  tries a chain (`3.6-flash` → `3.5-flash-lite` → `flash-lite-latest`) with a
+  tries a chain (`3.5-flash-lite` → `3.6-flash` → `flash-lite-latest`) with a
   10s timeout each, and if all fail it **saves the submission unscreened as
   Needs Review** instead of erroring. A person reviews it; nothing is lost.
   Before this, a busy model meant the student's suggestion was simply gone.
   List the models your key can actually use (`GET /v1beta/models`) rather than
   guessing names: two plausible-looking ones returned 404.
+- **Measure before choosing a model.** One real request here was ~1,660 input
+  tokens (mostly rules and background) and, on Flash, ~550 output tokens of
+  which ~490 were billed "thinking". Flash-Lite does no thinking and came to
+  about a fifth of the cost per idea. Classification is easy work: Flash-Lite
+  passed every case in `tests/test_ai.py`, so it leads the chain. Run the AI
+  tests on one model with no fallback (`AI_TEST_MODEL=...`) before switching
+  -- a pass that came from a fallback model proves nothing about the first.
 
 ---
 

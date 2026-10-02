@@ -5,6 +5,9 @@
     python tests/run_tests.py --ai       everything, plus the AI's verdicts
                                          on sample ideas (uses Gemini quota)
 
+To test one model alone, with no fallback:
+    AI_TEST_MODEL=gemini-3.5-flash-lite python tests/run_tests.py --ai
+
 On Windows use the project's Python:
     backend\\venv\\Scripts\\python.exe tests\\run_tests.py
 

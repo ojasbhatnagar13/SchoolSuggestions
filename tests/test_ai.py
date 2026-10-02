@@ -23,7 +23,7 @@ RUN = os.getenv("RUN_AI_TESTS") == "1"
 SECRET = os.getenv("SUBMIT_SECRET")
 
 # Same order as MODELS in the Edge Function: if one is busy, try the next.
-MODELS = ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-flash-lite-latest"]
+MODELS = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-flash-lite-latest"]
 
 # (suggestion, how it would help, expected status, why)
 CASES = [
@@ -70,15 +70,31 @@ class TestModeration(unittest.TestCase):
             "school_context": res.json.get("school_context") or "(none provided)",
         }
 
+    # Which model answered each case, printed at the end. A pass from a
+    # fallback model says nothing about the main one, so this is worth seeing.
+    answered_by = {}
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.answered_by:
+            print("\n  Answered by:")
+            for idea, model in cls.answered_by.items():
+                print(f"    {model:<26} {idea}")
+
     def analyse(self, text, benefit):
+        # AI_TEST_MODEL=gemini-3.5-flash-lite tests one model with no fallback.
+        models = [os.environ["AI_TEST_MODEL"]] if os.getenv("AI_TEST_MODEL") else MODELS
         errors = []
-        for model in MODELS:
+        for model in models:
             self.main.MODEL = model
-            try:
-                return self.main.analyse_suggestion(self.client, self.rules, text, benefit)
-            except RuntimeError as exc:
-                errors.append(f"{model}: {str(exc)[:120]}")
-                time.sleep(2)  # busy or over quota: give the next model a moment
+            for attempt in range(2):
+                try:
+                    result = self.main.analyse_suggestion(self.client, self.rules, text, benefit)
+                    self.answered_by[text] = model
+                    return result
+                except RuntimeError as exc:
+                    errors.append(f"{model}: {str(exc)[:120]}")
+                    time.sleep(8)  # busy or over the per-minute limit: wait, retry once
         self.skipTest("every model was unavailable -- " + " | ".join(errors))
 
     def test_cases(self):
