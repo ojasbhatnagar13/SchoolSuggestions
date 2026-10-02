@@ -1476,6 +1476,10 @@ textarea.code-box {
 
 /* Good news about the student's own idea, under the nav on any student page. */
 .receipts {
+  /* Lives inside the sticky nav; capped so it never fills a phone screen. */
+  max-height: 55vh;
+  overflow-y: auto;
+  border-top: 1px solid #3E5A3C;
   background: #20301F;
   border-bottom: 1px solid #3E5A3C;
   color: var(--text-d);

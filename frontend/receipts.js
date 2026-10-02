@@ -116,5 +116,9 @@ export async function showReceiptUpdates() {
   head.append(el("p", "eyebrow", updates.length === 1 ? "News about your idea" : "News about your ideas"), ok);
   wrap.append(head, items);
   banner.append(wrap);
-  document.querySelector(".nav")?.after(banner);
+  // Inside the sticky nav, not after it: the banner stays on screen however
+  // far the page is scrolled, until the student dismisses it.
+  const nav = document.querySelector(".nav");
+  if (nav) nav.append(banner);
+  else document.body.prepend(banner);
 }
