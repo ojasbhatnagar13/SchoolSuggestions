@@ -1,7 +1,6 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
-import { newReceipt, rememberReceipt, showReceiptUpdates } from "./receipts.js";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in
@@ -107,7 +106,6 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
 
-    const receipt = newReceipt();
     const res = await fetch(MODERATE_URL, {
       method: "POST",
       headers: {
@@ -115,7 +113,7 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit, receipt }),
+      body: JSON.stringify({ suggestion, benefit }),
     });
     const payload = await res.json();
 
@@ -143,12 +141,6 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
 
-    // A receipt lets this browser hear back about the idea later. Not kept for
-    // wellbeing concerns, which are never reported back on.
-    if (payload.id && !payload.support) {
-      rememberReceipt(receipt, payload.id, suggestion, payload.status);
-    }
-
     // Nothing appears on the Ideas page until staff approve it, so say so
     // either way -- otherwise a student submits, sees nothing new, and
     // assumes it failed. Checked first: a student asking for help must get
@@ -170,8 +162,7 @@ els.form.addEventListener("submit", async (event) => {
       // straight to a person instead of being screened first.
       notice(
         `Sent as #${payload.id}. The automatic check is busy right now, ` +
-        `so a member of staff will read it directly. You'll see a note here ` +
-        `when staff decide.`,
+        `so a member of staff will read it directly.`,
         "ok",
       );
     } else if (payload.status === "spam") {
@@ -191,8 +182,7 @@ els.form.addEventListener("submit", async (event) => {
     } else {
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
-        `It will appear on the Ideas page once staff approve it, and you'll ` +
-        `see a note on this site, on this laptop, when they do.`,
+        `It will appear on the Ideas page once staff approve it.`,
         "ok",
       );
     }
@@ -218,7 +208,6 @@ els.form.addEventListener("submit", async (event) => {
 els.text.addEventListener("input", updateCounter);
 restoreDraft();
 
-showReceiptUpdates();
 
 watchSession((newSession) => {
   session = newSession;

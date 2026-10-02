@@ -1,7 +1,6 @@
 // The Ideas page: approved suggestions, with one vote each, and below them
 // the ones the school has acted on, labelled Done.
 import { sb, el, signIn, watchSession } from "./common.js";
-import { showReceiptUpdates } from "./receipts.js";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
@@ -268,5 +267,4 @@ async function refresh(session) {
   render();
 }
 
-showReceiptUpdates();
 watchSession(refresh);
