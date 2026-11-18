@@ -1522,3 +1522,32 @@ textarea.code-box {
 /* The result sits above the form now (see suggest.html), so it needs space
    below it rather than above. */
 .compose > #result { margin: 0 0 20px; }
+
+/* ------------------------------------------------------------------ going ahead (no vote needed) */
+
+/* A deep teal, distinct from Done (green) and open for votes (orange). */
+.ahead-band { padding: 104px 0 112px; }
+.ahead-badge,
+.pill-accepted {
+  padding: 4px 9px;
+  background: #1F6F78;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.s-card.is-ahead { border-left: 3px solid #4FA8B1; }
+.card.is-accepted { border-left-color: #1F6F78; }
+.sq-ahead { background: #1F6F78; }
+.q-ahead { border-color: #1F6F78; color: #1F6F78; }
+.q-ahead:hover { background: #1F6F78; color: #fff; }
+
+/* Six status cards: three a row on wide screens, then the usual steps down. */
+.six-col { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .six-col { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) {
+  .six-col { grid-template-columns: 1fr; }
+  .ahead-band { padding: 80px 0; }
+}

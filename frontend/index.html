@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DPSI School Suggestions</title>
-  <meta name="description" content="Vote for the student ideas you want at DPS International Edge, or share your own anonymously.">
+  <meta name="description" content="Vote for the student suggestions you want at DPS International Edge, or send your own anonymously.">
   <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
   <header class="nav">
@@ -19,7 +19,7 @@
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
       <nav class="nav-links" aria-label="Pages">
-        <a href="index.html" aria-current="page">Ideas</a>
+        <a href="index.html" aria-current="page">Suggestions</a>
         <a href="suggest.html">Suggest</a>
         <a href="how.html">How it works</a>
       </nav>
@@ -35,17 +35,17 @@
     <section class="band band-dark page-head home-head">
       <div class="wrap page-head-grid">
         <div>
-          <p class="eyebrow">DPS International Edge · Student ideas</p>
-          <h1 class="headline headline-md">Vote for the ideas<br><span class="accent">you want at DPSI.</span></h1>
+          <p class="eyebrow">DPS International Edge · Student suggestions</p>
+          <h1 class="headline headline-md">Vote for the suggestions<br><span class="accent">you want at DPSI.</span></h1>
           <p class="page-head-note home-note">
-            Every idea here was approved by staff. <b>One vote each, which you
+            Every suggestion here was approved by staff. <b>One vote each, which you
             can take back any time.</b> Counts stay private.
           </p>
         </div>
         <a class="suggest-card" href="suggest.html">
-          <span class="eyebrow">Have an idea?</span>
-          <span class="suggest-card-title">Share it anonymously</span>
-          <span class="suggest-card-go">Suggest an idea <span aria-hidden="true">→</span></span>
+          <span class="eyebrow">Have a suggestion?</span>
+          <span class="suggest-card-title">Send it anonymously</span>
+          <span class="suggest-card-go">Make a suggestion <span aria-hidden="true">→</span></span>
         </a>
       </div>
     </section>
@@ -60,12 +60,25 @@
       </div>
     </section>
 
+    <section class="band band-cream-2 ahead-band" id="ahead-section" hidden>
+      <div class="wrap">
+        <div class="done-head">
+          <div>
+            <p class="eyebrow">Going ahead</p>
+            <h2 class="h2">No vote needed.<br>The school is on it.</h2>
+          </div>
+          <p class="mono done-note">Staff approved these straight away</p>
+        </div>
+        <div id="ahead-list" class="board"></div>
+      </div>
+    </section>
+
     <section class="band band-cream done-band" id="done-section" hidden>
       <div class="wrap">
         <div class="done-head">
           <div>
             <p class="eyebrow">Done</p>
-            <h2 class="h2">Ideas the school<br>has acted on.</h2>
+            <h2 class="h2">Suggestions the school<br>has acted on.</h2>
           </div>
           <p class="mono done-note"><span id="done-count"></span> · started as student suggestions</p>
         </div>
@@ -78,7 +91,7 @@
         <h2 class="headline headline-md">Got one of your own?</h2>
         <div class="cta-side">
           <p>It takes a minute and no name is attached.</p>
-          <a class="btn btn-primary" href="suggest.html">Send an idea <span aria-hidden="true">→</span></a>
+          <a class="btn btn-primary" href="suggest.html">Send a suggestion <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </section>
@@ -93,6 +106,6 @@
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=14"></script>
+  <script type="module" src="ideas.js?v=16"></script>
 </body>
 </html>

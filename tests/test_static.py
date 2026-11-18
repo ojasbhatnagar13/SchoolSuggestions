@@ -14,7 +14,7 @@ import unittest
 from helpers import FRONTEND, ROOT, public_config
 
 PAGES = ["index.html", "suggest.html", "how.html", "staff.html"]
-STUDENT_TABS = {"index.html": "Ideas", "suggest.html": "Suggest", "how.html": "How it works"}
+STUDENT_TABS = {"index.html": "Suggestions", "suggest.html": "Suggest", "how.html": "How it works"}
 
 
 def jwt_payload(token: str) -> dict:
@@ -63,6 +63,33 @@ class TestXss(unittest.TestCase):
             code = re.sub(r"//[^\n]*|/\*.*?\*/", "", js.read_text(encoding="utf-8"), flags=re.S)
             for bad in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write"):
                 self.assertNotIn(bad, code, f"{js.name} uses {bad}")
+
+
+class TestWording(unittest.TestCase):
+    """The principal asked for "suggestion", never "idea", everywhere students
+    and staff read. Code names (ideas.js, the ideas.html redirect) don't count."""
+
+    def visible_text(self, text):
+        text = re.sub(r"<script\b.*?</script>|<!--.*?-->", "", text, flags=re.S)
+        text = re.sub(r'(src|href)="[^"]*"', "", text)
+        return text
+
+    def test_pages_say_suggestion(self):
+        for page in PAGES:
+            with self.subTest(page=page):
+                found = re.findall(r"[^\n]*\bideas?\b[^\n]*", self.visible_text(
+                    (FRONTEND / page).read_text(encoding="utf-8")), re.I)
+                self.assertEqual(found, [])
+
+    def test_scripts_say_suggestion(self):
+        """Only quoted strings are checked: comments and variable names are not shown."""
+        for js in FRONTEND.glob("*.js"):
+            code = re.sub(r"//[^\n]*|/\*.*?\*/", "", js.read_text(encoding="utf-8"), flags=re.S)
+            strings = re.findall(r'"([^"\n]*)"|`([^`]*)`', code)
+            shown = [a or b for a, b in strings
+                     if re.search(r"\bideas?\b", a or b, re.I) and "ideas-last-visit" not in (a or b)]
+            with self.subTest(file=js.name):
+                self.assertEqual(shown, [])
 
 
 class TestPages(unittest.TestCase):

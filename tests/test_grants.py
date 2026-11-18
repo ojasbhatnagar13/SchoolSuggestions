@@ -32,7 +32,9 @@ ANON_FUNCTIONS = {
 
 def query(sql: str):
     out = subprocess.run(
-        [NPX, "--yes", "supabase@latest", "db", "query", "--linked", sql],
+        # --read-only: newer CLIs refuse any unflagged query against a hosted
+        # project from an automated run, and these only ever read.
+        [NPX, "--yes", "supabase@latest", "db", "query", "--linked", "--read-only", sql],
         cwd=ROOT, capture_output=True, text=True, timeout=180,
     )
     if out.returncode != 0:
@@ -44,8 +46,14 @@ def query(sql: str):
 class TestGrants(unittest.TestCase):
     def test_tables_and_views(self):
         rows = query(
-            "select table_name, grantee, privilege_type from information_schema.role_table_grants "
-            "where table_schema = 'public' and grantee in ('anon', 'authenticated')"
+            # Straight from the ACLs. In --read-only mode the CLI runs as a
+            # limited role, and information_schema.role_table_grants only lists
+            # grants involving that role, so it would come back empty.
+            "select c.relname as table_name, r.rolname as grantee, a.privilege_type "
+            "from pg_class c join pg_namespace n on n.oid = c.relnamespace "
+            "cross join lateral aclexplode(c.relacl) a join pg_roles r on r.oid = a.grantee "
+            "where n.nspname = 'public' and c.relkind in ('r', 'v') "
+            "and r.rolname in ('anon', 'authenticated')"
         )
         found = {(r["table_name"], r["grantee"], r["privilege_type"]) for r in rows}
         self.assertEqual(found - EXPECTED, set(), "API roles hold privileges they should not")

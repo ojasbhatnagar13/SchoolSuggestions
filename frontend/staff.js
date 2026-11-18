@@ -11,7 +11,8 @@ const els = {
 // the only group that needs someone to act.
 const GROUPS = [
   { key: "pending",  label: "Pending" },
-  { key: "approved", label: "Approved" },
+  { key: "approved", label: "Open for votes" },
+  { key: "accepted", label: "Going ahead" },
   { key: "actioned", label: "Actioned" },
   { key: "rejected", label: "Rejected" },
   { key: "spam",     label: "Spam" },
@@ -26,8 +27,9 @@ const SOURCES = [
 ];
 
 // Rejected and spam are hidden until asked for, so they don't bury the queue.
-const DEFAULT_STATUSES = ["pending", "approved", "actioned"];
-const FILTER_KEY = "staff-filters-v1";
+const DEFAULT_STATUSES = ["pending", "approved", "accepted", "actioned"];
+// v2: "accepted" was added; older saved filters would hide it.
+const FILTER_KEY = "staff-filters-v2";
 
 let session = null;
 let rows = [];
@@ -155,12 +157,13 @@ function card(row) {
   label.append(" ", select);
   foot.append(label);
 
-  // The three decisions a pending suggestion almost always needs, one click
+  // The decisions a pending suggestion almost always needs, one click
   // each. Everything else goes through the menu.
   if (row.status === "pending") {
     const quick = el("div", "quick");
     for (const [key, text, cls] of [
-      ["approved", "Approve", "q-approve"],
+      ["approved", "Approve for voting", "q-approve"],
+      ["accepted", "Go ahead, no vote", "q-ahead"],
       ["rejected", "Reject", "q-reject"],
       ["spam", "Spam", "q-spam"],
     ]) {
@@ -336,7 +339,7 @@ function concernButton(row, outcome, text, cls) {
   b.type = "button";
   b.addEventListener("click", async () => {
     if (outcome === "not_concern" && !confirm(
-      "Move this to the normal queue? Only do this if it is clearly an idea, " +
+      "Move this to the normal queue? Only do this if it is clearly a suggestion, " +
       "not a student asking for help.")) return;
     b.disabled = true;
     const { error } = await sb.rpc("staff_resolve_concern", { p_id: row.id, p_outcome: outcome });
@@ -380,7 +383,7 @@ function renderConcerns() {
     );
     const guide = el("ul", "concerns-guide");
     for (const line of [
-      "This looks like a report of bullying, self-harm, abuse or feeling unsafe, not an idea.",
+      "This looks like a report of bullying, self-harm, abuse or feeling unsafe, not a suggestion.",
       "Pass it to the Head of Pastoral Care today. If anyone may be in danger, follow the safeguarding procedure now.",
       "It is anonymous: the student cannot be identified or contacted from here. Act on what is written (year, place, time).",
       "It is never shown to students and cannot be approved.",

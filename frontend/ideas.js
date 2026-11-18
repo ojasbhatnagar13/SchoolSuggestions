@@ -1,20 +1,29 @@
-// The Ideas page: approved suggestions, with one vote each, and below them
-// the ones the school has acted on, labelled Done.
+// The home page: approved suggestions open for votes, then the ones going
+// ahead without a vote, then the ones the school has acted on (Done).
+// (The file keeps its old name, ideas.js, so cached pages don't break.)
 import { sb, el, signIn, watchSession } from "./common.js";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
+const aheadSection = document.getElementById("ahead-section");
+const aheadList = document.getElementById("ahead-list");
 const doneSection = document.getElementById("done-section");
 const doneList = document.getElementById("done-list");
 const doneCount = document.getElementById("done-count");
+const newNote = document.getElementById("new-note");
 
-// 'actioned' in the database. Students see it as Done.
-const isDone = (idea) => idea.status === "actioned";
+// Statuses in the database, and what students call them:
+//   approved -> open for votes
+//   accepted -> "Going ahead": staff decided it needs no vote
+//   actioned -> "Done"
+const isOpen = (s) => s.status === "approved";
+const isAhead = (s) => s.status === "accepted";
+const isDone = (s) => s.status === "actioned";
 
 // "New since your last visit". The last visit is remembered only in this
 // browser -- nothing about visits is sent anywhere. Read once per page load,
 // so labels stay put while the student is here; the next visit starts fresh.
-const VISIT_KEY = "ideas-last-visit";
+const VISIT_KEY = "ideas-last-visit"; // old name kept so past visits still count
 const lastVisit = (() => {
   try {
     const saved = localStorage.getItem(VISIT_KEY);
@@ -31,26 +40,32 @@ function rememberVisit() {
 }
 
 // On a first visit nothing is "new" -- everything would be, which says nothing.
-const isNew = (idea) =>
-  lastVisit !== null && !isDone(idea) && idea.decided_at && new Date(idea.decided_at) > lastVisit;
-const newNote = document.getElementById("new-note");
+const isNew = (s) =>
+  lastVisit !== null && !isDone(s) && s.decided_at && new Date(s.decided_at) > lastVisit;
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 // Suggestion ids the signed-in student has already voted for, so the UI can
-// disable those buttons instead of waiting for the database to reject a
-// duplicate.
+// show "Voted" without waiting for the database to reject a duplicate.
 let myVotes = new Set();
-let ideas = [];
+let suggestions = [];
 let category = "all";
 
-function card(idea) {
-  const { id, suggestion, benefit, category, summary, created_at } = idea;
-  const done = isDone(idea);
-  const article = el("article", "s-card" + (done ? " is-done" : ""));
+function card(s) {
+  const { id, suggestion, benefit, category, summary, created_at } = s;
+  const article = el("article", "s-card");
 
   const meta = el("div", "s-meta");
   const left = el("span", "s-meta-left");
-  if (done) left.append(el("span", "done-badge", "Done"));
-  if (isNew(idea)) {
+  if (isDone(s)) {
+    left.append(el("span", "done-badge", "Done"));
+    article.classList.add("is-done");
+  }
+  if (isAhead(s)) {
+    left.append(el("span", "ahead-badge", "Going ahead"));
+    article.classList.add("is-ahead");
+  }
+  if (isNew(s)) {
     left.append(el("span", "new-badge", "New"));
     article.classList.add("is-new");
   }
@@ -74,11 +89,14 @@ function card(idea) {
 
   const foot = el("div", "s-foot");
 
-  // A Done idea no longer takes votes (the database refuses them), but a
-  // student who backed it can still take that vote back.
-  if (done) {
+  // Going ahead and Done take no new votes (the database refuses them), but a
+  // student who voted before staff decided can still take that vote back.
+  if (!isOpen(s)) {
     const voted = myVotes.has(id);
-    foot.append(el("span", "mono", voted ? "You backed this" : "The school acted on this"));
+    const line = voted
+      ? "You voted for this"
+      : isDone(s) ? "The school acted on this" : "No vote needed: the school is going ahead";
+    foot.append(el("span", "mono", line));
     if (voted) {
       const btn = el("button", "vote");
       btn.type = "button";
@@ -131,7 +149,7 @@ function showVote(btn, voted) {
   btn.textContent = voted ? "Voted" : "Vote";
   btn.classList.toggle("voted", voted);
   btn.setAttribute("aria-pressed", String(voted));
-  btn.setAttribute("aria-label", voted ? "Remove your vote" : "Vote for this idea");
+  btn.setAttribute("aria-label", voted ? "Remove your vote" : "Vote for this suggestion");
 }
 
 async function toggleVote(id, btn) {
@@ -158,8 +176,8 @@ async function toggleVote(id, btn) {
 
 function renderFilters() {
   const counts = new Map();
-  ideas.forEach((i) => {
-    const c = i.category || "Uncategorised";
+  suggestions.forEach((s) => {
+    const c = s.category || "Uncategorised";
     counts.set(c, (counts.get(c) || 0) + 1);
   });
 
@@ -179,7 +197,7 @@ function renderFilters() {
   };
 
   filterBar.replaceChildren(
-    chip("all", "All", ideas.length),
+    chip("all", "All", suggestions.length),
     ...[...counts.entries()]
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([c, n]) => chip(c, c, n)),
@@ -189,35 +207,39 @@ function renderFilters() {
 function render() {
   renderFilters();
   const shown = category === "all"
-    ? ideas
-    : ideas.filter((i) => (i.category || "Uncategorised") === category);
+    ? suggestions
+    : suggestions.filter((s) => (s.category || "Uncategorised") === category);
+
   // New ones first, so a returning student sees what they haven't voted on
   // yet. Otherwise the order from the database (newest first) is kept.
-  const open = shown.filter((i) => !isDone(i))
-    .sort((a, b) => Number(isNew(b)) - Number(isNew(a)));
+  const byNew = (a, b) => Number(isNew(b)) - Number(isNew(a));
+  const open = shown.filter(isOpen).sort(byNew);
+  const ahead = shown.filter(isAhead).sort(byNew);
   const done = shown.filter(isDone);
 
-  const fresh = ideas.filter(isNew).length;
+  const fresh = suggestions.filter(isNew).length;
   newNote.hidden = !fresh;
-  newNote.textContent = fresh === 1
-    ? "1 new idea since your last visit"
-    : `${fresh} new ideas since your last visit`;
+  newNote.textContent = `${plural(fresh, "new suggestion")} since your last visit`;
 
   list.replaceChildren(...(open.length ? open.map(card) : [boardState({
     title: category === "all"
       ? "Nothing open for votes right now."
       : `Nothing in ${category} is open for votes right now.`,
-    body: "Everything here has already been done, and it's listed below. " +
-      "New ideas appear here once staff approve them.",
+    body: "New suggestions appear here once staff approve them. " +
+      "Anything already going ahead or done is listed below.",
   })]));
+
+  aheadSection.hidden = !ahead.length;
+  aheadList.replaceChildren(...ahead.map(card));
 
   doneSection.hidden = !done.length;
   doneList.replaceChildren(...done.map(card));
-  doneCount.textContent = done.length === 1 ? "1 idea" : `${done.length} ideas`;
+  doneCount.textContent = plural(done.length, "suggestion");
 }
 
 function hideBoard() {
   filterBar.hidden = true;
+  aheadSection.hidden = true;
   doneSection.hidden = true;
   newNote.hidden = true;
 }
@@ -230,11 +252,11 @@ function signedOut() {
   list.replaceChildren(boardState({
     title: "Sign in to see what everyone's suggested.",
     body: "The board stays inside the school instead of being shared around " +
-      "online. The same sign-in lets you send ideas of your own.",
+      "online. The same sign-in lets you send suggestions of your own.",
     action: button,
     points: [
-      "Ideas approved by staff, newest first",
-      "One vote per student per idea",
+      "Suggestions approved by staff, newest first",
+      "One vote per student per suggestion",
       "Vote counts stay private, so nothing snowballs",
     ],
   }));
@@ -283,19 +305,20 @@ async function refresh(session) {
     return;
   }
 
-  ideas = listRes.data ?? [];
-  if (!ideas.length) {
+  suggestions = listRes.data ?? [];
+  if (!suggestions.length) {
     hideBoard();
-    const link = el("a", "btn btn-primary", "Send an idea →");
+    const link = el("a", "btn btn-primary", "Send a suggestion →");
     link.href = "suggest.html";
     list.replaceChildren(boardState({
       title: "Nothing approved yet.",
-      body: "Ideas appear here once a member of staff has read and approved " +
-        "them. Yours could be the first.",
+      body: "Suggestions appear here once a member of staff has read and " +
+        "approved them. Yours could be the first.",
       action: link,
       points: [
-        "Sent ideas wait for staff review",
+        "Sent suggestions wait for staff review",
         "Approved ones appear here, newest first",
+        "Some go ahead straight away, with no vote needed",
         "Ones the school acts on are marked Done",
       ],
     }));

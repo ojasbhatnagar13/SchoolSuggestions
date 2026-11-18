@@ -48,14 +48,14 @@ function updateCounter() {
 }
 
 function idleLabel() {
-  return session ? "Send idea" : "Sign in to send";
+  return session ? "Send suggestion" : "Sign in to send";
 }
 
 function showAccount() {
   if (!busy) els.sendLabel.textContent = idleLabel();
   els.signedAs.textContent = session
-    ? `Sending as a signed-in student. Your name is never attached to the idea.`
-    : `You'll sign in with Google first. Your name is never attached to the idea.`;
+    ? `Sending as a signed-in student. Your name is never attached to the suggestion.`
+    : `You'll sign in with Google first. Your name is never attached to the suggestion.`;
 }
 
 function saveDraft() {
@@ -101,7 +101,7 @@ els.form.addEventListener("submit", async (event) => {
   busy = true;
   els.send.disabled = true;
   els.sendLabel.textContent = "Checking…";
-  notice("Checking your idea against the school guidelines. This usually takes a few seconds.");
+  notice("Checking your suggestion against the school guidelines. This usually takes a few seconds.");
 
   try {
     // getSession() refreshes an expired token, so this is always current.
@@ -148,13 +148,13 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
 
-    // Nothing appears on the Ideas page until staff approve it, so say so
+    // Nothing appears on the home page until staff approve it, so say so
     // either way -- otherwise a student submits, sees nothing new, and
     // assumes it failed. Checked first: a student asking for help must get
     // the help message even when the AI is down.
     if (payload.support) {
-      // Someone reaching out about bullying, safety or wellbeing. Not an idea,
-      // so not "it will appear on the Ideas page".
+      // Someone reaching out about bullying, safety or wellbeing. Not a suggestion,
+      // so not "it will appear on the home page".
       notice(
         `Thank you for telling us. ${payload.reason ?? ""} ` +
         `If you or someone else is in danger right now, tell a teacher or any ` +
@@ -189,7 +189,7 @@ els.form.addEventListener("submit", async (event) => {
     } else {
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
-        `It will appear on the Ideas page once staff approve it.`,
+        `It will appear on the home page once staff approve it.`,
         "ok",
       );
     }

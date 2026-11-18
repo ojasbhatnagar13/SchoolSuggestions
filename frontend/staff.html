@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
   <header class="nav">
@@ -97,16 +97,16 @@
             <p class="hint-d">
               A heading ending in a colon, then one rule per line starting with
               "- ". Headings containing "not" show red, "review" amber, anything
-              else green. Only these can make the AI turn an idea down.
+              else green. Only these can make the AI turn a suggestion down.
             </p>
             <textarea id="rules-text" class="code-box" rows="16" maxlength="8000" spellcheck="true"></textarea>
           </div>
           <div class="panel panel-dark">
             <label for="context-text" class="field-label">School background <span class="opt">AI only</span></label>
             <p class="hint-d">
-              Facts that help the AI judge ideas: facilities, food, transport,
+              Facts that help the AI judge suggestions: facilities, food, transport,
               how things work here. It flags clashes for you to review, but
-              never turns an idea down on these alone.
+              never turns a suggestion down on these alone.
             </p>
             <textarea id="context-text" class="code-box" rows="16" maxlength="12000" spellcheck="true"></textarea>
           </div>
@@ -121,23 +121,27 @@
     <section class="band band-cream-2">
       <div class="wrap">
         <p class="eyebrow">How to review</p>
-        <h2 class="h2">Five states.<br>You can change every one.</h2>
-        <div class="five-col">
+        <h2 class="h2">Six states.<br>You can change every one.</h2>
+        <div class="five-col six-col">
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-neutral" aria-hidden="true"></span>Pending</div>
             <p>Waiting for you. Anything the AI rated Feasible or Needs Review lands here, and it's shown first.</p>
           </div>
           <div class="status-card">
-            <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Approved</div>
-            <p>On the students' Ideas page, where they can back it with one vote each.</p>
+            <div class="rule-head mono"><span class="sq sq-ok" aria-hidden="true"></span>Open for votes</div>
+            <p>On the students' home page, where they can vote for it, one vote each. Use this when you want to see how much support it has.</p>
+          </div>
+          <div class="status-card">
+            <div class="rule-head mono"><span class="sq sq-ahead" aria-hidden="true"></span>Going ahead</div>
+            <p>Approved with no vote needed: a broken tap, a safety fix, anything that should just happen. Students see it, but can't vote on it.</p>
           </div>
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-warn" aria-hidden="true"></span>Actioned</div>
-            <p>The school has acted on it. Students see it on the Ideas page marked Done, so they know suggestions lead somewhere.</p>
+            <p>The school has acted on it. Students see it marked Done, so they know suggestions lead somewhere.</p>
           </div>
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-bad" aria-hidden="true"></span>Rejected</div>
-            <p>A real idea that breaks a guideline. Hidden from students, and from this page unless you tick it.</p>
+            <p>A real suggestion that breaks a guideline. Hidden from students, and from this page unless you tick it.</p>
           </div>
           <div class="status-card">
             <div class="rule-head mono"><span class="sq sq-spam" aria-hidden="true"></span>Spam</div>
@@ -165,6 +169,6 @@
     </div>
   </footer>
 
-  <script type="module" src="staff.js?v=11"></script>
+  <script type="module" src="staff.js?v=16"></script>
 </body>
 </html>
