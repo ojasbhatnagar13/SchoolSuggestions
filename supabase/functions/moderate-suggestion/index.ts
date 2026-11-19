@@ -69,6 +69,10 @@ ${schoolContext || "(none provided)"}
 Only what the school rules list as not allowed can be Not Feasible. Anything
 the rules say needs review (such as policy, timetable or budget-heavy
 changes) is Needs Review, never Not Feasible.
+Read each not-allowed rule narrowly, for what it actually forbids. For
+example, "changing exam requirements" means changing what is assessed or
+how it counts; exam timetables, revision sessions or homework around exams
+do not break it. Mentioning a topic is not the same as breaking a rule.
 
 TOPICS ALREADY IN USE, one per line, for suggestions already sent:
 

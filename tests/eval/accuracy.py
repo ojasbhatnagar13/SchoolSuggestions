@@ -65,6 +65,8 @@ def topic_similarities(groups: dict) -> tuple[list, float | None]:
 
 
 def main() -> int:
+    # Student text can contain emoji; Windows' default cp1252 cannot print them.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, help="only the first N cases")
     parser.add_argument("--only", help="only cases expecting this outcome (pending/rejected/spam/concern)")

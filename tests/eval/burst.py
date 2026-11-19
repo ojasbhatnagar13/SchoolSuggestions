@@ -56,6 +56,8 @@ def pct(values, p):
 
 
 def main() -> int:
+    # Student text can contain emoji; Windows' default cp1252 cannot print them.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--size", type=int, default=30, help="submissions at once (default 30, one class)")
     args = parser.parse_args()
