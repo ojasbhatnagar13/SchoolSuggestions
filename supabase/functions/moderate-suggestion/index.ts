@@ -300,6 +300,7 @@ async function save(
   analysis: Record<string, string | null>,
   concern: boolean,
   receipt: string,
+  author: string,
 ) {
   return await rpc("submit_suggestion", {
     p_secret: SUBMIT_SECRET,
@@ -314,6 +315,9 @@ async function save(
     p_concern: concern,
     // The student's private receipt code. The database keeps only its hash.
     p_receipt: receipt || null,
+    // So the student can follow it under "Your suggestions". From the verified
+    // session only. Never returned to staff (see docs/setup-my-suggestions.sql).
+    p_author: author,
   }) as { id?: number; status: string; duplicate_of?: number; existing?: string };
 }
 
@@ -432,7 +436,7 @@ Deno.serve(async (req) => {
       // With no AI, the word check is all there is, so a match also gets the
       // student the counsellor reply.
       const flagged = mentionsConcern(suggestion, benefit);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, user.id);
       return json({
         id: saved.id,
         status: saved.status,
@@ -452,7 +456,7 @@ Deno.serve(async (req) => {
     // the normal reply while staff check the red section.
     const concern = support || mentionsConcern(suggestion, benefit);
 
-    const saved = await save(suggestion, benefit, analysis, concern, receipt);
+    const saved = await save(suggestion, benefit, analysis, concern, receipt, user.id);
 
     // Nothing was written -- the idea already exists. Send back the original
     // so the student can see it rather than just being told "no".

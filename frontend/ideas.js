@@ -2,6 +2,7 @@
 // ahead without a vote, then the ones the school has acted on (Done).
 // (The file keeps its old name, ideas.js, so cached pages don't break.)
 import { sb, el, signIn, watchSession } from "./common.js";
+import { showUpdates } from "./mine.js";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
@@ -283,6 +284,9 @@ async function refresh(session) {
     }));
     return;
   }
+
+  // News about the student's own suggestions, whatever the board holds.
+  showUpdates(session);
 
   const [votesRes, listRes] = await Promise.all([
     sb.rpc("my_votes"),

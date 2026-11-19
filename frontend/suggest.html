@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -40,7 +40,7 @@
           <p class="eyebrow">DPS International Edge · Suggestion box</p>
           <h1 class="headline">Have a suggestion to improve DPSI? <span class="accent">Send it anonymously.</span></h1>
           <ul class="promise">
-            <li><b>No name.</b> <span>Nothing links a suggestion to you.</span></li>
+            <li><b>Hidden from staff.</b> <span>Staff never see who sent it.</span></li>
             <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
             <li><b>Read by staff.</b> <span>A real person decides.</span></li>
           </ul>
@@ -82,6 +82,16 @@
       </div>
     </section>
 
+    <!-- Shown only to the signed-in student who sent them (mine.js). -->
+    <section class="band band-cream-2 mine-band" id="mine" hidden>
+      <div class="wrap">
+        <p class="eyebrow">Your suggestions</p>
+        <h2 class="h2">Where yours stand.</h2>
+        <p class="section-lede">Only you can see this list. Staff never see who sent a suggestion.</p>
+        <ol class="mine-list"></ol>
+      </div>
+    </section>
+
     <section class="band band-cream next">
       <div class="wrap">
         <p class="eyebrow">What happens next</p>
@@ -89,7 +99,7 @@
           <li>
             <span class="mono n">01</span>
             <b>You send it</b>
-            <span>Sign in, write it, send. No name is attached.</span>
+            <span>Sign in, write it, send. Staff never see who sent it.</span>
           </li>
           <li>
             <span class="mono n">02</span>
@@ -128,6 +138,6 @@
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=16"></script>
+  <script type="module" src="submit.js?v=17"></script>
 </body>
 </html>

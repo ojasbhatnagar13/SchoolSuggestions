@@ -34,7 +34,7 @@ def query(sql: str):
     out = subprocess.run(
         # --read-only: newer CLIs refuse any unflagged query against a hosted
         # project from an automated run, and these only ever read.
-        [NPX, "--yes", "supabase@latest", "db", "query", "--linked", "--read-only", sql],
+        [NPX, "--yes", "supabase@latest", "db", "query", "--remote", "--read-only", sql],
         cwd=ROOT, capture_output=True, text=True, timeout=180,
     )
     if out.returncode != 0:
@@ -75,6 +75,24 @@ class TestGrants(unittest.TestCase):
         )
         extra = {r["proname"] for r in rows} - ANON_FUNCTIONS
         self.assertEqual(extra, set(), "anon can run functions it should not")
+
+    def test_nobody_is_handed_the_sender(self):
+        """Suggestions record their sender so students can follow their own
+        (docs/setup-my-suggestions.sql), but staff must never see it: no view
+        column and no function result may carry author_id."""
+        views = query(
+            "select table_name, column_name from information_schema.columns "
+            "where table_schema = 'public' and column_name like 'author%' "
+            "and table_name <> 'suggestions'"
+        )
+        self.assertEqual(views, [], "a view exposes the sender")
+        outputs = query(
+            "select p.proname, a.name from pg_proc p "
+            "join pg_namespace n on n.oid = p.pronamespace "
+            "cross join lateral unnest(p.proargnames, p.proargmodes) as a(name, mode) "
+            "where n.nspname = 'public' and a.mode in ('o', 't', 'b') and a.name like 'author%'"
+        )
+        self.assertEqual(outputs, [], "a function returns the sender")
 
     def test_definer_functions_pin_search_path(self):
         """A security definer function without a fixed search_path can be hijacked."""

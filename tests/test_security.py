@@ -27,6 +27,8 @@ SIGNED_IN_ONLY = {
     "unvote_suggestion": {"p_id": 1},
     "my_votes": {},
     "board_access_error": {},
+    "my_suggestions": {},
+    "mark_my_suggestions_seen": {"p_ids": [1]},
 }
 
 INTERNAL = {

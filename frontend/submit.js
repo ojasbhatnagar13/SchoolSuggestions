@@ -1,6 +1,7 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
+import { mySuggestions, showUpdates, renderMine } from "./mine.js";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in
@@ -54,8 +55,8 @@ function idleLabel() {
 function showAccount() {
   if (!busy) els.sendLabel.textContent = idleLabel();
   els.signedAs.textContent = session
-    ? `Sending as a signed-in student. Your name is never attached to the suggestion.`
-    : `You'll sign in with Google first. Your name is never attached to the suggestion.`;
+    ? `Sending as a signed-in student. Staff never see who sent it.`
+    : `You'll sign in with Google first. Staff never see who sent it.`;
 }
 
 function saveDraft() {
@@ -194,6 +195,7 @@ els.form.addEventListener("submit", async (event) => {
       );
     }
     clearForm();
+    refreshMine(); // the new one appears in "Your suggestions"
   } catch (err) {
     // fetch() rejects with a bare TypeError for DNS failures, CORS blocks and
     // a function that was never deployed -- "Failed to fetch" means nothing to
@@ -216,7 +218,22 @@ els.text.addEventListener("input", updateCounter);
 restoreDraft();
 
 
+const mineEl = document.getElementById("mine");
+
+// "Your suggestions" and any news about them. Signed out: nothing to show.
+async function refreshMine() {
+  if (!session) {
+    mineEl.hidden = true;
+    showUpdates(null);
+    return;
+  }
+  const rows = await mySuggestions();
+  renderMine(mineEl, rows);
+  showUpdates(session, rows);
+}
+
 watchSession((newSession) => {
   session = newSession;
   showAccount();
+  refreshMine();
 });

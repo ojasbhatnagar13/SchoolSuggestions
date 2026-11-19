@@ -73,9 +73,18 @@ Key points that generalise:
   the function calls the AI.
 - **Hiding UI is not access control.** The staff page checks membership inside
   the database, so calling the RPC directly gets refused just the same.
-- **Separate identity from content.** Submissions carry no author column at all.
-  Votes are attributed, but live in a different table. A vote can never be
-  joined back to who wrote something, because the link does not exist.
+- **Separate identity from content -- and if you can't, hide it.** Originally
+  submissions carried no author column at all, so the link did not exist.
+  In 2026-11 the principal asked for students to be told what happened to
+  their suggestion on any device, which needs the link. So `author_id` now
+  exists, but **nothing staff can call returns it**: not the staff list, not
+  the view. Only `my_suggestions()` reads it, and only for `auth.uid()`.
+  `tests/test_grants.py` fails if any view column or function result ever
+  carries it. The honest description changed with it: anonymous to staff and
+  students, not to database administrators -- so the organisation, not a
+  student, must hold that access. An earlier device-only version (a random
+  receipt in the browser, hashed in the database) kept full anonymity, but
+  students found "how does it know?" more alarming than a plain explanation.
 
 ---
 
