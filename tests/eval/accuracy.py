@@ -68,10 +68,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, help="only the first N cases")
     parser.add_argument("--only", help="only cases expecting this outcome (pending/rejected/spam/concern)")
+    parser.add_argument("--set", choices=["main", "grey", "all"], default="all",
+                        help="main: the original 149; grey: vague, mixed and borderline cases; all: both")
     parser.add_argument("--delay", type=float, default=4.0, help="seconds between requests (default 4)")
     args = parser.parse_args()
 
     cases = json.loads((HERE / "cases.json").read_text(encoding="utf-8"))["cases"]
+    if args.set != "all":
+        cases = [c for c in cases if c.get("set", "main") == args.set]
     if args.only:
         cases = [c for c in cases if args.only in accepted(c)]
     if args.limit:
