@@ -60,6 +60,8 @@ def load_rules() -> dict:
     return {
         "rules": res.json["rules"],
         "school_context": res.json.get("school_context") or "(none provided)",
+        # Callers replace this as they go; see accuracy.py.
+        "topics": "(none yet)",
     }
 
 

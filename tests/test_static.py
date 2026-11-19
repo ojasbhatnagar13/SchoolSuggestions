@@ -182,7 +182,7 @@ class TestPromptsInStep(unittest.TestCase):
         edge = (ROOT / "supabase/functions/moderate-suggestion/index.ts").read_text(encoding="utf-8")
         main = (ROOT / "backend/main.py").read_text(encoding="utf-8")
         ts = re.search(r"return `(You are the moderator.*?)`;", edge, re.S).group(1)
-        ts = ts.replace("${rules}", "{rules}").replace('${schoolContext || "(none provided)"}', "{school_context}")
+        ts = ts.replace("${rules}", "{rules}").replace('${schoolContext || "(none provided)"}', "{school_context}").replace("${existingTopics}", "{topics}")
         py = re.search(r'SYSTEM_INSTRUCTION = """\\\n(.*?)"""', main, re.S).group(1)
         self.assertEqual(ts.strip(), py.strip())
 

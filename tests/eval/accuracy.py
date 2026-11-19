@@ -68,12 +68,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, help="only the first N cases")
     parser.add_argument("--only", help="only cases expecting this outcome (pending/rejected/spam/concern)")
+    parser.add_argument("--groups", action="store_true",
+                        help="only the reworded-duplicate groups (quick duplicate check)")
     parser.add_argument("--set", choices=["main", "grey", "all"], default="all",
                         help="main: the original 149; grey: vague, mixed and borderline cases; all: both")
     parser.add_argument("--delay", type=float, default=4.0, help="seconds between requests (default 4)")
     args = parser.parse_args()
 
     cases = json.loads((HERE / "cases.json").read_text(encoding="utf-8"))["cases"]
+    if args.groups:
+        cases = [c for c in cases if c.get("group")]
     if args.set != "all":
         cases = [c for c in cases if c.get("set", "main") == args.set]
     if args.only:
@@ -86,15 +90,24 @@ def main() -> int:
     client = make_client()
 
     results = []
+    topics_in_use = []  # newest first, like public.live_topics()
     print(f"Running {len(cases)} cases, {args.delay}s apart...\n")
     for i, case in enumerate(cases, 1):
         benefit = case.get("benefit", "")
+        # As on the live site, each submission sees the topics of the live
+        # suggestions before it, so a reworded duplicate can reuse one.
+        rules["topics"] = main_py.format_topics(topics_in_use)
         analysis, model, seconds, errors = moderate(main_py, client, rules, case["text"], benefit, retry_wait=30)
         got = outcome(analysis, case["text"], benefit)
         ok = got in accepted(case)
         results.append({**case, "got": got, "ok": ok, "model": model, "seconds": seconds,
                         "reason": (analysis or {}).get("reason", ""), "topic": (analysis or {}).get("topic"),
                         "errors": errors})
+        # Only suggestions that would stay live are offered for reuse, as in
+        # the database (rejected, spam and concerns are left out).
+        topic = (analysis or {}).get("topic")
+        if got == "pending" and topic and topic not in topics_in_use:
+            topics_in_use.insert(0, topic)
         mark = "ok  " if ok else "MISS"
         print(f"[{i:3}/{len(cases)}] {mark} {got:<10} {case['text'][:70]}")
         time.sleep(args.delay)

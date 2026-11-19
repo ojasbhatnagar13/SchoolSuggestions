@@ -45,6 +45,7 @@ NEEDS_SECRET = {
     },
     "claim_account_slot": {"p_secret": "guess", "p_account_hash": "a" * 64},
     "moderation_config": {"p_secret": "guess"},
+    "live_topics": {"p_secret": "guess"},
 }
 
 
