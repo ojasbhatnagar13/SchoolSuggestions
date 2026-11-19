@@ -136,6 +136,18 @@ function restoreDraft() {
   updateCounter();
 }
 
+// "Complete anonymity": swaps the reassurance for a bold warning, so nobody
+// ticks it without seeing that it means no updates. Deliberately not reset
+// after sending -- it is the student's standing choice for this visit.
+const anonBox = document.getElementById("full-anon");
+const anonDefault = document.getElementById("anon-default");
+const anonWarning = document.getElementById("anon-warning");
+anonBox.addEventListener("change", () => {
+  anonDefault.hidden = anonBox.checked;
+  anonWarning.hidden = !anonBox.checked;
+  anonBox.closest(".anon-choice").classList.toggle("is-on", anonBox.checked);
+});
+
 function clearForm() {
   els.text.value = "";
   els.benefit.value = "";
@@ -160,6 +172,8 @@ els.form.addEventListener("submit", async (event) => {
   els.send.disabled = true;
   els.sendLabel.textContent = "Checking…";
   const stopLoader = startLoader();
+  // Read now: the student could untick it while the check is running.
+  const fullyAnonymous = anonBox.checked;
 
   try {
     // getSession() refreshes an expired token, so this is always current.
@@ -178,7 +192,7 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit }),
+      body: JSON.stringify({ suggestion, benefit, fullyAnonymous }),
     });
     const payload = await res.json();
 
@@ -227,8 +241,10 @@ els.form.addEventListener("submit", async (event) => {
       // once-a-minute run checks it, and "Your suggestions" shows the result.
       notice(
         `Sent as #${payload.id}. Lots of students are sending right now, so ` +
-        `yours is in the queue and will be checked within a few minutes. You ` +
-        `can follow it under "Your suggestions" below.`,
+        `yours is in the queue and will be checked within a few minutes. ` +
+        (fullyAnonymous
+          ? `It was sent with complete anonymity, so check the home page later to see if it's approved.`
+          : `You can follow it under "Your suggestions" below.`),
         "ok",
       );
     } else if (payload.status === "spam") {
@@ -248,7 +264,9 @@ els.form.addEventListener("submit", async (event) => {
     } else {
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
-        `It will appear on the home page once staff approve it.`,
+        (fullyAnonymous
+          ? `It was sent with complete anonymity, so you won't get updates: check the home page to see if it's approved.`
+          : `It will appear on the home page once staff approve it.`),
         "ok",
       );
     }

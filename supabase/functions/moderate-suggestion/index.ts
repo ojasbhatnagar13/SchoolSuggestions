@@ -370,7 +370,7 @@ async function save(
   analysis: Analysis,
   concern: boolean,
   receipt: string,
-  author: string,
+  author: string | null,
   queued = false,
 ) {
   return await rpc("submit_suggestion", {
@@ -497,11 +497,17 @@ Deno.serve(async (req) => {
   let suggestion: string;
   let benefit: string;
   let receipt: string;
+  let fullyAnonymous = false;
   try {
     const body = await req.json();
     suggestion = String(body?.suggestion ?? "").trim();
     benefit = String(body?.benefit ?? "").trim();
     receipt = String(body?.receipt ?? "").trim().slice(0, 64);
+    // "Complete anonymity" ticked: the suggestion is not linked to the
+    // account at all, so nobody, admins included, can trace it -- and the
+    // student gets no updates about it. The rate limit still counts the
+    // account (by salted hash and hour only), so it cannot be used to spam.
+    fullyAnonymous = body?.fullyAnonymous === true;
   } catch {
     return json({ error: "Body must be JSON like {\"suggestion\": \"...\"}" }, 400);
   }
@@ -571,7 +577,7 @@ Deno.serve(async (req) => {
       // With no AI yet, the word check is all there is, so a match goes to
       // the red section now and the student gets the counsellor reply.
       const flagged = mentionsConcern(suggestion, benefit);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, user.id, true);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, fullyAnonymous ? null : user.id, true);
       return json({
         id: saved.id,
         status: saved.status,
@@ -592,7 +598,7 @@ Deno.serve(async (req) => {
     // the normal reply while staff check the red section.
     const concern = support || mentionsConcern(suggestion, benefit);
 
-    const saved = await save(suggestion, benefit, analysis, concern, receipt, user.id);
+    const saved = await save(suggestion, benefit, analysis, concern, receipt, fullyAnonymous ? null : user.id);
 
     // Nothing was written -- the idea already exists. Send back the original
     // so the student can see it rather than just being told "no".
