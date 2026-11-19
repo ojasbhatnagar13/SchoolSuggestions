@@ -39,6 +39,63 @@ function notice(message, kind = "info") {
   }
 }
 
+// What the student watches while the AI checks: an animated ring, the step
+// it is on, and a bar that fills over the ~15 seconds the server will wait
+// before queueing. Purely for show -- the steps advance on a timer, not on
+// real progress -- but it tells the truth about what is happening, and
+// explains a longer wait instead of leaving a frozen screen.
+const LOADER_STEPS = [
+  "Reading your suggestion",
+  "Checking it against the school guidelines",
+  "Looking for anyone who suggested the same thing",
+  "Getting it ready for staff",
+];
+
+function startLoader() {
+  const box = els.result;
+  box.className = "notice loader";
+  box.hidden = false;
+
+  const orbit = document.createElement("div");
+  orbit.className = "loader-orbit";
+  orbit.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 3; i++) orbit.append(document.createElement("span"));
+
+  const body = document.createElement("div");
+  body.className = "loader-body";
+  const step = document.createElement("p");
+  step.className = "loader-step";
+  const bar = document.createElement("div");
+  bar.className = "loader-bar";
+  const fill = document.createElement("i");
+  bar.append(fill);
+  const hint = document.createElement("p");
+  hint.className = "loader-hint mono";
+  body.append(step, bar, hint);
+  box.replaceChildren(orbit, body);
+
+  let i = 0;
+  const show = () => {
+    step.textContent = LOADER_STEPS[Math.min(i, LOADER_STEPS.length - 1)] + "…";
+    step.classList.remove("in");
+    void step.offsetWidth; // restart the fade-in
+    step.classList.add("in");
+  };
+  show();
+  requestAnimationFrame(() => fill.classList.add("go"));
+
+  const timers = [
+    setInterval(() => { i += 1; if (i < LOADER_STEPS.length) show(); }, 2200),
+    setTimeout(() => {
+      hint.textContent = "Lots of students are sending right now. Hang tight, you're in line.";
+    }, 8000),
+    setTimeout(() => {
+      hint.textContent = "Nearly there. If it's still busy, we'll queue it so you don't have to wait.";
+    }, 13000),
+  ];
+  return () => timers.forEach((t) => { clearInterval(t); clearTimeout(t); });
+}
+
 // Counts down, so the number people watch is the one that matters: how much
 // room is left. Only turns warning-coloured near the limit.
 function updateCounter() {
@@ -102,7 +159,7 @@ els.form.addEventListener("submit", async (event) => {
   busy = true;
   els.send.disabled = true;
   els.sendLabel.textContent = "Checking…";
-  notice("Checking your suggestion against the school guidelines. This usually takes a few seconds.");
+  const stopLoader = startLoader();
 
   try {
     // getSession() refreshes an expired token, so this is always current.
@@ -165,12 +222,13 @@ els.form.addEventListener("submit", async (event) => {
         `cannot reply to you. It will not be shown to other students.`,
         "warn",
       );
-    } else if (payload.unchecked) {
-      // Every AI model was busy. The suggestion was still saved -- it goes
-      // straight to a person instead of being screened first.
+    } else if (payload.queued || payload.unchecked) {
+      // Every AI model stayed busy past the wait. It is saved and queued; the
+      // once-a-minute run checks it, and "Your suggestions" shows the result.
       notice(
-        `Sent as #${payload.id}. The automatic check is busy right now, ` +
-        `so a member of staff will read it directly.`,
+        `Sent as #${payload.id}. Lots of students are sending right now, so ` +
+        `yours is in the queue and will be checked within a few minutes. You ` +
+        `can follow it under "Your suggestions" below.`,
         "ok",
       );
     } else if (payload.status === "spam") {
@@ -208,6 +266,7 @@ els.form.addEventListener("submit", async (event) => {
       "error",
     );
   } finally {
+    stopLoader();
     busy = false;
     els.send.disabled = false;
     els.sendLabel.textContent = idleLabel();

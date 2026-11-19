@@ -27,6 +27,8 @@ EXPECTED = {("public_suggestions", "authenticated", "SELECT")}
 ANON_FUNCTIONS = {
     "auto_status", "public_rules", "submit_suggestion", "claim_account_slot",
     "moderation_config", "live_topics",
+    # the AI queue (docs/setup-ai-queue.sql); all demand the server secret
+    "queued_suggestions", "apply_ai_check", "queue_attempt_failed",
 }
 
 

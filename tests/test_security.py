@@ -46,6 +46,11 @@ NEEDS_SECRET = {
     "claim_account_slot": {"p_secret": "guess", "p_account_hash": "a" * 64},
     "moderation_config": {"p_secret": "guess"},
     "live_topics": {"p_secret": "guess"},
+    "queued_suggestions": {"p_secret": "guess", "p_limit": 5},
+    "queue_attempt_failed": {"p_secret": "guess", "p_id": 1},
+    "apply_ai_check": {"p_secret": "guess", "p_id": 1, "p_spam": "No", "p_feasibility": "Feasible",
+                       "p_category": "x", "p_reason": "x", "p_summary": "x", "p_topic": "x",
+                       "p_flags": [], "p_concern": False},
 }
 
 
@@ -114,6 +119,20 @@ class TestEdgeFunction(unittest.TestCase):
     def test_cors_preflight(self):
         res = request("OPTIONS", f"{public_config()['url']}/functions/v1/moderate-suggestion")
         self.assertEqual(res.status, 200, res)
+
+    def test_queue_run_needs_the_server_secret(self):
+        """Only pg_cron, holding the secret, may trigger a queue run."""
+        url = f"{public_config()['url']}/functions/v1/moderate-suggestion"
+        import json, urllib.request, urllib.error
+        cfg = public_config()
+        req = urllib.request.Request(url, data=b'{"queue": true}', method="POST", headers={
+            "apikey": cfg["key"], "Authorization": f"Bearer {cfg['key']}",
+            "Content-Type": "application/json", "x-queue-secret": "guess"})
+        try:
+            status = urllib.request.urlopen(req, timeout=30).status
+        except urllib.error.HTTPError as err:
+            status = err.code
+        self.assertEqual(status, 403)
 
     def test_rewording_is_staff_only(self):
         """The rephrase function spends AI quota, so nobody but staff may use it."""

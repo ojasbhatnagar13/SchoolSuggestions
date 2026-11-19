@@ -262,6 +262,26 @@ async function moderate(instruction: string, submission: string, apiKey: string)
   throw new ModerationUnavailable(failures.join(" | "));
 }
 
+// How long a student waits for a check before their suggestion is queued
+// instead. Busy spells on the free tier usually clear within seconds, and the
+// page shows a progress animation meanwhile.
+const PATIENCE_MS = 15_000;
+
+async function moderatePatiently(instruction: string, submission: string, apiKey: string) {
+  const started = Date.now();
+  let pause = 1500;
+  for (;;) {
+    try {
+      return await moderate(instruction, submission, apiKey);
+    } catch (err) {
+      if (!(err instanceof ModerationUnavailable)) throw err;
+      if (Date.now() - started + pause > PATIENCE_MS) throw err;
+      await new Promise((r) => setTimeout(r, pause));
+      pause = Math.min(pause * 2, 5000);
+    }
+  }
+}
+
 // What gets stored when no model could screen the suggestion. It lands in the
 // staff queue as Needs Review rather than being auto-sorted, and the reason
 // says plainly that nothing checked it. No topic, so it skips duplicate
@@ -271,8 +291,8 @@ function uncheckedAnalysis(suggestion: string): Analysis {
     spam: "No",
     feasibility: "Needs Review",
     category: "Unsorted",
-    reason: "The automatic check was unavailable when this was submitted, " +
-      "so it has not been screened. Please review it manually.",
+    reason: "Waiting in the queue for the automatic check. It will be checked " +
+      "within a few minutes; if it never is, it has not been screened -- review it manually.",
     summary: suggestion.length > 200 ? suggestion.slice(0, 197) + "..." : suggestion,
     topic: null,
     flags: [],
@@ -351,6 +371,7 @@ async function save(
   concern: boolean,
   receipt: string,
   author: string,
+  queued = false,
 ) {
   return await rpc("submit_suggestion", {
     p_secret: SUBMIT_SECRET,
@@ -369,7 +390,52 @@ async function save(
     // session only. Never returned to staff (see docs/setup-my-suggestions.sql).
     p_author: author,
     p_flags: Array.isArray(analysis.flags) ? analysis.flags : [],
+    // No AI check yet: the once-a-minute queue run will do it
+    // (docs/setup-ai-queue.sql).
+    p_queued: queued,
   }) as { id?: number; status: string; duplicate_of?: number; existing?: string };
+}
+
+// Called once a minute by pg_cron while anything is queued. Checks the oldest
+// few, stopping early if the models are still busy, so the queue drains as
+// fast as the AI allows without burning attempts.
+async function processQueue(apiKey: string) {
+  const [config, topics, queued] = await Promise.all([
+    rpc("moderation_config", { p_secret: SUBMIT_SECRET }) as Promise<{ rules: string; school_context: string }>,
+    (rpc("live_topics", { p_secret: SUBMIT_SECRET }) as Promise<string[]>).catch(() => []),
+    rpc("queued_suggestions", { p_secret: SUBMIT_SECRET, p_limit: 5 }) as Promise<
+      { id: number; suggestion: string; benefit: string | null }[]
+    >,
+  ]);
+  const instruction = systemInstruction(config.rules, config.school_context, topics ?? []);
+
+  const done: unknown[] = [];
+  for (const item of queued ?? []) {
+    let analysis: Analysis;
+    try {
+      analysis = await moderate(instruction, submissionText(item.suggestion, item.benefit ?? ""), apiKey);
+    } catch (err) {
+      if (!(err instanceof ModerationUnavailable)) throw err;
+      await rpc("queue_attempt_failed", { p_secret: SUBMIT_SECRET, p_id: item.id });
+      break; // still busy: try again next minute
+    }
+    const concern = (analysis.reason ?? "").startsWith("This sounds like a personal concern") ||
+      (Array.isArray(analysis.flags) && analysis.flags.includes("hidden_concern")) ||
+      mentionsConcern(item.suggestion, item.benefit ?? "");
+    done.push(await rpc("apply_ai_check", {
+      p_secret: SUBMIT_SECRET,
+      p_id: item.id,
+      p_spam: analysis.spam,
+      p_feasibility: analysis.feasibility,
+      p_category: analysis.category,
+      p_reason: analysis.reason,
+      p_summary: analysis.summary,
+      p_topic: analysis.topic,
+      p_flags: Array.isArray(analysis.flags) ? analysis.flags : [],
+      p_concern: concern,
+    }));
+  }
+  return { checked: done.length, waiting: (queued ?? []).length - done.length, results: done };
 }
 
 // What the student is told when they seem to be reporting a problem rather
@@ -408,6 +474,19 @@ Deno.serve(async (req) => {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey || !SUBMIT_SECRET) {
     return json({ error: "The suggestion box is not fully set up (missing a server secret)." }, 500);
+  }
+
+  // The once-a-minute queue run from pg_cron, identified by the server secret
+  // (never sent to a browser) rather than a student's session.
+  const queueSecret = req.headers.get("x-queue-secret");
+  if (queueSecret !== null) {
+    if (queueSecret !== SUBMIT_SECRET) return json({ error: "Not allowed" }, 403);
+    try {
+      return json(await processQueue(apiKey));
+    } catch (err) {
+      console.error("queue run failed:", err);
+      return json({ error: (err as Error).message }, 502);
+    }
   }
 
   const user = await currentUser(req);
@@ -483,21 +562,21 @@ Deno.serve(async (req) => {
 
     let analysis: Analysis;
     try {
-      analysis = await moderate(instruction, submissionText(suggestion, benefit), apiKey);
+      analysis = await moderatePatiently(instruction, submissionText(suggestion, benefit), apiKey);
     } catch (err) {
       if (!(err instanceof ModerationUnavailable)) throw err;
-      // Every model is down. Save it for a person to screen rather than
-      // telling the student to try again later -- most never would.
-      console.error("all moderation models unavailable:", err.message);
-      // With no AI, the word check is all there is, so a match also gets the
-      // student the counsellor reply.
+      // Still busy after waiting: queue it for the once-a-minute run rather
+      // than asking the student to try again -- most never would.
+      console.warn("models busy, queued:", err.message);
+      // With no AI yet, the word check is all there is, so a match goes to
+      // the red section now and the student gets the counsellor reply.
       const flagged = mentionsConcern(suggestion, benefit);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, user.id);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, user.id, true);
       return json({
         id: saved.id,
         status: saved.status,
         category: "Unsorted",
-        unchecked: true,
+        queued: true,
         reason: flagged ? SUPPORT_REASON : undefined,
         support: flagged || undefined,
       });

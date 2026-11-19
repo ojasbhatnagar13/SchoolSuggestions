@@ -118,6 +118,7 @@ function decisionText(row) {
 // Set by the AI when a suggestion arrives (docs/setup-flags-reword.sql).
 // Each has its own colour (style.css, .flag-*) and a plain instruction.
 const FLAGS = {
+  queued: ["Waiting for AI check", "Queued because the AI was busy. It will be checked within a few minutes, or you can decide now."],
   hidden_concern: ["Hidden concern", "Also reports harm or feeling unsafe. It is in the red section at the top: pass it to pastoral care."],
   rude: ["Rude wording", "A real point, phrased with insults or disrespect. Reword it before students see it."],
   names_person: ["Names someone", "Mentions a specific teacher or student. Reword to take the name out before students see it."],
@@ -270,7 +271,7 @@ function card(row) {
   );
 
   article.append(head);
-  const warnings = warningBox(row.flags);
+  const warnings = warningBox(row.ai_status === "queued" ? [...(row.flags ?? []), "queued"] : row.flags);
   if (warnings) article.append(warnings);
 
   // The wording students will see. Swapped for an editor by "Reword".

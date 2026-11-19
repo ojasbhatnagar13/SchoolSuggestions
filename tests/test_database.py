@@ -58,7 +58,14 @@ class TestRateLimit(unittest.TestCase):
 @needs_secret
 class TestDuplicates(unittest.TestCase):
     def test_same_idea_in_other_words_is_caught_without_writing(self):
-        topic = os.getenv("DUPLICATE_PROBE_TOPIC", "school food quality")
+        # Probe with a topic that is live RIGHT NOW, so a match is certain and
+        # nothing is written. With no live suggestions there is nothing safe
+        # to probe with -- skip rather than write a row (which happened once,
+        # 2026-11-19, after the database was cleared).
+        live = rpc("live_topics", {"p_secret": SECRET})
+        if live.status != 200 or not live.json:
+            self.skipTest("no live suggestions to match against")
+        topic = live.json[0]
         res = rpc("submit_suggestion", {
             "p_secret": SECRET,
             "p_suggestion": "[automated test] the canteen food should be better",
@@ -70,8 +77,8 @@ class TestDuplicates(unittest.TestCase):
         if res.json.get("status") != "duplicate":
             self.fail(
                 f"Expected a duplicate but a row was written (id {res.json.get('id')}). "
-                f"No live idea matches '{topic}' any more: reject that test row on the "
-                f"staff page and set DUPLICATE_PROBE_TOPIC to an existing idea's topic."
+                f"Topic {topic!r} was live a moment ago but no longer matched: reject that "
+                f"test row on the staff page."
             )
 
 

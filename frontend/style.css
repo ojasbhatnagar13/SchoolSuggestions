@@ -1725,3 +1725,66 @@ textarea.code-box {
 @media (max-width: 600px) {
   .warning { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* ------------------------------------------------------------------ checking animation (Suggest page) */
+
+.notice.loader {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-left-color: var(--accent);
+}
+.notice.loader::after { display: none; } /* replaces the old sweeping line */
+
+/* Three dots chasing round a ring, in the site's orange. */
+.loader-orbit {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--line-d);
+  animation: orbit-spin 1.6s linear infinite;
+}
+.loader-orbit span {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform-origin: 4.5px 26px;
+}
+.loader-orbit span:nth-child(2) { transform: rotate(120deg); opacity: 0.6; }
+.loader-orbit span:nth-child(3) { transform: rotate(240deg); opacity: 0.3; }
+@keyframes orbit-spin { to { transform: rotate(360deg); } }
+
+.loader-body { flex: 1; min-width: 0; }
+.loader-step { margin: 0; font-weight: 600; }
+.loader-step.in { animation: step-in 400ms ease both; }
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Fills to 92% over the ~15 seconds the server waits, never quite finishing
+   until the answer arrives. */
+.loader-bar {
+  height: 4px;
+  margin-top: 10px;
+  background: var(--line-d);
+  overflow: hidden;
+}
+.loader-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  transition: width 15s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.loader-bar i.go { width: 92%; }
+.loader-hint { margin: 8px 0 0; color: var(--faint-d); }
+.loader-hint:empty { display: none; }
+.flag-queued          { color: #64748B; }
