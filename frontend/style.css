@@ -1637,3 +1637,27 @@ textarea.code-box {
   .mine-row { grid-template-columns: 1fr auto; gap: 8px 12px; }
   .mine-text { grid-column: 1 / -1; }
 }
+
+/* ------------------------------------------------------------------ plain-words write-up (How it works) */
+
+.writeup { padding: 96px 0; }
+.writeup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 72px;
+  align-items: start;
+}
+.writeup-grid > div:first-child { position: sticky; top: calc(var(--nav-h) + 32px); }
+.writeup-for { margin: 20px 0 0; color: var(--muted-l); text-transform: uppercase; }
+.writeup-body { max-width: 640px; }
+.writeup-body .h3 { margin: 32px 0 8px; }
+.writeup-body .h3:first-child { margin-top: 0; }
+.writeup-body p { margin: 0 0 12px; font-size: 17.5px; line-height: 1.65; color: #3E3C37; }
+
+@media (max-width: 900px) {
+  .writeup-grid { grid-template-columns: 1fr; gap: 32px; }
+  .writeup-grid > div:first-child { position: static; }
+}
+@media (max-width: 600px) {
+  .writeup { padding: 64px 0; }
+}
