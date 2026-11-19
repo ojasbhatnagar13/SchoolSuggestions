@@ -143,6 +143,8 @@ from public.app_config;
 --      where email = 'your-personal@gmail.com'
 --      on conflict (user_id) do nothing;
 --
--- 4. Afterwards, remove the demo account from staff:
+-- 4. (Superseded 2026-11-19: the owner account keeps staff and full access
+--    permanently -- see docs/setup-owner-access.sql. Only remove OTHER demo
+--    accounts.) To remove a demo account from staff:
 --      delete from public.staff s using auth.users u
 --      where s.user_id = u.id and u.email = 'your-personal@gmail.com';
