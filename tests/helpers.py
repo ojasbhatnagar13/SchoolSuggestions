@@ -81,8 +81,8 @@ def table(name: str) -> Response:
     return request("GET", f"{public_config()['url']}/rest/v1/{name}?select=*&limit=1")
 
 
-def edge(body: dict, token: str | None = None) -> Response:
-    return request("POST", f"{public_config()['url']}/functions/v1/moderate-suggestion", body, token)
+def edge(body: dict, token: str | None = None, function: str = "moderate-suggestion") -> Response:
+    return request("POST", f"{public_config()['url']}/functions/v1/{function}", body, token)
 
 
 def is_refused(res: Response) -> bool:

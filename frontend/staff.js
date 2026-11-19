@@ -1,4 +1,9 @@
 import { sb, el, signIn, watchSession } from "./common.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+
+// Built here rather than added to config.js: browsers can hold an old cached
+// config.js after an update, and a missing export would break the whole page.
+const REPHRASE_URL = `${SUPABASE_URL}/functions/v1/rephrase-suggestion`;
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -108,6 +113,143 @@ function decisionText(row) {
 
 // ------------------------------------------------------------------ cards
 
+// ------------------------------------------------------------------ wording warnings
+
+// Set by the AI when a suggestion arrives (docs/setup-flags-reword.sql).
+// Each has its own colour (style.css, .flag-*) and a plain instruction.
+const FLAGS = {
+  hidden_concern: ["Hidden concern", "Also reports harm or feeling unsafe. It is in the red section at the top: pass it to pastoral care."],
+  rude: ["Rude wording", "A real point, phrased with insults or disrespect. Reword it before students see it."],
+  names_person: ["Names someone", "Mentions a specific teacher or student. Reword to take the name out before students see it."],
+  sarcastic: ["Sarcastic", "Mocking or sarcastic wording. Reword it into a plain request."],
+  no_suggestion: ["No suggestion", "Describes a problem but asks for nothing. Reword it into a request, or reject it."],
+  unclear: ["Unclear", "Hard to tell what is being asked for."],
+  several_requests: ["Several requests", "Asks for more than one thing. You may want to reword it to one."],
+};
+// These mean students should not see the wording as it stands.
+const NEEDS_REWORD = ["rude", "names_person", "sarcastic"];
+
+function warningBox(flags) {
+  const known = (flags ?? []).filter((f) => FLAGS[f]);
+  if (!known.length) return null;
+  const box = el("ul", "warnings");
+  for (const f of Object.keys(FLAGS).filter((k) => known.includes(k))) {
+    const li = el("li", `warning flag-${f}`);
+    li.append(el("span", "flag", FLAGS[f][0]), el("span", "warning-text", FLAGS[f][1]));
+    box.append(li);
+  }
+  return box;
+}
+
+// ------------------------------------------------------------------ rewording
+
+function originalBox(row) {
+  const details = el("details", "original");
+  const when = row.reworded_at ? ` · ${new Date(row.reworded_at).toLocaleDateString()}` : "";
+  details.append(el("summary", null, `Reworded by ${row.reworder || "staff"}${when}. Show the student's original`));
+  details.append(el("p", "original-text", row.original_suggestion));
+  if (row.original_benefit) details.append(el("p", "original-text", `How it helps: ${row.original_benefit}`));
+  const restore = el("button", "qbtn", "Restore the original");
+  restore.type = "button";
+  restore.addEventListener("click", async () => {
+    if (!confirm("Put the student's original wording back? Students will see it as they wrote it.")) return;
+    restore.disabled = true;
+    const { error } = await sb.rpc("staff_restore_original", { p_id: row.id });
+    if (error) {
+      restore.disabled = false;
+      return toast(error.message, null, true);
+    }
+    await load();
+    toast(`#${row.id} is back to the student's original wording.`);
+  });
+  details.append(restore);
+  return details;
+}
+
+// Swaps the wording on a card for an editor. "Ask AI" drafts a respectful
+// version of both boxes; the teacher can edit it, and nothing is saved until
+// they press Save.
+function openRewordEditor(row, words) {
+  if (words.querySelector(".reword")) return;
+  const shown = [...words.children];
+  shown.forEach((n) => (n.hidden = true));
+
+  const editor = el("div", "reword");
+  const textLabel = el("label", "field-label-l", "Suggestion, as students will see it");
+  const text = el("textarea");
+  text.rows = 3;
+  text.maxLength = 2000;
+  text.value = row.suggestion;
+  const benefitLabel = el("label", "field-label-l", "How it helps");
+  const benefit = el("textarea");
+  benefit.rows = 2;
+  benefit.maxLength = 1000;
+  benefit.value = row.benefit ?? "";
+  textLabel.append(text);
+  benefitLabel.append(benefit);
+
+  const status = el("p", "reword-status mono");
+  const ask = el("button", "qbtn q-ai", "Ask AI to rephrase");
+  const save = el("button", "qbtn q-approve", "Save wording");
+  const cancel = el("button", "qbtn", "Cancel");
+  [ask, save, cancel].forEach((b) => (b.type = "button"));
+
+  ask.addEventListener("click", async () => {
+    ask.disabled = true;
+    status.textContent = "Asking the AI…";
+    const { data } = await sb.auth.getSession();
+    try {
+      const res = await fetch(REPHRASE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${data.session?.access_token}`,
+        },
+        // Always from the student's own words, so asking twice never drifts.
+        body: JSON.stringify({
+          suggestion: row.original_suggestion ?? row.suggestion,
+          benefit: row.original_suggestion ? row.original_benefit ?? "" : row.benefit ?? "",
+        }),
+      });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || `Request failed (${res.status})`);
+      text.value = out.suggestion;
+      benefit.value = out.benefit;
+      status.textContent = "Draft ready. Check it says what the student meant, edit if needed, then save.";
+    } catch (err) {
+      status.textContent = err.message;
+    } finally {
+      ask.disabled = false;
+    }
+  });
+
+  save.addEventListener("click", async () => {
+    save.disabled = true;
+    const { error } = await sb.rpc("staff_reword", {
+      p_id: row.id, p_suggestion: text.value, p_benefit: benefit.value,
+    });
+    if (error) {
+      save.disabled = false;
+      status.textContent = error.message;
+      return;
+    }
+    await load();
+    toast(`#${row.id} reworded. Students will see the new wording.`);
+  });
+
+  cancel.addEventListener("click", () => {
+    editor.remove();
+    shown.forEach((n) => (n.hidden = false));
+  });
+
+  const buttons = el("div", "quick");
+  buttons.append(ask, save, cancel);
+  editor.append(textLabel, benefitLabel, buttons, status);
+  words.append(editor);
+  text.focus();
+}
+
 // Suggestion text, the student's explanation and the AI's reason are all
 // untrusted input -- a student can put anything in them, and the model
 // echoes parts back. el() only ever uses textContent.
@@ -127,13 +269,20 @@ function card(row) {
     el("span", "hint", `#${row.id} · ${row.votes ?? 0} votes · ${new Date(row.created_at).toLocaleDateString()}`),
   );
 
-  article.append(head, el("p", "body", row.suggestion));
+  article.append(head);
+  const warnings = warningBox(row.flags);
+  if (warnings) article.append(warnings);
 
+  // The wording students will see. Swapped for an editor by "Reword".
+  const words = el("div", "words");
+  words.append(el("p", "body", row.suggestion));
   if (row.benefit) {
     const why = el("p", "why");
     why.append(el("span", "mono", "Why it helps"), el("span", null, row.benefit));
-    article.append(why);
+    words.append(why);
   }
+  if (row.original_suggestion) words.append(originalBox(row));
+  article.append(words);
 
   const ai = el("div", `ai-box ai-${aiVerdict(row).toLowerCase().replace(/\s+/g, "-")}`);
   ai.append(el("span", "mono", `AI verdict · ${aiVerdict(row)}`));
@@ -155,7 +304,12 @@ function card(row) {
   }
   select.addEventListener("change", () => setStatus(row, select.value, select));
   label.append(" ", select);
-  foot.append(label);
+  const reword = el("button", "qbtn q-reword", row.original_suggestion ? "Reword again" : "Reword");
+  reword.type = "button";
+  reword.addEventListener("click", () => openRewordEditor(row, words));
+  const left = el("div", "foot-left");
+  left.append(label, reword);
+  foot.append(left);
 
   // The decisions a pending suggestion almost always needs, one click
   // each. Everything else goes through the menu.
@@ -202,6 +356,19 @@ function toast(message, undo = null, isError = false) {
 
 async function setStatus(row, wanted, control) {
   if (wanted === row.status) return;
+
+  // Showing a rude, sarcastic or name-calling suggestion to students as the
+  // student wrote it is almost always a slip. Ask first.
+  const risky = (row.flags ?? []).filter((f) => NEEDS_REWORD.includes(f));
+  if (["approved", "accepted", "actioned"].includes(wanted) && risky.length && !row.original_suggestion) {
+    const what = risky.map((f) => FLAGS[f][0].toLowerCase()).join(" and ");
+    if (!confirm(`This suggestion was flagged for ${what}. Students will see it exactly as written. ` +
+        `Press Cancel to reword it first, or OK to show it anyway.`)) {
+      render(); // puts the menu back
+      return;
+    }
+  }
+
   const previous = row.status;
   control.disabled = true;
 

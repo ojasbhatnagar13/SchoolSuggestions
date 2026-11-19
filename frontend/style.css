@@ -1661,3 +1661,67 @@ textarea.code-box {
 @media (max-width: 600px) {
   .writeup { padding: 64px 0; }
 }
+
+/* ------------------------------------------------------------------ wording warnings + reword (staff) */
+
+/* One colour per kind of warning, so a teacher can scan a column of cards. */
+.warnings { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.warning {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 10px;
+  border-left: 3px solid currentColor;
+  background: color-mix(in srgb, currentColor 7%, white);
+  font-size: 14px;
+}
+.warning .flag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.warning-text { color: var(--text-l); }
+.flag-hidden_concern  { color: #B23B26; }
+.flag-rude            { color: #C2410C; }
+.flag-names_person    { color: #0F766E; }
+.flag-sarcastic       { color: #7E22CE; }
+.flag-no_suggestion   { color: #A16207; }
+.flag-unclear         { color: #475569; }
+.flag-several_requests { color: #1D4ED8; }
+
+.words { display: grid; gap: 12px; }
+.foot-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.q-reword { border-color: var(--line-l2); }
+.q-reword:hover { border-color: var(--text-l); }
+.q-ai { border-color: #7E22CE; color: #7E22CE; }
+.q-ai:hover { background: #7E22CE; color: #fff; }
+
+.original {
+  padding: 10px 12px;
+  background: var(--cream-2);
+  border: 1px dashed var(--line-l2);
+  font-size: 14px;
+}
+.original summary { cursor: pointer; color: var(--muted-l); }
+.original-text { margin: 8px 0 0; color: var(--text-l); overflow-wrap: anywhere; }
+.original .qbtn { margin-top: 10px; }
+
+.reword { display: grid; gap: 12px; padding: 14px; background: var(--cream-2); border: 1px solid var(--line-l); }
+.field-label-l { display: grid; gap: 6px; font-size: 14px; font-weight: 600; color: var(--text-l); }
+.reword textarea {
+  min-height: 0;
+  background: var(--paper);
+  color: var(--text-l);
+  border-color: var(--line-l2);
+  font-size: 16px;
+}
+.reword-status { margin: 0; color: var(--muted-l); }
+.reword-status:empty { display: none; }
+
+@media (max-width: 600px) {
+  .warning { grid-template-columns: 1fr; gap: 2px; }
+}

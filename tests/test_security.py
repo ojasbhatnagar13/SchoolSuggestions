@@ -20,6 +20,8 @@ STAFF_ONLY = {
     "staff_get_rules": {},
     "staff_set_rules": {"p_rules": "Usually acceptable:\n- anything", "p_school_context": ""},
     "staff_resolve_concern": {"p_id": 1, "p_outcome": "not_concern"},
+    "staff_reword": {"p_id": 1, "p_suggestion": "hijacked wording", "p_benefit": ""},
+    "staff_restore_original": {"p_id": 1},
 }
 
 SIGNED_IN_ONLY = {
@@ -111,6 +113,13 @@ class TestEdgeFunction(unittest.TestCase):
     def test_cors_preflight(self):
         res = request("OPTIONS", f"{public_config()['url']}/functions/v1/moderate-suggestion")
         self.assertEqual(res.status, 200, res)
+
+    def test_rewording_is_staff_only(self):
+        """The rephrase function spends AI quota, so nobody but staff may use it."""
+        for token in (None, "not.a.real-token"):
+            with self.subTest(token=token):
+                res = edge({"suggestion": "anything"}, token=token, function="rephrase-suggestion")
+                self.assertIn(res.status, (401, 403), res)
 
 
 if __name__ == "__main__":

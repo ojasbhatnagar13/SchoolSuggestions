@@ -107,6 +107,31 @@ class TestModeration(unittest.TestCase):
                     f"{why}. AI said: {analysis['feasibility']} / spam={analysis['spam']} -- {analysis['reason']}",
                 )
 
+    def test_wording_flags(self):
+        """Each kind of awkward wording gets its own warning for staff, and a
+        real point made rudely is still a real point, not spam."""
+        for text, flag, not_spam in [
+            ("the food here is trash, the cooks clearly don't care, put some flavour in it", "rude", True),
+            ("The 3rd floor toilets are disgusting", "no_suggestion", True),
+            ("wow the wifi works for 5 whole minutes a day, amazing", "sarcastic", False),
+            ("Ms Kapoor is an amazing teacher, can she teach more classes?", "names_person", False),
+            ("Can we get a chess club and also fix the broken fan in 7C and also longer lunch", "several_requests", True),
+            ("can we have more variety at lunch, also some people in my class keep hitting me at lunch", "hidden_concern", True),
+        ]:
+            with self.subTest(text=text):
+                analysis = self.analyse(text, "")
+                flags = analysis.get("flags") or []
+                if flag == "hidden_concern":
+                    # Either signal reaches the red section.
+                    self.assertTrue(
+                        flag in flags or analysis["reason"].startswith("This sounds like a personal concern"),
+                        f"flags={flags} reason={analysis['reason']}",
+                    )
+                else:
+                    self.assertIn(flag, flags, f"reason: {analysis['reason']}")
+                if not_spam:
+                    self.assertEqual(analysis["spam"], "No", f"flags={flags} reason={analysis['reason']}")
+
     def test_reports_are_recognised_as_concerns(self):
         # The Edge Function matches this exact opening to flag the staff
         # page's red section and send the student the counsellor reply.

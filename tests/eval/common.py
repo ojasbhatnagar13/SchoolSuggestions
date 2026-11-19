@@ -104,7 +104,8 @@ def outcome(analysis, text, benefit="") -> str:
     words = concern_pattern()
     if analysis is None:
         return "concern" if words.search(text) or words.search(benefit) else "unchecked"
-    if (analysis.get("reason") or "").startswith(SUPPORT_PREFIX) or words.search(text) or words.search(benefit):
+    hidden = "hidden_concern" in (analysis.get("flags") or [])
+    if hidden or (analysis.get("reason") or "").startswith(SUPPORT_PREFIX) or words.search(text) or words.search(benefit):
         return "concern"
     if analysis["spam"] == "Yes":
         return "spam"
