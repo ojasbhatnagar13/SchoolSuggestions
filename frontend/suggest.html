@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -66,10 +66,16 @@
                  so no updates. submit.js swaps the two explanations. -->
             <!-- Outside the switch box on purpose: true either way, so a
                  student who reads nothing else still gets it right. -->
-            <p class="anon-always">
-              <b>Staff already never see who sent your suggestion.</b>
-              The switch below only decides whether you get updates about it.
-            </p>
+            <div class="anon-always">
+              <svg class="anon-lock" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10.5" width="14" height="10" rx="2"></rect>
+                <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
+              </svg>
+              <div>
+                <p class="anon-always-main">Staff already never see who sent your suggestion.</p>
+                <p class="anon-always-sub">The switch below only decides whether you get updates about it.</p>
+              </div>
+            </div>
             <div class="anon-choice">
               <label class="anon-toggle" for="full-anon">
                 <input type="checkbox" id="full-anon">
