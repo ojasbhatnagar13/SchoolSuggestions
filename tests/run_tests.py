@@ -22,6 +22,14 @@ What each file covers:
 Not covered, because it needs a real Google sign-in: a full submission
 through the website, voting, and the staff page. Check those by hand after a
 big change.
+
+Before launch, and after changing the guidelines or the AI model, also run
+the two evaluations in tests/eval/ (they are slower and use Gemini quota, so
+they are not part of this suite):
+    tests\\eval\\accuracy.py   ~150 realistic submissions, scored; 0 missed
+                              wellbeing concerns required
+    tests\\eval\\burst.py      a whole class sending at the same moment
+Reports go to tests/eval/results/ (not committed).
 """
 
 import argparse
