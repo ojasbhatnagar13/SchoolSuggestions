@@ -1845,3 +1845,6 @@ textarea.code-box {
 .anon-warning { color: var(--text-d); }
 .anon-big { margin: 0 0 6px; font-size: 17px; }
 .anon-big b { color: var(--warn); }
+.anon-always { margin: 14px 0 0; font-size: 15px; color: var(--muted-d); }
+.anon-always b { color: var(--text-d); }
+.anon-always + .anon-choice { margin-top: 8px; }

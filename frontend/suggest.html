@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=22">
+  <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -64,6 +64,12 @@
             <!-- Default: linked privately to the account so the student can
                  follow it (never shown to staff). Ticked: not linked at all,
                  so no updates. submit.js swaps the two explanations. -->
+            <!-- Outside the switch box on purpose: true either way, so a
+                 student who reads nothing else still gets it right. -->
+            <p class="anon-always">
+              <b>Staff already never see who sent your suggestion.</b>
+              The switch below only decides whether you get updates about it.
+            </p>
             <div class="anon-choice">
               <label class="anon-toggle" for="full-anon">
                 <input type="checkbox" id="full-anon">
@@ -71,9 +77,8 @@
                 <span><b>Complete anonymity</b> <span class="opt">Optional</span></span>
               </label>
               <div id="anon-default" class="anon-note">
-                Your suggestion is already anonymous: <b>staff never see who sent it.</b>
-                It's kept privately with your account only so you can see what
-                happens to it under "Your suggestions".
+                Off: it's kept privately with your account, only so you can see
+                what happens to it under "Your suggestions" and get updates.
               </div>
               <div id="anon-warning" class="anon-note anon-warning" hidden>
                 <p class="anon-big"><b>You will NOT get any updates about this suggestion.</b></p>
