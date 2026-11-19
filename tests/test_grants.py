@@ -96,6 +96,16 @@ class TestGrants(unittest.TestCase):
         )
         self.assertEqual(outputs, [], "a function returns the sender")
 
+    def test_staff_page_never_names_staff(self):
+        """Decision 2026-11-19: nobody sees which member of staff made a
+        decision. The staff page's data must not look up anyone's email."""
+        rows = query(
+            "select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace "
+            "where n.nspname = 'public' and p.proname in ('staff_suggestions', 'staff_get_rules') "
+            "and pg_get_functiondef(p.oid) like '%auth.users%'"
+        )
+        self.assertEqual([r["proname"] for r in rows], [])
+
     def test_definer_functions_pin_search_path(self):
         """A security definer function without a fixed search_path can be hijacked."""
         rows = query(

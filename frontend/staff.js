@@ -104,7 +104,9 @@ function decisionText(row) {
     return `${label} automatically by the AI` + (row.decided_at ? ` · ${when(row.decided_at)}` : "");
   }
   if (row.decided_by === "staff") {
-    const who = row.reviewer || "a member of staff";
+    // Never which member of staff: the database does not send it (decision
+    // 2026-11-19, docs/setup-hide-reviewers.sql).
+    const who = "staff";
     const what = row.status === "pending" ? "Moved back to Pending" : label;
     return `${what} by ${who}` + (row.decided_at ? ` · ${when(row.decided_at)}` : "");
   }
@@ -147,7 +149,7 @@ function warningBox(flags) {
 function originalBox(row) {
   const details = el("details", "original");
   const when = row.reworded_at ? ` · ${new Date(row.reworded_at).toLocaleDateString()}` : "";
-  details.append(el("summary", null, `Reworded by ${row.reworder || "staff"}${when}. Show the student's original`));
+  details.append(el("summary", null, `Reworded by staff${when}. Show the student's original`));
   details.append(el("p", "original-text", row.original_suggestion));
   if (row.original_benefit) details.append(el("p", "original-text", `How it helps: ${row.original_benefit}`));
   const restore = el("button", "qbtn", "Restore the original");
@@ -386,7 +388,7 @@ async function setStatus(row, wanted, control) {
     status: data,
     decided_by: "staff",
     decided_at: new Date().toISOString(),
-    reviewer: session?.user?.email ?? null,
+    reviewer: null, // never shown: who decided is not displayed
   });
   render();
 
@@ -490,7 +492,7 @@ function concernCard(row, handled) {
 
   const foot = el("div", "concern-foot");
   if (handled) {
-    foot.append(el("span", "mono", `Handled by ${row.concern_handled_by || "a member of staff"} · ${when(row.concern_handled_at)}`));
+    foot.append(el("span", "mono", `Handled by staff · ${when(row.concern_handled_at)}`));
     foot.append(concernButton(row, "reopen", "Reopen", "c-ghost"));
   } else {
     foot.append(
@@ -657,7 +659,7 @@ function describeSaved(data) {
   const when = data.updated_at ? new Date(data.updated_at).toLocaleString(undefined, {
     day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
   }) : "";
-  return `Last changed ${when}` + (data.updated_by ? ` by ${data.updated_by}` : "");
+  return `Last changed ${when}`; // when, never who
 }
 
 async function loadRules() {
