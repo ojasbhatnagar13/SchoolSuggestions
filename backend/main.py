@@ -37,6 +37,8 @@ ANALYSIS_SCHEMA = types.Schema(
             enum=["Feasible", "Not Feasible", "Needs Review"],
         ),
         "category": types.Schema(type=types.Type.STRING),
+        # Not required: only filled in when the suggestion is unclear.
+        "clarify": types.Schema(type=types.Type.STRING),
         "reason": types.Schema(type=types.Type.STRING),
         "summary": types.Schema(type=types.Type.STRING),
         "topic": types.Schema(type=types.Type.STRING),
@@ -141,6 +143,10 @@ Fill every field:
                Otherwise cite the rule or school practice that applies.
   summary      The suggestion condensed to a single neutral sentence.
   flags        The wording flags above that apply; an empty list if none.
+  clarify      Only when the unclear flag applies: one short, friendly
+               question asking the student what exactly they mean, e.g.
+               "Which part of the school would you like to change, and how?"
+               Otherwise an empty string.
   topic        The core request in 2-4 lowercase words, naming the thing being
                asked for and nothing else. No verbs, no filler, no location
                detail unless it is the point of the request. This is used to

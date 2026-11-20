@@ -135,6 +135,26 @@ class TestModeration(unittest.TestCase):
                 if not_spam:
                     self.assertEqual(analysis["spam"], "No", f"flags={flags} reason={analysis['reason']}")
 
+    def test_vague_suggestions_are_sent_back(self):
+        """Too vague -> the site asks the student to say more instead of saving
+        it. Clear suggestions, even short or blunt ones, must NOT be sent back."""
+        for text, should_ask in [
+            ("make school better", True),
+            ("more fun stuff pls", True),
+            ("change things", True),
+            ("Start a robotics club for grade 7 and 8", False),
+            ("The 3rd floor toilets are disgusting", False),
+            ("more benches near the basketball court", False),
+            ("can we have a longer lunch break", False),
+            ("better food", False),
+        ]:
+            with self.subTest(text=text):
+                analysis = self.analyse(text, "")
+                asked = "unclear" in (analysis.get("flags") or []) and analysis["spam"] != "Yes"
+                self.assertEqual(asked, should_ask, f"flags={analysis.get('flags')} clarify={analysis.get('clarify')!r}")
+                if asked:
+                    self.assertTrue((analysis.get("clarify") or "").strip(), "no question for the student")
+
     def test_reports_are_recognised_as_concerns(self):
         # The Edge Function matches this exact opening to flag the staff
         # page's red section and send the student the counsellor reply.

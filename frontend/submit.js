@@ -136,6 +136,43 @@ function restoreDraft() {
   updateCounter();
 }
 
+// A friendly popup for a suggestion the AI couldn't make sense of. The AI
+// writes the question (e.g. "Which part of the school would you like to
+// change, and how?"); the button puts the student straight back in the box.
+function askToClarify(question) {
+  document.querySelector(".clarify-dialog")?.remove();
+  const dialog = document.createElement("dialog");
+  dialog.className = "clarify-dialog";
+
+  const title = document.createElement("h3");
+  title.textContent = "We're not quite sure what you mean";
+  const ask = document.createElement("p");
+  ask.className = "clarify-question";
+  ask.textContent = question;
+  const note = document.createElement("p");
+  note.className = "clarify-note";
+  note.textContent = "Nothing has been sent yet. Your suggestion is still in the box, " +
+    "so just add a little more detail and send it again.";
+  const ok = document.createElement("button");
+  ok.type = "button";
+  ok.className = "btn btn-primary";
+  ok.textContent = "Edit my suggestion";
+
+  const back = () => {
+    dialog.close();
+    dialog.remove();
+    els.text.focus();
+    els.text.setSelectionRange(els.text.value.length, els.text.value.length);
+  };
+  ok.addEventListener("click", back);
+  dialog.addEventListener("cancel", (e) => { e.preventDefault(); back(); });
+
+  dialog.append(title, ask, note, ok);
+  document.body.append(dialog);
+  dialog.showModal();
+  ok.focus();
+}
+
 // "Complete anonymity": swaps the reassurance for a bold warning, so nobody
 // ticks it without seeing that it means no updates. Deliberately not reset
 // after sending -- it is the student's standing choice for this visit.
@@ -208,6 +245,14 @@ els.form.addEventListener("submit", async (event) => {
       return;
     }
     if (!res.ok) throw new Error(payload.error || `Request failed (${res.status})`);
+
+    if (payload.status === "clarify") {
+      // Too vague to act on. Nothing was saved, accepted or rejected: the
+      // text stays in the box and the student is asked to say more.
+      notice("Not sent yet. Please add a little more detail and send it again.", "warn");
+      askToClarify(payload.question);
+      return;
+    }
 
     if (payload.status === "duplicate") {
       // Nothing was written. Show the existing suggestion so this reads as

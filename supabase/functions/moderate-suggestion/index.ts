@@ -138,6 +138,10 @@ Fill every field:
                Otherwise cite the rule or school practice that applies.
   summary      The suggestion condensed to a single neutral sentence.
   flags        The wording flags above that apply; an empty list if none.
+  clarify      Only when the unclear flag applies: one short, friendly
+               question asking the student what exactly they mean, e.g.
+               "Which part of the school would you like to change, and how?"
+               Otherwise an empty string.
   topic        The core request in 2-4 lowercase words, naming the thing being
                asked for and nothing else. No verbs, no filler, no location
                detail unless it is the point of the request. This is used to
@@ -176,6 +180,8 @@ const RESPONSE_SCHEMA = {
       enum: ["Feasible", "Not Feasible", "Needs Review"],
     },
     category: { type: "STRING" },
+    // Not required: only filled in when the suggestion is unclear.
+    clarify: { type: "STRING" },
     reason: { type: "STRING" },
     summary: { type: "STRING" },
     topic: { type: "STRING" },
@@ -597,6 +603,21 @@ Deno.serve(async (req) => {
     // what the student is told, so "start an anti-bullying club" still gets
     // the normal reply while staff check the red section.
     const concern = support || mentionsConcern(suggestion, benefit);
+
+    // Too vague to act on: ask the student to say more instead of accepting,
+    // rejecting or saving it. Never for a possible concern -- a person must
+    // see that however it is worded -- and spam is still treated as spam.
+    const unclear = Array.isArray(analysis.flags) && analysis.flags.includes("unclear");
+    if (unclear && !concern && analysis.spam !== "Yes") {
+      // Nothing was saved, so this send doesn't count against their limit.
+      await rpc("refund_account_slot", { p_secret: SUBMIT_SECRET, p_account_hash: await hash(user.id) })
+        .catch(() => {});
+      return json({
+        status: "clarify",
+        question: String(analysis.clarify ?? "").trim() ||
+          "Could you say a little more about what you'd like to change, and where?",
+      });
+    }
 
     const saved = await save(suggestion, benefit, analysis, concern, receipt, fullyAnonymous ? null : user.id);
 
