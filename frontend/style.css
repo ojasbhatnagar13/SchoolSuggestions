@@ -2117,3 +2117,268 @@ textarea.code-box {
   .nav-links a:nth-child(n+4) { grid-column: span 3; border-top: 1px solid var(--line-d); }
   html { scroll-padding-top: 170px; }
 }
+
+/* ------------------------------------------------------------------ home: split-flap board */
+.hero-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 48px;
+  align-items: end;
+}
+.flap-frame {
+  width: min(560px, 46vw);
+  padding: 16px 16px 18px;
+  background: #0D0D0C;
+  border: 1px solid var(--line-d);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.flap-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-d);
+}
+.flap-light {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 10px var(--ok);
+  animation: flap-blink 2.4s ease-in-out infinite;
+}
+@keyframes flap-blink { 50% { opacity: 0.35; } }
+
+.flap-board {
+  --cell: 22px;
+  --gap: 3px;
+  --cols: 20;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  gap: 5px var(--gap);
+  justify-content: center;
+}
+.flap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: calc(var(--cell) * 1.45);
+  border-radius: 3px;
+  background: linear-gradient(#262522 0 50%, #1E1D1B 50% 100%);
+  color: #F5F2ED;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: calc(var(--cell) * 0.82);
+  line-height: 1;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.flap::after { /* the hinge line across the middle */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.75);
+}
+.flap[data-f="a"] { animation: flap-a 65ms linear; }
+.flap[data-f="b"] { animation: flap-b 65ms linear; }
+@keyframes flap-a { 0% { transform: scaleY(1); } 50% { transform: scaleY(0.15); } 100% { transform: scaleY(1); } }
+@keyframes flap-b { 0% { transform: scaleY(1); } 50% { transform: scaleY(0.15); } 100% { transform: scaleY(1); } }
+.flap-head { color: var(--accent); }
+.flap-board[data-kind="done"] .flap-head { color: var(--ok); }
+.flap-board[data-kind="ahead"] .flap-head { color: #6FC3C8; }
+.flap-board[data-kind="open"] .flap-head { color: var(--accent); }
+.flap-board[data-kind="info"] .flap-head { color: var(--warn); }
+
+@media (max-width: 900px) {
+  .hero-top { grid-template-columns: 1fr; gap: 28px; }
+  .flap-frame { width: 100%; }
+}
+@media (max-width: 600px) {
+  .flap-board { --cell: 16px; --gap: 2px; row-gap: 4px; }
+  .flap-frame { padding: 12px 10px 14px; }
+}
+
+/* ------------------------------------------------------------------ vote page: the burst */
+.spark-layer { position: fixed; z-index: 200; width: 0; height: 0; pointer-events: none; }
+.spark {
+  position: absolute;
+  left: -3.5px; top: -3.5px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  animation: spark-out 620ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.spark.in { animation: spark-in 480ms cubic-bezier(0.6, 0, 0.8, 0.4) forwards; }
+@keyframes spark-out {
+  from { transform: rotate(var(--a)) translateX(10px) scale(1); opacity: 1; }
+  to   { transform: rotate(var(--a)) translateX(var(--d)) scale(0.2); opacity: 0; }
+}
+@keyframes spark-in {
+  from { transform: rotate(var(--a)) translateX(var(--d)) scale(0.6); opacity: 0.9; }
+  to   { transform: rotate(var(--a)) translateX(4px) scale(0.1); opacity: 0; }
+}
+.spark-ring {
+  position: absolute;
+  left: -20px; top: -20px;
+  width: 40px; height: 40px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: spark-ring 560ms ease-out forwards;
+}
+@keyframes spark-ring { from { transform: scale(0.6); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+button.vote.pop { animation: vote-pop 420ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+button.vote.unpop { animation: vote-unpop 300ms ease-out; }
+@keyframes vote-pop { 0% { transform: scale(1); } 35% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes vote-unpop { 0% { transform: scale(1); } 40% { transform: scale(0.9); } 100% { transform: scale(1); } }
+
+/* ------------------------------------------------------------------ home: the journey of a suggestion */
+.journey-band { padding: 104px 0 112px; }
+.journey-head { margin-bottom: 56px; }
+.journey { position: relative; --dur: 11s; }
+.journey-track { position: absolute; inset: 0; pointer-events: none; }
+.journey-line, .journey-fill {
+  position: absolute;
+  top: 31px; left: 10%;
+  height: 3px;
+}
+.journey-line { width: 80%; background: var(--line-l2); }
+.journey-fill { width: 0; background: var(--accent); animation: journey-fill var(--dur) linear infinite; }
+.journey-plane {
+  position: absolute;
+  z-index: 2;
+  top: -12px; left: 10%;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  animation: journey-x var(--dur) ease-in-out infinite;
+}
+.journey-plane svg { width: 100%; height: 100%; fill: var(--accent); stroke: var(--accent-2); stroke-width: 1.2; stroke-linejoin: round; transform: rotate(45deg); }
+.journey-stops {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.stop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 8px; text-align: center; }
+.stop-dot {
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--line-l2);
+  background: var(--paper);
+  color: var(--muted-l);
+}
+.stop-dot svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.stop b { font-size: 19px; color: var(--text-l); }
+.stop > span:not(.stop-dot):not(.stamp) { max-width: 190px; font-size: 15.5px; line-height: 1.45; color: var(--muted-l); }
+.s0 .stop-dot { animation: lit0 var(--dur) linear infinite; }
+.s1 .stop-dot { animation: lit1 var(--dur) linear infinite; }
+.s2 .stop-dot { animation: lit2 var(--dur) linear infinite; }
+.s3 .stop-dot { animation: lit3 var(--dur) linear infinite; }
+.s4 .stop-dot { animation: lit4 var(--dur) linear infinite; }
+.stamp {
+  position: absolute;
+  top: -14px; left: 50%;
+  padding: 4px 12px;
+  border: 3px solid var(--ok-l);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ok-l);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateX(-50%) rotate(-12deg) scale(2);
+  animation: stamp var(--dur) ease-out infinite;
+}
+
+/* Plane timeline: hold at a stop, fly to the next. Stops light as it lands
+   at 3%, 18%, 38%, 58% and 78%, then the Done stamp lands. */
+@keyframes journey-x {
+  0%        { left: 10%; opacity: 0; }
+  3%, 6%    { left: 10%; opacity: 1; }
+  18%, 26%  { left: 30%; }
+  38%, 46%  { left: 50%; }
+  58%, 66%  { left: 70%; }
+  78%, 92%  { left: 90%; opacity: 1; }
+  97%, 100% { left: 90%; opacity: 0; }
+}
+@keyframes journey-fill {
+  0%, 6%    { width: 0; }
+  18%, 26%  { width: 20%; }
+  38%, 46%  { width: 40%; }
+  58%, 66%  { width: 60%; }
+  78%, 94%  { width: 80%; opacity: 1; }
+  98%, 100% { width: 80%; opacity: 0; }
+}
+@keyframes lit0 { 0%, 2% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 4% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 7%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
+@keyframes lit1 { 0%, 17% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 19% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 22%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
+@keyframes lit2 { 0%, 37% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 39% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 42%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
+@keyframes lit3 { 0%, 57% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 59% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 62%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
+@keyframes lit4 { 0%, 77% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 79% { background: var(--ok-l); color: #fff; border-color: var(--ok-l); transform: scale(1.2); } 82%, 94% { background: var(--ok-l); color: #fff; border-color: var(--ok-l); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
+@keyframes stamp {
+  0%, 80%   { opacity: 0; transform: translateX(-50%) rotate(-12deg) scale(2); }
+  83%       { opacity: 1; transform: translateX(-50%) rotate(-12deg) scale(0.92); }
+  85%, 94%  { opacity: 1; transform: translateX(-50%) rotate(-12deg) scale(1); }
+  98%, 100% { opacity: 0; transform: translateX(-50%) rotate(-12deg) scale(1); }
+}
+@keyframes stamp-side {
+  0%, 80%   { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(2); }
+  83%       { opacity: 1; transform: translateY(-50%) rotate(-12deg) scale(0.92); }
+  85%, 94%  { opacity: 1; transform: translateY(-50%) rotate(-12deg) scale(1); }
+  98%, 100% { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(1); }
+}
+@keyframes journey-fill-y {
+  0%, 6%    { height: 0; }
+  18%, 26%  { height: 20%; }
+  38%, 46%  { height: 40%; }
+  58%, 66%  { height: 60%; }
+  78%, 94%  { height: 80%; opacity: 1; }
+  98%, 100% { height: 80%; opacity: 0; }
+}
+
+/* Phones: the stops stack, and the line fills downwards as each one lights. */
+@media (max-width: 760px) {
+  .journey-band { padding: 72px 0 80px; }
+  .journey-head { margin-bottom: 36px; }
+  .journey-stops { grid-template-columns: 1fr; }
+  .stop {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 18px;
+    row-gap: 2px;
+    align-content: center;
+    height: 96px;
+    padding: 0;
+    text-align: left;
+  }
+  .stop-dot { grid-row: 1 / 3; width: 56px; height: 56px; margin: 0 4px; }
+  .stop b { align-self: end; }
+  .stop > span:not(.stop-dot):not(.stamp) { align-self: start; max-width: none; }
+  .stamp { top: 50%; left: auto; right: 0; transform: translateY(-50%) rotate(-12deg) scale(2); animation-name: stamp-side; }
+  .journey-line, .journey-fill { top: 10%; left: 32px; width: 3px; height: 80%; }
+  .journey-fill { height: 0; animation-name: journey-fill-y; }
+  .journey-plane { display: none; }
+}
+
+/* Anyone who has asked their device for less motion gets the finished picture. */
+@media (prefers-reduced-motion: reduce) {
+  .journey-plane { display: none; }
+  .journey-fill { width: 80%; opacity: 1; }
+  .stop-dot { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+  .s4 .stop-dot { background: var(--ok-l) !important; border-color: var(--ok-l) !important; }
+  .stamp { opacity: 1 !important; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 760px) {
+  .journey-fill { width: 3px; height: 80%; }
+}
+.hero-top > * { min-width: 0; }
+.flap-frame { overflow: hidden; }

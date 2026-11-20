@@ -4,6 +4,29 @@
 //                 going ahead and what is Done
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=2";
+import { createBoard } from "./flap.js?v=1";
+
+// The split-flap board on the home page. Until there are real suggestions to
+// show (or the student is signed out), it explains the box instead.
+const flapEl = document.getElementById("flap");
+const setBoard = flapEl ? createBoard(flapEl.parentElement, flapEl) : () => {};
+const BOARD_INTRO = [
+  ["Suggest it", "Got a way to make DPSI better? Send it in a minute.", "info"],
+  ["Vote on it", "Back the suggestions you want. One vote each.", "info"],
+  ["See it done", "When the school acts on one, it shows up here.", "done"],
+];
+setBoard(BOARD_INTRO);
+
+function boardMessages() {
+  const pick = (test, status, kind, max) =>
+    suggestions.filter(test).slice(0, max).map((s) => [status, s.summary || s.suggestion, kind]);
+  const real = [
+    ...pick(isDone, "Done", "done", 8),
+    ...pick(isAhead, "Going ahead", "ahead", 4),
+    ...pick(isOpen, "Open for votes", "open", 6),
+  ];
+  return real.length ? real : BOARD_INTRO;
+}
 
 const list = document.getElementById("list"); // vote page only
 const homeState = document.getElementById("home-state"); // home page only
@@ -176,6 +199,36 @@ async function toggleVote(id, btn) {
   status.textContent = voted ? "Vote removed" : "One vote each";
   status.classList.remove("vote-error");
   showVote(btn, !voted);
+  burst(btn, !voted);
+}
+
+// A pop and a burst of sparks when a vote lands; the sparks fly back in when
+// it is taken back. Fixed to the screen, so no card can clip them.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SPARK_COLOURS = ["var(--accent)", "var(--warn)", "var(--text-d)", "var(--accent)"];
+
+function burst(btn, adding) {
+  btn.classList.remove("pop", "unpop");
+  void btn.offsetWidth; // restart the pop if clicked twice quickly
+  btn.classList.add(adding ? "pop" : "unpop");
+  if (reduceMotion) return;
+
+  const r = btn.getBoundingClientRect();
+  const layer = el("div", "spark-layer");
+  layer.style.left = `${r.left + r.width / 2}px`;
+  layer.style.top = `${r.top + r.height / 2}px`;
+  layer.setAttribute("aria-hidden", "true");
+  if (adding) layer.append(el("span", "spark-ring"));
+  const n = 14;
+  for (let i = 0; i < n; i++) {
+    const s = el("span", "spark" + (adding ? "" : " in"));
+    s.style.setProperty("--a", `${(360 / n) * i + Math.random() * 14}deg`);
+    s.style.setProperty("--d", `${36 + Math.random() * 30}px`);
+    s.style.background = SPARK_COLOURS[i % SPARK_COLOURS.length];
+    layer.append(s);
+  }
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 800);
 }
 
 function renderFilters() {
@@ -248,6 +301,8 @@ function renderHome() {
   aheadSection.hidden = !ahead.length;
   aheadList.replaceChildren(...ahead.map(card));
 
+  setBoard(boardMessages());
+
   const done = suggestions.filter(isDone);
   doneSection.hidden = !done.length;
   doneList.replaceChildren(...done.map(card));
@@ -255,6 +310,7 @@ function renderHome() {
 }
 
 function hideBoard() {
+  setBoard(BOARD_INTRO);
   if (filterBar) filterBar.hidden = true;
   if (newNote) newNote.hidden = true;
   if (aheadSection) aheadSection.hidden = true;

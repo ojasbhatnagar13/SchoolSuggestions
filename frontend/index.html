@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=31">
+  <link rel="stylesheet" href="style.css?v=32">
 </head>
 <body>
   <header class="nav">
@@ -37,8 +37,17 @@
   <main>
     <section class="band band-dark home-hero">
       <div class="wrap">
-        <p class="eyebrow">DPS International Edge · Student suggestions</p>
-        <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Vote, or suggest.</span></h1>
+        <div class="hero-top">
+          <div>
+            <p class="eyebrow">DPS International Edge · Student suggestions</p>
+            <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Vote, or suggest.</span></h1>
+          </div>
+          <!-- Split-flap board, filled by flap.js with real suggestions. -->
+          <div class="flap-frame">
+            <div class="flap-label mono"><span class="flap-light" aria-hidden="true"></span>The board</div>
+            <div id="flap" class="flap-board" role="img" aria-label="Suggestion board"></div>
+          </div>
+        </div>
 
         <div class="choice-grid">
           <a class="choice choice-vote" href="vote.html">
@@ -55,6 +64,49 @@
           </a>
         </div>
         <div id="home-state" hidden></div>
+      </div>
+    </section>
+
+    <!-- The journey of a suggestion: a paper plane flies from stop to stop
+         and each one lights up as it arrives. CSS only. -->
+    <section class="band band-cream journey-band">
+      <div class="wrap">
+        <div class="journey-head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="h2">From your head<br>to done.</h2>
+        </div>
+        <div class="journey">
+          <div class="journey-track" aria-hidden="true">
+            <span class="journey-line"></span>
+            <span class="journey-fill"></span>
+            <span class="journey-plane">
+              <svg viewBox="0 0 24 24"><path d="M2 11.5 21.5 3l-6 18.5-4.2-7.3z"/><path d="m11.3 14.2 10.2-11.2"/></svg>
+            </span>
+          </div>
+          <ol class="journey-stops">
+            <li class="stop s0">
+              <span class="stop-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></span>
+              <b>You suggest</b><span>Anonymously, in a minute</span>
+            </li>
+            <li class="stop s1">
+              <span class="stop-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><path d="M12 8.5 13.2 11l2.3 1-2.3 1L12 15.5 10.8 13l-2.3-1 2.3-1z"/></svg></span>
+              <b>AI checks it</b><span>Against the school guidelines, in seconds</span>
+            </li>
+            <li class="stop s2">
+              <span class="stop-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <b>Staff decide</b><span>A real person reads every one</span>
+            </li>
+            <li class="stop s3">
+              <span class="stop-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4.5 12.5 4.5 4.5L19.5 6.5"/></svg></span>
+              <b>Students vote</b><span>One vote each, counts stay private</span>
+            </li>
+            <li class="stop s4">
+              <span class="stop-dot" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/></svg></span>
+              <b>Done</b><span>The school acts on it</span>
+              <span class="stamp" aria-hidden="true">Done</span>
+            </li>
+          </ol>
+        </div>
       </div>
     </section>
 
@@ -94,6 +146,6 @@
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=28"></script>
+  <script type="module" src="ideas.js?v=29"></script>
 </body>
 </html>
