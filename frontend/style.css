@@ -2588,32 +2588,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 }
 @media (max-width: 640px) { .bp-stub { background-color: var(--paper); } }
 
-/* ------------------------------------------------------------------ first visit: the flypast (flypast.js) */
-.flypast { position: fixed; inset: 0; z-index: 300; overflow: hidden; pointer-events: none; }
-.fp-craft { position: absolute; top: 0; left: 0; will-change: transform; }
-.fp-body { position: absolute; inset: 0; will-change: transform; }
-.fp-jet { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45)); }
-.fp-flame { transform-box: fill-box; transform-origin: right center; animation: fp-flicker 70ms steps(2) infinite alternate; }
-.fp-flame-core { animation-duration: 55ms; }
-.fp-glow { animation: fp-pulse 120ms ease-in-out infinite alternate; }
-@keyframes fp-flicker { from { transform: scaleX(0.82) scaleY(0.92); } to { transform: scaleX(1.08) scaleY(1.06); } }
-@keyframes fp-pulse { from { opacity: 0.7; } to { opacity: 1; } }
-/* The contrail: from the nozzle back across the page, thinning and fading. */
-.fp-trail {
-  position: absolute;
-  top: 50%; right: 94%;
-  width: 150vw;
-  height: 7%;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  background: linear-gradient(to left,
-    rgba(255, 196, 120, 0.55) 0%,
-    rgba(245, 242, 237, 0.45) 6%,
-    rgba(245, 242, 237, 0.18) 45%,
-    rgba(245, 242, 237, 0) 100%);
-  filter: blur(2px);
-}
-@media (prefers-reduced-motion: reduce) { .flypast { display: none; } }
 /* Stamp in the empty corner beside the buttons, never over the text. */
 .bp-stamp { top: auto; bottom: 30px; right: 214px; }
 @media (max-width: 640px) { .bp-stamp { top: auto; bottom: 96px; right: 16px; } }
