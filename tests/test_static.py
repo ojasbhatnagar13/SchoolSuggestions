@@ -13,8 +13,8 @@ import unittest
 
 from helpers import FRONTEND, ROOT, public_config
 
-PAGES = ["index.html", "suggest.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html"]
-STUDENT_TABS = {"index.html": "Suggestions", "suggest.html": "Suggest",
+PAGES = ["index.html", "suggest.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html", "privacy.html"]
+STUDENT_TABS = {"index.html": "Vote", "suggest.html": "Suggest",
                 "mine.html": "My suggestions", "how.html": "How it works"}
 
 

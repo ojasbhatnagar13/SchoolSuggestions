@@ -1,7 +1,7 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js";
+import { showUpdates } from "./mine.js?v=2";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in
@@ -26,9 +26,21 @@ const els = {
 let session = null;
 let busy = false;
 
-function notice(message, kind = "info") {
-  els.result.textContent = message;
-  els.result.className = `notice ${kind}`;
+function notice(message, kind = "info", title = "") {
+  // The outcome of a send gets a big headline, so a student sees at a glance
+  // what happened before reading the detail underneath.
+  if (title) {
+    const head = document.createElement("strong");
+    head.className = "notice-title";
+    head.textContent = title;
+    const body = document.createElement("span");
+    body.className = "notice-body";
+    body.textContent = message;
+    els.result.replaceChildren(head, body);
+  } else {
+    els.result.textContent = message;
+  }
+  els.result.className = `notice ${kind}${title ? " notice-outcome" : ""}`;
   els.result.hidden = false;
   // It sits above the form, so if the student has scrolled down to the
   // button, bring it back into view (below the sticky nav).
@@ -249,7 +261,7 @@ els.form.addEventListener("submit", async (event) => {
     if (payload.status === "clarify") {
       // Too vague to act on. Nothing was saved, accepted or rejected: the
       // text stays in the box and the student is asked to say more.
-      notice("Not sent yet. Please add a little more detail and send it again.", "warn");
+      notice("Not sent yet. Please add a little more detail and send it again.", "warn", "Needs a bit more detail");
       askToClarify(payload.question);
       return;
     }
@@ -260,7 +272,7 @@ els.form.addEventListener("submit", async (event) => {
       notice(
         `Someone has already suggested this, so it wasn't filed twice. ` +
         `The original (#${payload.duplicate_of}): “${payload.existing}”`,
-        "warn",
+        "warn", "Already suggested",
       );
       return;
     }
@@ -279,7 +291,7 @@ els.form.addEventListener("submit", async (event) => {
         `${HELP.email}. A member of staff will read what you wrote and pass it ` +
         `to the pastoral care team, but because this box is anonymous they ` +
         `cannot reply to you. It will not be shown to other students.`,
-        "warn",
+        "warn", "Thank you for telling us",
       );
     } else if (payload.queued || payload.unchecked) {
       // Every AI model stayed busy past the wait. It is saved and queued; the
@@ -288,31 +300,31 @@ els.form.addEventListener("submit", async (event) => {
         `Sent as #${payload.id}. Lots of students are sending right now, so ` +
         `yours is in the queue and will be checked within a few minutes. ` +
         (fullyAnonymous
-          ? `It was sent with complete anonymity, so check the home page later to see if it's approved.`
+          ? `It was sent with complete anonymity, so check the Vote page later to see if it's approved.`
           : `You can follow it on your My suggestions page.`),
-        "ok",
+        "ok", "Sent, waiting in the queue",
       );
     } else if (payload.status === "spam") {
       notice(
         `This doesn't look like a real suggestion, so it wasn't added. ` +
         (payload.reason ? `${payload.reason} ` : "") +
         `If it was meant seriously, try rewording it.`,
-        "warn",
+        "warn", "Not added",
       );
     } else if (payload.status === "rejected") {
       notice(
         `This doesn't fit the school guidelines, so it wasn't added. ` +
         (payload.reason ? `Reason: ${payload.reason} ` : "") +
         `If you think that's wrong, reword it or speak to a teacher.`,
-        "warn",
+        "warn", "Not added: against the guidelines",
       );
     } else {
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
         (fullyAnonymous
-          ? `It was sent with complete anonymity, so you won't get updates: check the home page to see if it's approved.`
-          : `It will appear on the home page once staff approve it.`),
-        "ok",
+          ? `It was sent with complete anonymity, so you won't get updates: check the Vote page to see if it's approved.`
+          : `It will appear on the Vote page once staff approve it.`),
+        "ok", "Sent for staff review",
       );
     }
     clearForm();

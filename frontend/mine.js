@@ -16,7 +16,7 @@ export const STATES = {
   },
   approved: {
     label: "Open for votes",
-    notice: "Staff approved it. It's on the home page for everyone to vote on.",
+    notice: "Staff approved it. It's on the Vote page for everyone to vote on.",
   },
   going_ahead: {
     label: "Going ahead",

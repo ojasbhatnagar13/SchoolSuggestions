@@ -429,6 +429,13 @@ textarea:focus {
 .notice.warn  { border-left-color: var(--warn); }
 .notice.error { border-left-color: var(--bad); }
 
+/* The result of a send: a clear headline, then the detail. */
+.notice.notice-outcome { padding: 20px 22px 20px 22px; border-left-width: 5px; font-size: 16.5px; line-height: 1.6; }
+.notice-title { display: block; margin-bottom: 6px; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+.notice.ok .notice-title { color: var(--ok); }
+.notice.warn .notice-title { color: var(--warn); }
+.notice-body { display: block; }
+
 /* While a suggestion is being checked, a thin line sweeps along the bottom so
    the few seconds of waiting read as progress rather than a frozen page. */
 .notice.info::after {

@@ -2,7 +2,7 @@
 // ahead without a vote, then the ones the school has acted on (Done).
 // (The file keeps its old name, ideas.js, so cached pages don't break.)
 import { sb, el, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js";
+import { showUpdates } from "./mine.js?v=2";
 
 const list = document.getElementById("list");
 const filterBar = document.getElementById("categories");
