@@ -7,7 +7,7 @@ refused. Nothing here writes data.
 
 import unittest
 
-from helpers import edge, is_refused, request, rpc, table, public_config
+from helpers import SSL_CONTEXT, edge, is_refused, request, rpc, table, public_config
 
 TABLES = [
     "suggestions", "suggestion_votes", "staff", "app_config",
@@ -22,6 +22,9 @@ STAFF_ONLY = {
     "staff_resolve_concern": {"p_id": 1, "p_outcome": "not_concern"},
     "staff_reword": {"p_id": 1, "p_suggestion": "hijacked wording", "p_benefit": ""},
     "staff_restore_original": {"p_id": 1},
+    "staff_set_reason": {"p_id": 1, "p_reason": "hijacked"},
+    "staff_feedback": {},
+    "staff_mark_feedback": {"p_id": 1, "p_handled": True},
 }
 
 SIGNED_IN_ONLY = {
@@ -31,6 +34,7 @@ SIGNED_IN_ONLY = {
     "board_access_error": {},
     "my_suggestions": {},
     "mark_my_suggestions_seen": {"p_ids": [1]},
+    "send_feedback": {"p_kind": "other", "p_message": "spam from outside"},
 }
 
 INTERNAL = {
@@ -129,7 +133,7 @@ class TestEdgeFunction(unittest.TestCase):
             "apikey": cfg["key"], "Authorization": f"Bearer {cfg['key']}",
             "Content-Type": "application/json", "x-queue-secret": "guess"})
         try:
-            status = urllib.request.urlopen(req, timeout=30).status
+            status = urllib.request.urlopen(req, timeout=30, context=SSL_CONTEXT).status
         except urllib.error.HTTPError as err:
             status = err.code
         self.assertEqual(status, 403)

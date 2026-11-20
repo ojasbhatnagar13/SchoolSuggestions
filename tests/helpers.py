@@ -10,6 +10,13 @@ import os
 import re
 import urllib.error
 import urllib.request
+import ssl
+
+# Python 3.13+ adds VERIFY_X509_STRICT, which rejects the certificates that
+# school and office Wi-Fi inspection proxies issue ("Missing Authority Key
+# Identifier"). The chain and hostname are still fully verified without it.
+SSL_CONTEXT = ssl.create_default_context()
+SSL_CONTEXT.verify_flags &= ~getattr(ssl, "VERIFY_X509_STRICT", 0)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -66,7 +73,7 @@ def request(method: str, url: str, body=None, token: str | None = None, timeout=
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as res:
+        with urllib.request.urlopen(req, timeout=timeout, context=SSL_CONTEXT) as res:
             return Response(res.status, res.read().decode())
     except urllib.error.HTTPError as err:
         return Response(err.code, err.read().decode())

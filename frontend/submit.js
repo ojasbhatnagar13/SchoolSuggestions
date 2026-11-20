@@ -1,7 +1,7 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
-import { mySuggestions, showUpdates, renderMine } from "./mine.js";
+import { showUpdates } from "./mine.js";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in
@@ -238,13 +238,13 @@ els.form.addEventListener("submit", async (event) => {
       );
     } else if (payload.queued || payload.unchecked) {
       // Every AI model stayed busy past the wait. It is saved and queued; the
-      // once-a-minute run checks it, and "Your suggestions" shows the result.
+      // once-a-minute run checks it, and My suggestions shows the result.
       notice(
         `Sent as #${payload.id}. Lots of students are sending right now, so ` +
         `yours is in the queue and will be checked within a few minutes. ` +
         (fullyAnonymous
           ? `It was sent with complete anonymity, so check the home page later to see if it's approved.`
-          : `You can follow it under "Your suggestions" below.`),
+          : `You can follow it on your My suggestions page.`),
         "ok",
       );
     } else if (payload.status === "spam") {
@@ -271,7 +271,7 @@ els.form.addEventListener("submit", async (event) => {
       );
     }
     clearForm();
-    refreshMine(); // the new one appears in "Your suggestions"
+    showUpdates(session); // news about earlier suggestions, if any
   } catch (err) {
     // fetch() rejects with a bare TypeError for DNS failures, CORS blocks and
     // a function that was never deployed -- "Failed to fetch" means nothing to
@@ -295,22 +295,9 @@ els.text.addEventListener("input", updateCounter);
 restoreDraft();
 
 
-const mineEl = document.getElementById("mine");
-
-// "Your suggestions" and any news about them. Signed out: nothing to show.
-async function refreshMine() {
-  if (!session) {
-    mineEl.hidden = true;
-    showUpdates(null);
-    return;
-  }
-  const rows = await mySuggestions();
-  renderMine(mineEl, rows);
-  showUpdates(session, rows);
-}
 
 watchSession((newSession) => {
   session = newSession;
   showAccount();
-  refreshMine();
+  showUpdates(session);
 });

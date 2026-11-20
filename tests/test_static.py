@@ -13,8 +13,9 @@ import unittest
 
 from helpers import FRONTEND, ROOT, public_config
 
-PAGES = ["index.html", "suggest.html", "how.html", "staff.html"]
-STUDENT_TABS = {"index.html": "Suggestions", "suggest.html": "Suggest", "how.html": "How it works"}
+PAGES = ["index.html", "suggest.html", "mine.html", "how.html", "feedback.html", "staff.html"]
+STUDENT_TABS = {"index.html": "Suggestions", "suggest.html": "Suggest",
+                "mine.html": "My suggestions", "how.html": "How it works"}
 
 
 def jwt_payload(token: str) -> dict:

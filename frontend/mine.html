@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Suggestions — DPSI School Suggestions</title>
+  <meta name="description" content="See where your own suggestions stand. Only you can see this list.">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=26">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Pages">
+        <a href="index.html">Suggestions</a>
+        <a href="suggest.html">Suggest</a>
+        <a href="mine.html" aria-current="page">My suggestions</a>
+        <a href="how.html">How it works</a>
+      </nav>
+      <div class="nav-actions">
+        <span id="who" class="who" hidden></span>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="band band-dark page-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">My suggestions</p>
+          <h1 class="headline headline-md">Where your<br>suggestions stand.</h1>
+        </div>
+        <p class="page-head-note">
+          Only you can see this list. <b>Staff never see who sent a
+          suggestion.</b>
+        </p>
+      </div>
+    </section>
+
+    <section class="band band-cream mine-page">
+      <div class="wrap">
+        <div class="mine-notice">
+          <svg class="anon-lock" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="10.5" width="14" height="10" rx="2"></rect>
+            <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
+          </svg>
+          <p>
+            <b>Suggestions you sent with "Complete anonymity" switched on won't show up here.</b>
+            They aren't linked to you at all, so to see what happened to them,
+            check the home page.
+          </p>
+        </div>
+
+        <p id="mine-summary" class="mono mine-summary" aria-live="polite"></p>
+        <div id="mine-empty" hidden></div>
+        <ol id="mine-list" class="mine-list" hidden></ol>
+
+        <p class="mine-footnote">
+          Suggestions marked as spam or offensive won't show up here either.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · 2026</span>
+        <span><a href="feedback.html">Feedback about this site</a> · <a href="staff.html">Staff review</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="mine-page.js?v=26"></script>
+</body>
+</html>

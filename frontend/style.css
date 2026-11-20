@@ -1883,3 +1883,86 @@ textarea.code-box {
   .anon-always { padding: 14px; gap: 12px; }
   .anon-always-main { font-size: 17px; }
 }
+
+/* ------------------------------------------------------------------ My suggestions page */
+
+.mine-page { padding: 72px 0 104px; }
+.mine-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line-l);
+  border-left: 3px solid var(--ok-l);
+}
+.mine-notice p { margin: 0; font-size: 16px; color: var(--muted-l); }
+.mine-notice b { color: var(--text-l); }
+.mine-notice .anon-lock { stroke: var(--ok-l); }
+.mine-summary { margin: 28px 0 0; color: var(--muted-l); text-transform: uppercase; }
+#mine-empty { margin-top: 28px; }
+#mine-empty .board-state { background: var(--paper); border-color: var(--line-l); color: var(--text-l); grid-template-columns: 1fr; }
+#mine-empty .board-state p { color: var(--muted-l); }
+.mine-page .mine-list { margin-top: 16px; }
+.mine-page .mine-row { grid-template-columns: 160px 1fr auto; align-items: start; }
+.mine-row.is-updated { background: rgba(217, 108, 53, 0.06); padding-left: 10px; border-left: 3px solid var(--accent); }
+.mine-main p { margin: 0; }
+.mine-reason { display: grid; gap: 2px; margin-top: 8px !important; padding-left: 12px; border-left: 2px solid var(--line-l2); color: var(--muted-l); font-size: 15px; }
+.mine-reason .mono { font-size: 11px; text-transform: uppercase; }
+.mine-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.mine-footnote { margin: 24px 0 0; font-size: 14.5px; color: var(--muted-l); }
+
+/* ------------------------------------------------------------------ Feedback page */
+
+.feedback-wrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: 56px; align-items: start; }
+.feedback-form { display: grid; gap: 12px; }
+.kind-choice { display: grid; gap: 10px; margin: 0 0 8px; padding: 0; border: 0; }
+.kind-choice label { display: flex; align-items: center; gap: 10px; font-size: 16px; color: var(--text-l); cursor: pointer; }
+.kind-choice input { width: 18px; height: 18px; accent-color: var(--accent); }
+.feedback-form textarea { background: var(--paper); color: var(--text-l); border-color: var(--line-l2); }
+.feedback-form .notice { background: var(--paper); color: var(--text-l); border-color: var(--line-l); }
+.feedback-aside { padding: 22px 24px; background: var(--paper); border: 1px solid var(--line-l); }
+.feedback-aside ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted-l); }
+.feedback-aside li { margin-bottom: 8px; }
+.feedback-aside b { color: var(--text-l); }
+.page-head-note a, .feedback-aside a { color: var(--accent); }
+
+/* Staff page: feedback list */
+.feedback-band { padding: 88px 0; }
+.feedback-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.feedback-item { display: grid; gap: 10px; padding: 18px 20px; background: var(--paper); border: 1px solid var(--line-l); border-left: 3px solid var(--accent); }
+.feedback-item.is-handled { border-left-color: var(--line-l2); opacity: 0.7; }
+.feedback-text { margin: 0; overflow-wrap: anywhere; }
+.feedback-item .qbtn { justify-self: start; }
+.kind-broken { color: var(--bad-l); border-color: var(--bad-l); }
+.kind-improve { color: var(--ok-l); border-color: var(--ok-l); }
+
+/* Staff page: reason for the student */
+.staff-reason { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin: 0; padding: 10px 12px; background: var(--cream-2); border-left: 2px solid var(--bad-l); font-size: 15px; }
+.staff-reason .mono { grid-column: 1 / -1; font-size: 11px; color: var(--muted-l); text-transform: uppercase; }
+.link-edit { justify-self: start; padding: 0; border: 0; background: none; color: var(--accent-2); font-size: 14px; font-weight: 600; cursor: pointer; }
+.link-edit:hover { text-decoration: underline; }
+.reason-dialog {
+  width: min(520px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid var(--line-l);
+  background: var(--paper);
+  color: var(--text-l);
+}
+.reason-dialog::backdrop { background: rgba(26, 26, 26, 0.55); }
+.reason-dialog h3 { margin: 0 0 6px; font-size: 20px; }
+.reason-dialog textarea { margin: 12px 0; min-height: 0; background: var(--paper); color: var(--text-l); border-color: var(--line-l2); font-size: 16px; }
+
+/* Four tabs: they share the row on phones, wrapping onto two lines if needed. */
+@media (max-width: 1020px) {
+  .nav-links { grid-template-columns: repeat(var(--tabs, 4), 1fr); height: auto; min-height: 48px; }
+  .nav-links a { padding: 8px 4px; text-align: center; line-height: 1.2; font-size: 14px; }
+}
+@media (max-width: 900px) {
+  .feedback-wrap { grid-template-columns: 1fr; gap: 28px; }
+}
+@media (max-width: 600px) {
+  .mine-page .mine-row { grid-template-columns: 1fr auto; }
+  .mine-page .mine-main { grid-column: 1 / -1; grid-row: 2; }
+  .nav-links a { font-size: 13px; }
+}

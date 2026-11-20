@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -23,6 +23,7 @@
       <nav class="nav-links" aria-label="Pages">
         <a href="index.html">Suggestions</a>
         <a href="suggest.html" aria-current="page">Suggest</a>
+        <a href="mine.html">My suggestions</a>
         <a href="how.html">How it works</a>
       </nav>
       <div class="nav-actions">
@@ -84,12 +85,12 @@
               </label>
               <div id="anon-default" class="anon-note">
                 Off: it's kept privately with your account, only so you can see
-                what happens to it under "Your suggestions" and get updates.
+                what happens to it on your My suggestions page and get updates.
               </div>
               <div id="anon-warning" class="anon-note anon-warning" hidden>
                 <p class="anon-big"><b>You will NOT get any updates about this suggestion.</b></p>
                 It won't be linked to your account at all, so it won't appear under
-                "Your suggestions" and nobody, not even the site's admins, can trace
+                your My suggestions page and nobody, not even the site's admins, can trace
                 it back to you. To find out whether it was approved, you'll have to
                 check the home page yourself.
               </div>
@@ -116,15 +117,6 @@
       </div>
     </section>
 
-    <!-- Shown only to the signed-in student who sent them (mine.js). -->
-    <section class="band band-cream-2 mine-band" id="mine" hidden>
-      <div class="wrap">
-        <p class="eyebrow">Your suggestions</p>
-        <h2 class="h2">Where yours stand.</h2>
-        <p class="section-lede">Only you can see this list. Staff never see who sent a suggestion.</p>
-        <ol class="mine-list"></ol>
-      </div>
-    </section>
 
     <section class="band band-cream next">
       <div class="wrap">
@@ -167,11 +159,11 @@
     <div class="wrap">
       <div class="footer-bar mono">
         <span>DPSI Student Suggestions · 2026</span>
-        <span><a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
+        <span><a href="feedback.html">Feedback about this site</a> · <a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=22"></script>
+  <script type="module" src="submit.js?v=26"></script>
 </body>
 </html>

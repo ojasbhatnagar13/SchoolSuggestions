@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Feedback — DPSI School Suggestions</title>
+  <meta name="description" content="Tell us about the suggestion site itself: something broken, or a way to make it better.">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=26">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Pages">
+        <a href="index.html">Suggestions</a>
+        <a href="suggest.html">Suggest</a>
+        <a href="mine.html">My suggestions</a>
+        <a href="how.html">How it works</a>
+      </nav>
+      <div class="nav-actions">
+        <span id="who" class="who" hidden></span>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="band band-dark page-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">Feedback</p>
+          <h1 class="headline headline-md">How can we make<br>this site better?</h1>
+        </div>
+        <p class="page-head-note">
+          This is about <b>the website itself</b>: something not working, or
+          something that would make it easier to use. For changes to the school,
+          <a href="suggest.html">make a suggestion</a> instead.
+        </p>
+      </div>
+    </section>
+
+    <section class="band band-cream">
+      <div class="wrap feedback-wrap">
+        <form id="feedback-form" class="feedback-form">
+          <fieldset class="kind-choice">
+            <legend class="field-label-l">What is it about?</legend>
+            <label><input type="radio" name="kind" value="broken" required> Something's broken or confusing</label>
+            <label><input type="radio" name="kind" value="improve"> A way to improve the site</label>
+            <label><input type="radio" name="kind" value="other"> Something else</label>
+          </fieldset>
+          <label class="field-label-l" for="feedback-text">Your feedback</label>
+          <textarea id="feedback-text" rows="5" maxlength="1000" required
+            placeholder="e.g. The vote button didn't work on my phone."></textarea>
+          <div class="form-foot">
+            <span class="hint">Staff read this. Your name is never shown to anyone.</span>
+            <button id="feedback-send" class="btn btn-primary" type="submit">Send feedback <span aria-hidden="true">→</span></button>
+          </div>
+          <div id="feedback-result" class="notice" role="status" hidden></div>
+        </form>
+
+        <aside class="feedback-aside">
+          <h2 class="h3">Not the place for</h2>
+          <ul>
+            <li><b>Suggestions for the school.</b> Use the <a href="suggest.html">Suggest</a> page.</li>
+            <li><b>Personal problems.</b> If you're being bullied or feel unsafe, talk to a teacher or counsellor in person.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · 2026</span>
+        <span><a href="staff.html">Staff review</a> · Built by Ojas Bhatnagar</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="feedback.js?v=26"></script>
+</body>
+</html>

@@ -285,6 +285,20 @@ function card(row) {
     words.append(why);
   }
   if (row.original_suggestion) words.append(originalBox(row));
+  if (row.staff_reason) {
+    const said = el("p", "staff-reason");
+    said.append(el("span", "mono", "Reason given to the student"), el("span", null, row.staff_reason));
+    const edit = el("button", "link-edit", "Edit");
+    edit.type = "button";
+    edit.addEventListener("click", () => askReason(row));
+    said.append(edit);
+    words.append(said);
+  } else if (row.status === "rejected") {
+    const add = el("button", "link-edit", "+ Add a reason for the student");
+    add.type = "button";
+    add.addEventListener("click", () => askReason(row));
+    words.append(add);
+  }
   article.append(words);
 
   const ai = el("div", `ai-box ai-${aiVerdict(row).toLowerCase().replace(/\s+/g, "-")}`);
@@ -403,6 +417,53 @@ async function setStatus(row, wanted, control) {
       toast(`#${row.id} is back in ${LABEL[previous] ?? previous}.`);
     },
   );
+
+  // "Explain the no's": a turned-down student hears why, if staff say.
+  if (data === "rejected") askReason(row);
+}
+
+// A small dialog after rejecting: one optional sentence for the student,
+// shown on their My suggestions page. Skipping is fine.
+function askReason(row) {
+  const dialog = el("dialog", "reason-dialog");
+  const title = el("h3", null, "Tell the student why? (optional)");
+  const help = el("p", "hint",
+    "One sentence is enough. The student sees it on their My suggestions page. " +
+    "They never see who wrote it.");
+  const box = el("textarea");
+  box.rows = 3;
+  box.maxLength = 500;
+  box.placeholder = "e.g. This isn't possible because of fire safety rules in the corridors.";
+  box.value = row.staff_reason ?? "";
+  const status = el("p", "reword-status mono");
+  const save = el("button", "qbtn q-approve", "Save reason");
+  const skip = el("button", "qbtn", "Skip");
+  [save, skip].forEach((b) => (b.type = "button"));
+  const buttons = el("div", "quick");
+  buttons.append(save, skip);
+  dialog.append(title, help, box, buttons, status);
+  document.body.append(dialog);
+
+  const close = () => { dialog.close(); dialog.remove(); };
+  skip.addEventListener("click", close);
+  dialog.addEventListener("cancel", () => dialog.remove()); // Esc key
+  save.addEventListener("click", async () => {
+    if (!box.value.trim()) return close();
+    save.disabled = true;
+    const { error } = await sb.rpc("staff_set_reason", { p_id: row.id, p_reason: box.value });
+    if (error) {
+      save.disabled = false;
+      status.textContent = error.message;
+      return;
+    }
+    row.staff_reason = box.value.trim();
+    close();
+    render();
+    toast(`Reason saved. The student will see it.`);
+  });
+
+  dialog.showModal();
+  box.focus();
 }
 
 // ------------------------------------------------------------------ filters
@@ -614,6 +675,7 @@ function gate(message, kind = "info") {
   els.gate.hidden = false;
   els.board.hidden = true;
   rulesEls.section.hidden = true;
+  $("feedback-section").hidden = true;
 }
 
 async function load() {
@@ -640,6 +702,48 @@ async function load() {
   els.board.hidden = false;
   render();
   if (!rulesDirty) await loadRules();
+  await loadFeedback();
+}
+
+// ------------------------------------------------------------------ site feedback
+
+const KINDS = { broken: "Something's broken", improve: "Improve the site", other: "Something else" };
+
+async function loadFeedback() {
+  const section = $("feedback-section");
+  const { data, error } = await sb.rpc("staff_feedback");
+  if (error) {
+    section.hidden = true; // not installed yet
+    return;
+  }
+  section.hidden = false;
+  const open = data.filter((f) => !f.handled).length;
+  $("feedback-count").textContent = data.length
+    ? `${open} new · ${data.length - open} handled`
+    : "Nothing yet";
+
+  const list = $("feedback-list");
+  if (!data.length) {
+    list.replaceChildren(el("li", "hint", "No feedback yet. Students send it from the Feedback link at the bottom of every page."));
+    return;
+  }
+  list.replaceChildren(...data.map((f) => {
+    const li = el("li", "feedback-item" + (f.handled ? " is-handled" : ""));
+    const head = el("div", "row");
+    head.append(
+      el("span", `tag kind-${f.kind}`, KINDS[f.kind] ?? f.kind),
+      el("span", "hint", `${new Date(f.created_at).toLocaleDateString()}${f.page ? ` · from ${f.page}` : ""}`),
+    );
+    const done = el("button", "qbtn", f.handled ? "Mark as new" : "Mark handled");
+    done.type = "button";
+    done.addEventListener("click", async () => {
+      done.disabled = true;
+      await sb.rpc("staff_mark_feedback", { p_id: f.id, p_handled: !f.handled });
+      await loadFeedback();
+    });
+    li.append(head, el("p", "feedback-text", f.message), done);
+    return li;
+  }));
 }
 
 // ------------------------------------------------------------------ guidelines

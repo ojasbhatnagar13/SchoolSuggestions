@@ -94,23 +94,25 @@ export async function showUpdates(session, rows = null) {
   else document.body.prepend(banner);
 }
 
-// The list on the Suggest page.
-export function renderMine(container, rows) {
-  if (!rows || !rows.length) {
-    container.hidden = true;
-    return;
-  }
-  container.hidden = false;
-  const list = container.querySelector(".mine-list");
+// The list on the My suggestions page. Anything updated since the student
+// last looked is marked "Updated"; the page then marks it seen.
+export function renderMine(list, rows) {
   list.replaceChildren(...rows.map((s) => {
-    const row = el("li", `mine-row mine-${s.status}`);
-    row.append(
-      el("span", "mine-state", STATES[s.status]?.label ?? s.status),
-      el("span", "mine-text", s.suggestion),
-      el("span", "mono mine-date", new Date(s.created_at).toLocaleDateString(undefined, {
-        day: "numeric", month: "short",
-      })),
-    );
+    const row = el("li", `mine-row mine-${s.status}` + (s.unseen && s.status !== "waiting" ? " is-updated" : ""));
+    const state = el("span", "mine-state", STATES[s.status]?.label ?? s.status);
+    const text = el("div", "mine-main");
+    text.append(el("p", "mine-text", s.suggestion));
+    if (s.reason) {
+      const why = el("p", "mine-reason");
+      why.append(el("span", "mono", "Why"), el("span", null, s.reason));
+      text.append(why);
+    }
+    const side = el("div", "mine-side");
+    if (s.unseen && s.status !== "waiting") side.append(el("span", "new-badge", "Updated"));
+    side.append(el("span", "mono mine-date", new Date(s.created_at).toLocaleDateString(undefined, {
+      day: "numeric", month: "short",
+    })));
+    row.append(state, text, side);
     return row;
   }));
 }
