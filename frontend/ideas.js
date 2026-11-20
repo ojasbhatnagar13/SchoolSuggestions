@@ -1,10 +1,13 @@
-// The home page: approved suggestions open for votes, then the ones going
-// ahead without a vote, then the ones the school has acted on (Done).
-// (The file keeps its old name, ideas.js, so cached pages don't break.)
+// Two pages share this file (old name kept so cached pages don't break):
+//   vote.html  -- only the suggestions open for votes, nothing else
+//   index.html -- home: the way in to voting and suggesting, then what is
+//                 going ahead and what is Done
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=2";
 
-const list = document.getElementById("list");
+const list = document.getElementById("list"); // vote page only
+const homeState = document.getElementById("home-state"); // home page only
+const openCount = document.getElementById("open-count"); // home page only
 const filterBar = document.getElementById("categories");
 const aheadSection = document.getElementById("ahead-section");
 const aheadList = document.getElementById("ahead-list");
@@ -205,18 +208,21 @@ function renderFilters() {
   );
 }
 
+// New ones first, so a returning student sees what they haven't voted on
+// yet. Otherwise the order from the database (newest first) is kept.
+const byNew = (a, b) => Number(isNew(b)) - Number(isNew(a));
+
 function render() {
+  if (list) renderVote();
+  else renderHome();
+}
+
+function renderVote() {
   renderFilters();
   const shown = category === "all"
     ? suggestions
     : suggestions.filter((s) => (s.category || "Uncategorised") === category);
-
-  // New ones first, so a returning student sees what they haven't voted on
-  // yet. Otherwise the order from the database (newest first) is kept.
-  const byNew = (a, b) => Number(isNew(b)) - Number(isNew(a));
   const open = shown.filter(isOpen).sort(byNew);
-  const ahead = shown.filter(isAhead).sort(byNew);
-  const done = shown.filter(isDone);
 
   const fresh = suggestions.filter(isNew).length;
   newNote.hidden = !fresh;
@@ -227,22 +233,43 @@ function render() {
       ? "Nothing open for votes right now."
       : `Nothing in ${category} is open for votes right now.`,
     body: "New suggestions appear here once staff approve them. " +
-      "Anything already going ahead or done is listed below.",
+      "Ones going ahead or already done are on the Home page.",
   })]));
+}
 
+function renderHome() {
+  const open = suggestions.filter(isOpen);
+  const fresh = open.filter(isNew).length;
+  openCount.textContent = open.length
+    ? `${plural(open.length, "suggestion")} open for votes` + (fresh ? `, ${fresh} new since your last visit.` : ".")
+    : "Nothing is open for votes right now. Check back soon.";
+
+  const ahead = suggestions.filter(isAhead).sort(byNew);
   aheadSection.hidden = !ahead.length;
   aheadList.replaceChildren(...ahead.map(card));
 
+  const done = suggestions.filter(isDone);
   doneSection.hidden = !done.length;
   doneList.replaceChildren(...done.map(card));
   doneCount.textContent = plural(done.length, "suggestion");
 }
 
 function hideBoard() {
-  filterBar.hidden = true;
-  aheadSection.hidden = true;
-  doneSection.hidden = true;
-  newNote.hidden = true;
+  if (filterBar) filterBar.hidden = true;
+  if (newNote) newNote.hidden = true;
+  if (aheadSection) aheadSection.hidden = true;
+  if (doneSection) doneSection.hidden = true;
+}
+
+// Where messages go: the list on the vote page, under the two big choices on
+// the home page.
+function showState(panel) {
+  if (list) {
+    list.replaceChildren(panel);
+  } else {
+    homeState.replaceChildren(panel);
+    homeState.hidden = !panel;
+  }
 }
 
 function signedOut() {
@@ -250,7 +277,7 @@ function signedOut() {
   const button = el("button", "btn btn-primary", "Sign in with Google");
   button.type = "button";
   button.addEventListener("click", signIn);
-  list.replaceChildren(boardState({
+  showState(boardState({
     title: "Sign in to see what everyone's suggested.",
     body: "The board stays inside the school instead of being shared around " +
       "online. The same sign-in lets you send suggestions of your own.",
@@ -277,7 +304,7 @@ async function refresh(session) {
     const button = el("button", "btn btn-ghost", "Sign out");
     button.type = "button";
     button.addEventListener("click", () => sb.auth.signOut());
-    list.replaceChildren(boardState({
+    showState(boardState({
       title: "This account can't see the board.",
       body: blocked,
       action: button,
@@ -301,7 +328,7 @@ async function refresh(session) {
 
   if (listRes.error) {
     hideBoard();
-    list.replaceChildren(boardState({
+    showState(boardState({
       title: "The board couldn't load.",
       body: listRes.error.message,
       isError: true,
@@ -310,11 +337,20 @@ async function refresh(session) {
   }
 
   suggestions = listRes.data ?? [];
+  if (!list) {
+    // Home: the two choices always show; only the lists below change. Not
+    // counted as a visit, or the vote page would lose its "New" labels.
+    homeState.hidden = true;
+    render();
+    return;
+  }
+  // The vote page shows only what can be voted on; filters count only those.
+  suggestions = suggestions.filter(isOpen);
   if (!suggestions.length) {
     hideBoard();
     const link = el("a", "btn btn-primary", "Send a suggestion →");
     link.href = "suggest.html";
-    list.replaceChildren(boardState({
+    showState(boardState({
       title: "Nothing approved yet.",
       body: "Suggestions appear here once a member of staff has read and " +
         "approved them. Yours could be the first.",

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -21,7 +21,8 @@
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
       <nav class="nav-links" aria-label="Pages">
-        <a href="index.html">Vote</a>
+        <a href="index.html">Home</a>
+        <a href="vote.html">Vote</a>
         <a href="suggest.html" aria-current="page">Suggest</a>
         <a href="mine.html">My suggestions</a>
         <a href="how.html">How it works</a>
@@ -36,16 +37,24 @@
   </header>
 
   <main>
-    <section class="band band-dark home">
+    <section class="band band-dark home home-suggest">
       <div class="wrap home-grid">
         <div class="home-copy">
           <p class="eyebrow">DPS International Edge · Suggestion box</p>
-          <h1 class="headline">Have a suggestion to improve DPSI? <span class="accent">Send it anonymously.</span></h1>
+          <h1 class="headline headline-md">Have a suggestion to improve DPSI? <span class="accent">Send it anonymously.</span></h1>
           <ul class="promise">
             <li><b>Hidden from staff.</b> <span>Staff never see who sent it.</span></li>
             <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
             <li><b>Read by staff.</b> <span>A real person decides.</span></li>
           </ul>
+          <p class="not-for">
+            <b>Not for personal problems.</b> If you're being bullied, feel
+            unsafe, or are going through something hard, please talk to a
+            teacher or a school counsellor in person. This box is anonymous, so
+            nobody can reply to you or help you through it.
+            <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
+            You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
+          </p>
         </div>
 
         <article class="panel panel-dark compose" id="suggest">
@@ -54,7 +63,7 @@
           <div id="result" class="notice" role="status" hidden></div>
           <form id="submit-form" class="form">
             <label for="suggestion" class="field-label">Your suggestion</label>
-            <textarea id="suggestion" maxlength="2000" rows="4" required
+            <textarea id="suggestion" maxlength="2000" rows="3" required
               placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
 
             <label for="benefit" class="field-label">
@@ -106,14 +115,6 @@
             </div>
           </form>
           <p id="signed-as" class="mono form-note"></p>
-          <p class="not-for">
-            <b>Not for personal problems.</b> If you're being bullied, feel
-            unsafe, or are going through something hard, please talk to a
-            teacher or a school counsellor in person. This box is anonymous, so
-            nobody can reply to you or help you through it.
-            <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
-            You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
-          </p>
         </article>
       </div>
     </section>
@@ -141,9 +142,9 @@
         </ol>
 
         <div class="tiles">
-          <a class="tile tile-dark" href="index.html">
-            <span class="eyebrow">Suggestions</span>
-            <span class="tile-title">See what others suggested</span>
+          <a class="tile tile-dark" href="vote.html">
+            <span class="eyebrow">Vote</span>
+            <span class="tile-title">Vote for what others suggested</span>
             <span class="tile-go" aria-hidden="true">→</span>
           </a>
           <a class="tile" href="how.html#rules">

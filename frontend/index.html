@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vote | DPSI School Suggestions</title>
-  <meta name="description" content="Vote for the student suggestions you want at DPS International Edge, or send your own anonymously.">
+  <title>DPSI School Suggestions</title>
+  <meta name="description" content="Suggest changes to DPS International Edge anonymously, and vote for the ones you want.">
   <link rel="icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
   <header class="nav">
@@ -19,7 +19,8 @@
         <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
       </a>
       <nav class="nav-links" aria-label="Pages">
-        <a href="index.html" aria-current="page">Vote</a>
+        <a href="index.html" aria-current="page">Home</a>
+        <a href="vote.html">Vote</a>
         <a href="suggest.html">Suggest</a>
         <a href="mine.html">My suggestions</a>
         <a href="how.html">How it works</a>
@@ -34,31 +35,26 @@
   </header>
 
   <main>
-    <section class="band band-dark page-head home-head">
-      <div class="wrap page-head-grid">
-        <div>
-          <p class="eyebrow">DPS International Edge · Student suggestions</p>
-          <h1 class="headline headline-md">Vote for the suggestions<br><span class="accent">you want at DPSI.</span></h1>
-          <p class="page-head-note home-note">
-            Every suggestion here was approved by staff. <b>One vote each, which you
-            can take back any time.</b> Counts stay private.
-          </p>
-        </div>
-        <a class="suggest-card" href="suggest.html">
-          <span class="eyebrow">Have a suggestion?</span>
-          <span class="suggest-card-title">Send it anonymously</span>
-          <span class="suggest-card-go">Make a suggestion <span aria-hidden="true">→</span></span>
-        </a>
-      </div>
-    </section>
-
-    <section class="band band-dark board-band">
+    <section class="band band-dark home-hero">
       <div class="wrap">
-        <p id="new-note" class="mono new-note" hidden></p>
-        <div id="categories" class="filters filters-dark" role="group" aria-label="Filter by category" hidden></div>
-        <div id="list" class="board" aria-live="polite">
-          <div class="board-state"><p class="mono">Loading…</p></div>
+        <p class="eyebrow">DPS International Edge · Student suggestions</p>
+        <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Vote, or suggest.</span></h1>
+
+        <div class="choice-grid">
+          <a class="choice choice-vote" href="vote.html">
+            <span class="choice-kicker">Vote</span>
+            <span class="choice-title">Vote for suggestions</span>
+            <span id="open-count" class="choice-sub">See what other students want, and back the ones you agree with.</span>
+            <span class="choice-go">Start voting <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="choice choice-suggest" href="suggest.html">
+            <span class="choice-kicker">Suggest</span>
+            <span class="choice-title">Send a suggestion</span>
+            <span class="choice-sub">Staff never see who sent it. It takes a minute.</span>
+            <span class="choice-go">Make a suggestion <span aria-hidden="true">→</span></span>
+          </a>
         </div>
+        <div id="home-state" hidden></div>
       </div>
     </section>
 
@@ -87,27 +83,17 @@
         <div id="done-list" class="board"></div>
       </div>
     </section>
-
-    <section class="band band-dark cta-band">
-      <div class="wrap cta-inner">
-        <h2 class="headline headline-md">Got one of your own?</h2>
-        <div class="cta-side">
-          <p>It takes a minute, and staff never see who sent it.</p>
-          <a class="btn btn-primary" href="suggest.html">Send a suggestion <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="footer footer-min">
     <div class="wrap">
       <div class="footer-bar mono">
         <span>DPSI Student Suggestions · 2026</span>
-        <span><a href="feedback.html">Feedback about this site</a> · <a href="privacy.html">Privacy</a> · Vote counts are visible to staff only</span>
+        <span><a href="feedback.html">Feedback about this site</a> · <a href="privacy.html">Privacy</a> · <a href="staff.html">Staff review</a></span>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=27"></script>
+  <script type="module" src="ideas.js?v=28"></script>
 </body>
 </html>
