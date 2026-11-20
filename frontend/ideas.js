@@ -41,6 +41,24 @@ const list = document.getElementById("list"); // vote page only
 const homeState = document.getElementById("home-state"); // home page only
 const openCount = document.getElementById("open-count"); // home page only
 const filterBar = document.getElementById("categories");
+const searchWrap = document.getElementById("search-wrap"); // vote page only
+const searchBox = document.getElementById("search");
+let query = "";
+let entered = false; // cards animate in only on the first render
+const entering = (list) => {
+  if (entered) return list;
+  list.forEach((c, i) => {
+    c.classList.add("enter");
+    c.style.setProperty("--i", String(Math.min(i, 8)));
+    // Once in, drop the animation so hover can lift the card.
+    c.addEventListener("animationend", () => c.classList.remove("enter"), { once: true });
+  });
+  return list;
+};
+searchBox?.addEventListener("input", () => {
+  query = searchBox.value.trim().toLowerCase();
+  render();
+});
 const aheadSection = document.getElementById("ahead-section");
 const aheadList = document.getElementById("ahead-list");
 const doneSection = document.getElementById("done-section");
@@ -281,16 +299,22 @@ function render() {
 
 function renderVote() {
   renderFilters();
-  const shown = category === "all"
+  searchWrap.hidden = suggestions.length < 2;
+  const matches = (s) => !query ||
+    [s.suggestion, s.benefit, s.summary, s.category].some((t) => (t || "").toLowerCase().includes(query));
+  const shown = (category === "all"
     ? suggestions
-    : suggestions.filter((s) => (s.category || "Uncategorised") === category);
+    : suggestions.filter((s) => (s.category || "Uncategorised") === category)).filter(matches);
   const open = shown.filter(isOpen).sort(byNew);
 
   const fresh = suggestions.filter(isNew).length;
   newNote.hidden = !fresh;
   newNote.textContent = `${plural(fresh, "new suggestion")} since your last visit`;
 
-  list.replaceChildren(...(open.length ? open.map(card) : [boardState({
+  list.replaceChildren(...(open.length ? entering(open.map(card)) : [query ? boardState({
+    title: `Nothing matches “${searchBox.value.trim()}”.`,
+    body: "Try a different word, or clear the search to see everything.",
+  }) : boardState({
     title: category === "all"
       ? "Nothing open for votes right now."
       : `Nothing in ${category} is open for votes right now.`,
@@ -321,6 +345,7 @@ function renderHome() {
 function hideBoard() {
   setBoard(BOARD_INTRO);
   if (filterBar) filterBar.hidden = true;
+  if (searchWrap) searchWrap.hidden = true;
   if (newNote) newNote.hidden = true;
   if (aheadSection) aheadSection.hidden = true;
   if (doneSection) doneSection.hidden = true;
@@ -431,6 +456,7 @@ async function refresh(session) {
   }
 
   render();
+  entered = true;
   // Only a visit that actually showed the list counts as a visit.
   rememberVisit();
 }

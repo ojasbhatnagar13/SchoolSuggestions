@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=37">
+  <link rel="stylesheet" href="style.css?v=38">
 </head>
 <body>
   <header class="nav">
@@ -49,6 +49,10 @@
     <section class="band band-dark board-band vote-board">
       <div class="wrap">
         <p id="new-note" class="mono new-note" hidden></p>
+        <div class="search" id="search-wrap" hidden>
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <input id="search" type="search" placeholder="Search suggestions, e.g. canteen" aria-label="Search suggestions" autocomplete="off">
+        </div>
         <div id="categories" class="filters filters-dark" role="group" aria-label="Filter by category" hidden></div>
         <div id="list" class="board" aria-live="polite">
           <div class="board-state"><p class="mono">Loading…</p></div>
@@ -66,6 +70,7 @@
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=31"></script>
+  <script type="module" src="ideas.js?v=32"></script>
+  <script type="module" src="reveal.js?v=1"></script>
 </body>
 </html>

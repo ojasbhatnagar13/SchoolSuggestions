@@ -201,6 +201,48 @@ function clearForm() {
   els.text.value = "";
   els.benefit.value = "";
   updateCounter();
+  updatePreview();
+}
+
+// ---- Live preview and writing tips ------------------------------------
+// The card on the left shows the suggestion as the Vote page will, and three
+// gentle ticks light up as it gets clearer. Tips only: nothing is blocked.
+const preview = {
+  card: $("preview"), text: $("preview-text"), why: $("preview-why"),
+  benefit: $("preview-benefit"), date: $("preview-date"),
+  copy: document.querySelector(".home-copy"),
+  tips: [...document.querySelectorAll("#tips li")],
+};
+preview.date.textContent = new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
+const PLACE_OR_GROUP = new RegExp("\\b(" + [
+  "canteen", "cafeteria", "library", "class(room)?s?", "grade", "floor", "toilets?", "washrooms?",
+  "bathrooms?", "field", "court", "ground", "bus(es)?", "corridors?", "labs?", "playground", "gym",
+  "pool", "students?", "teachers?", "juniors?", "seniors?", "rooms?", "hall", "gate", "parking",
+  "lunch", "break", "recess", "assembly", "timetable", "uniforms?", "exams?", "tests?", "sports?",
+  "clubs?", "wi-?fi", "fans?", "ac", "lockers?", "benches", "water", "menu", "block", "wing",
+  "auditorium", "music", "art", "science", "maths?", "english", "hindi", "pe", "house", "prefects?",
+  "monday|tuesday|wednesday|thursday|friday|saturday", "morning", "afternoon", "after school",
+].join("|") + ")\\b", "i");
+const HOW = /\b(so (that|we|students|people|everyone)|because|to help|which would|it would|helps?)\b/i;
+
+function updatePreview() {
+  const text = els.text.value.trim();
+  const benefit = els.benefit.value.trim();
+  const typing = text.length > 0;
+  preview.card.hidden = !typing;
+  preview.copy?.classList.toggle("is-typing", typing);
+  preview.text.textContent = text;
+  preview.why.hidden = !benefit;
+  preview.benefit.textContent = benefit;
+
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const checks = {
+    what: words >= 4,
+    where: PLACE_OR_GROUP.test(text),
+    why: benefit.length >= 12 || HOW.test(text),
+  };
+  for (const li of preview.tips) li.classList.toggle("ok", checks[li.dataset.tip]);
 }
 
 els.form.addEventListener("submit", async (event) => {
@@ -348,8 +390,10 @@ els.form.addEventListener("submit", async (event) => {
   }
 });
 
-els.text.addEventListener("input", updateCounter);
+els.text.addEventListener("input", () => { updateCounter(); updatePreview(); });
+els.benefit.addEventListener("input", updatePreview);
 restoreDraft();
+updatePreview();
 
 
 
