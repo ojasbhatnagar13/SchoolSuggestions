@@ -25,7 +25,7 @@ EXPECTED = {("public_suggestions", "authenticated", "SELECT")}
 # Functions that must be callable without signing in. Everything else that
 # anon can execute is a mistake.
 ANON_FUNCTIONS = {
-    "auto_status", "public_rules", "submit_suggestion", "claim_account_slot",
+    "auto_status", "public_rules", "submit_suggestion", "claim_account_slot", "refund_account_slot",
     "moderation_config", "live_topics",
     # the AI queue (docs/setup-ai-queue.sql); all demand the server secret
     "queued_suggestions", "apply_ai_check", "queue_attempt_failed",

@@ -48,6 +48,7 @@ NEEDS_SECRET = {
         "p_category": "Test", "p_reason": "test", "p_summary": "test", "p_secret": "guess",
     },
     "claim_account_slot": {"p_secret": "guess", "p_account_hash": "a" * 64},
+    "refund_account_slot": {"p_secret": "guess", "p_account_hash": "a" * 64},
     "moderation_config": {"p_secret": "guess"},
     "live_topics": {"p_secret": "guess"},
     "queued_suggestions": {"p_secret": "guess", "p_limit": 5},
