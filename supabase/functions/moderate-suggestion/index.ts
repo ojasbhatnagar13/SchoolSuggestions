@@ -121,7 +121,14 @@ applies, or none:
   rude              a real suggestion or issue, phrased with insults, swearing
                     or disrespect towards anyone
   sarcastic         sarcastic or mocking wording
-  unclear           hard to tell what is actually being asked for
+  unclear           does not name anything specific to change, so staff could
+                    not act on it. "make the whole school better", "improve
+                    everything", "more fun stuff", "change things" and "fix
+                    the school" are all unclear. A short request that names a
+                    specific thing ("better food", "more benches", "longer
+                    lunch") is NOT unclear. When in doubt about a sincere but
+                    vague request, use this flag: the student is simply asked
+                    to say more.
   several_requests  asks for more than one unrelated thing
   names_person      mentions a specific teacher, staff member or student
   hidden_concern    as described above
@@ -468,6 +475,23 @@ function mentionsConcern(...texts: string[]): boolean {
   return texts.some((t) => CONCERN_WORDS.test(t));
 }
 
+// A backstop under the AI for suggestions that name nothing to change, like
+// "make the whole school better". Only whole messages match, so anything that
+// names a real thing ("better food", "more benches") is never caught here.
+const VAGUE_WHOLE = new RegExp(
+  "^(please |pls |plz |can (we|you) |could (we|you) |we should |lets |i want (you )?to )?" +
+    "(make|improve|change|fix|upgrade|better|update)( the| our| this| my)?( whole| entire| overall)?" +
+    " (school|everything|things|stuff|it|this place|the place|life)" +
+    "( better| good| nicer| great| fun| more fun| cool| best| amazing)?( please| pls| plz)?$" +
+    "|^(more |some )?(fun|cool|good|better|nice) (stuff|things)( please| pls| plz)?$" +
+    "|^(just )?(make it|be) better( please| pls| plz)?$",
+);
+
+function isVague(suggestion: string): boolean {
+  const t = suggestion.toLowerCase().replace(/[^a-z' ]+/g, " ").replace(/\s+/g, " ").trim();
+  return VAGUE_WHOLE.test(t);
+}
+
 // Shared with the database (app_config.submit_secret) and never sent to a
 // browser. Without it the write functions refuse every call, which is what
 // stops anyone skipping this function by calling the database directly.
@@ -607,7 +631,8 @@ Deno.serve(async (req) => {
     // Too vague to act on: ask the student to say more instead of accepting,
     // rejecting or saving it. Never for a possible concern -- a person must
     // see that however it is worded -- and spam is still treated as spam.
-    const unclear = Array.isArray(analysis.flags) && analysis.flags.includes("unclear");
+    const unclear = (Array.isArray(analysis.flags) && analysis.flags.includes("unclear")) ||
+      isVague(suggestion);
     if (unclear && !concern && analysis.spam !== "Yes") {
       // Nothing was saved, so this send doesn't count against their limit.
       await rpc("refund_account_slot", { p_secret: SUBMIT_SECRET, p_account_hash: await hash(user.id) })

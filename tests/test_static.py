@@ -146,6 +146,31 @@ class TestHelpContacts(unittest.TestCase):
         self.assertNotIn("XXXXX", submit)
 
 
+class TestVagueBackstop(unittest.TestCase):
+    """The check under the AI that sends 'make the whole school better' back
+    to the student, mirrored from isVague() in the Edge Function."""
+
+    def check(self, text):
+        edge = (ROOT / "supabase/functions/moderate-suggestion/index.ts").read_text(encoding="utf-8")
+        block = re.search(r"const VAGUE_WHOLE = new RegExp\((.*?)\);", edge, re.S).group(1)
+        pattern = re.compile("".join(re.findall(r'"([^"]*)"', block)))
+        t = re.sub(r"\s+", " ", re.sub(r"[^a-z' ]+", " ", text.lower())).strip()
+        return bool(pattern.search(t))
+
+    def test_catches_vague(self):
+        for text in ["make whole school better", "Make the whole school better!", "improve everything",
+                     "change things", "more fun stuff pls", "fix the school", "make school better please"]:
+            with self.subTest(text=text):
+                self.assertTrue(self.check(text))
+
+    def test_leaves_real_suggestions_alone(self):
+        for text in ["better food", "more benches near the basketball court", "Start a robotics club",
+                     "make the school canteen better", "can we have a longer lunch break",
+                     "make the whole school greener with more plants"]:
+            with self.subTest(text=text):
+                self.assertFalse(self.check(text))
+
+
 class TestConcernWords(unittest.TestCase):
     """The keyword safety net that flags a report even when the AI is down."""
 

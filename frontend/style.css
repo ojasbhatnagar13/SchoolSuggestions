@@ -212,7 +212,8 @@ button, input, textarea, select { font: inherit; }
   text-decoration: none;
   cursor: pointer;
 }
-.link-btn:hover { color: var(--text-d); }
+.link-btn:hover,
+.link-btn[aria-current="page"] { color: var(--text-d); }
 
 /* ------------------------------------------------------------------ nav */
 

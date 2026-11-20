@@ -126,7 +126,14 @@ applies, or none:
   rude              a real suggestion or issue, phrased with insults, swearing
                     or disrespect towards anyone
   sarcastic         sarcastic or mocking wording
-  unclear           hard to tell what is actually being asked for
+  unclear           does not name anything specific to change, so staff could
+                    not act on it. "make the whole school better", "improve
+                    everything", "more fun stuff", "change things" and "fix
+                    the school" are all unclear. A short request that names a
+                    specific thing ("better food", "more benches", "longer
+                    lunch") is NOT unclear. When in doubt about a sincere but
+                    vague request, use this flag: the student is simply asked
+                    to say more.
   several_requests  asks for more than one unrelated thing
   names_person      mentions a specific teacher, staff member or student
   hidden_concern    as described above
