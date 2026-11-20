@@ -3,7 +3,7 @@
 //   index.html -- home: the way in to voting and suggesting, then what is
 //                 going ahead and what is Done
 import { sb, el, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js?v=2";
+import { showUpdates } from "./mine.js?v=3";
 import { createBoard } from "./flap.js?v=2";
 
 // The split-flap board on the home page. Until there are real suggestions to

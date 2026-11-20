@@ -2434,3 +2434,194 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 @media (max-width: 760px) {
   .journey.is-live .journey-fill { width: 3px; height: 80%; transform: scaleY(0); transform-origin: center top; }
 }
+
+/* ------------------------------------------------------------------ news about your suggestion: a boarding pass */
+.bp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(13, 13, 12, 0.72);
+  backdrop-filter: blur(3px);
+  perspective: 1200px;
+  animation: bp-fade 250ms ease-out;
+}
+.bp-backdrop.is-leaving { opacity: 0; transition: opacity 300ms ease; }
+@keyframes bp-fade { from { opacity: 0; } }
+
+.bp {
+  --bp-colour: var(--accent);
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 190px;
+  width: min(720px, 100%);
+  color: var(--text-l);
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.5));
+  transform-origin: center bottom;
+  animation: bp-in 650ms cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.bp-going_ahead { --bp-colour: #3F8F96; }
+.bp-done { --bp-colour: var(--ok-l); }
+.bp-not_taken_forward { --bp-colour: #6B6860; }
+@keyframes bp-in {
+  from { opacity: 0; transform: translateY(60px) rotateX(75deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+.bp-main, .bp-stub { position: relative; background: var(--paper); }
+.bp-main {
+  padding: 26px 30px 26px;
+  border-radius: 14px 0 0 14px;
+  border-top: 8px solid var(--bp-colour);
+}
+.bp-stub {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 26px 22px;
+  border-radius: 0 14px 14px 0;
+  border-top: 8px solid var(--bp-colour);
+  /* the perforation */
+  background-image: radial-gradient(circle at 0 6px, transparent 4px, var(--paper) 4.5px);
+  background-size: 100% 14px;
+  background-repeat: repeat-y;
+  border-left: 2px dashed var(--line-l2);
+  background-color: transparent;
+}
+.bp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+.bp-brand { font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
+.bp-kind { font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-l); }
+.bp-fields { display: grid; grid-template-columns: repeat(4, auto); gap: 14px 22px; justify-content: start; }
+.bp-field { display: grid; gap: 3px; }
+.bp-label { font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-l); }
+.bp-value { font-weight: 700; font-size: 17px; }
+.bp-fields .bp-field:last-child .bp-value { color: var(--bp-colour); }
+.bp-quote {
+  margin: 22px 0 8px;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.bp-note { margin: 0; font-size: 16px; line-height: 1.55; color: var(--muted-l); }
+.bp-reason { color: var(--text-l); }
+.bp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 22px; }
+.bp-link { color: var(--bp-colour); font-weight: 700; text-decoration: none; }
+.bp-link:hover { text-decoration: underline; }
+.bp-stub .bp-value { font-size: 20px; }
+.bp-stub .bp-field:nth-child(2) .bp-value { color: var(--bp-colour); font-size: 17px; }
+.bp-barcode {
+  height: 52px;
+  margin-top: 6px;
+  background: repeating-linear-gradient(90deg,
+    var(--text-l) 0 2px, transparent 2px 4px, var(--text-l) 4px 5px, transparent 5px 8px,
+    var(--text-l) 8px 11px, transparent 11px 12px, var(--text-l) 12px 13px, transparent 13px 16px);
+  opacity: 0.85;
+}
+
+/* The stamp lands after the pass flips up, and the pass jolts. */
+.bp-stamp {
+  position: absolute;
+  top: 46%; right: 210px;
+  padding: 6px 16px;
+  border: 4px solid var(--bp-colour);
+  border-radius: 6px;
+  color: var(--bp-colour);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  transform: rotate(-11deg) scale(2.4);
+  animation: bp-stamp 320ms cubic-bezier(0.5, 0, 0.75, 0) 700ms forwards;
+}
+@keyframes bp-stamp {
+  to { opacity: 0.92; transform: rotate(-11deg) scale(1); }
+}
+.bp::after { content: none; }
+.bp .bp-main { animation: bp-jolt 260ms ease-out 1010ms; }
+@keyframes bp-jolt {
+  0% { transform: none; } 30% { transform: translateY(3px); } 60% { transform: translateY(-1px); } 100% { transform: none; }
+}
+
+/* "Got it": the stub stays a moment, the pass tears away along the perforation. */
+.bp.is-torn { animation: none; }
+.bp.is-torn .bp-main, .bp.is-torn .bp-stamp {
+  animation: bp-tear-main 600ms cubic-bezier(0.5, 0, 0.8, 0.6) forwards;
+}
+.bp.is-torn .bp-stub { animation: bp-tear-stub 600ms cubic-bezier(0.5, 0, 0.8, 0.6) forwards; }
+@keyframes bp-tear-main {
+  0%   { transform: none; opacity: 1; }
+  25%  { transform: translateX(-6px) rotate(-1.5deg); }
+  100% { transform: translate(-60px, 140px) rotate(-14deg); opacity: 0; }
+}
+@keyframes bp-tear-stub {
+  0%   { transform: none; opacity: 1; }
+  25%  { transform: translateX(8px) rotate(2deg); }
+  100% { transform: translate(90px, 60px) rotate(18deg); opacity: 0; }
+}
+
+/* Phones: the stub goes under the pass, torn along a horizontal line. */
+@media (max-width: 640px) {
+  .bp { grid-template-columns: 1fr; }
+  .bp-main { padding: 22px 20px; border-radius: 14px 14px 0 0; }
+  .bp-stub {
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    padding: 18px 20px;
+    border-radius: 0 0 14px 14px;
+    border-top: 2px dashed var(--line-l2);
+    border-left: 0;
+    background-image: none;
+  }
+  .bp-barcode { width: 70px; height: 40px; margin: 0; }
+  .bp-fields { grid-template-columns: repeat(2, auto); }
+  .bp-quote { font-size: 18px; }
+  .bp-stamp { right: 18px; top: 40%; font-size: 18px; }
+}
+@media (max-width: 640px) { .bp-stub { background-color: var(--paper); } }
+
+/* ------------------------------------------------------------------ first visit: the flypast (flypast.js) */
+.flypast { position: fixed; inset: 0; z-index: 300; overflow: hidden; pointer-events: none; }
+.fp-craft { position: absolute; top: 0; left: 0; will-change: transform; }
+.fp-body { position: absolute; inset: 0; will-change: transform; }
+.fp-jet { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.45)); }
+.fp-flame { transform-box: fill-box; transform-origin: right center; animation: fp-flicker 70ms steps(2) infinite alternate; }
+.fp-flame-core { animation-duration: 55ms; }
+.fp-glow { animation: fp-pulse 120ms ease-in-out infinite alternate; }
+@keyframes fp-flicker { from { transform: scaleX(0.82) scaleY(0.92); } to { transform: scaleX(1.08) scaleY(1.06); } }
+@keyframes fp-pulse { from { opacity: 0.7; } to { opacity: 1; } }
+/* The contrail: from the nozzle back across the page, thinning and fading. */
+.fp-trail {
+  position: absolute;
+  top: 50%; right: 94%;
+  width: 150vw;
+  height: 7%;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(to left,
+    rgba(255, 196, 120, 0.55) 0%,
+    rgba(245, 242, 237, 0.45) 6%,
+    rgba(245, 242, 237, 0.18) 45%,
+    rgba(245, 242, 237, 0) 100%);
+  filter: blur(2px);
+}
+@media (prefers-reduced-motion: reduce) { .flypast { display: none; } }
+/* Stamp in the empty corner beside the buttons, never over the text. */
+.bp-stamp { top: auto; bottom: 30px; right: 214px; }
+@media (max-width: 640px) { .bp-stamp { top: auto; bottom: 96px; right: 16px; } }
+/* The stamp gets its own strip at the bottom of the pass. */
+.bp-main { padding-bottom: 92px; }
+.bp-stamp, .bp-stamp { top: auto; bottom: 24px; right: 26px; left: auto; }
+.bp.is-torn .bp-stamp { animation: none; }
+@media (max-width: 640px) {
+  .bp-main { padding-bottom: 84px; }
+  .bp-stamp { bottom: 20px; right: auto; left: 20px; font-size: 17px; }
+}

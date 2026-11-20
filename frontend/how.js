@@ -1,7 +1,7 @@
 // How it works: shows the guidelines staff have set, straight from the
 // database, so the page never disagrees with what the AI is checking.
 import { sb, el, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js?v=2";
+import { showUpdates } from "./mine.js?v=3";
 
 const cards = document.getElementById("rules-cards");
 

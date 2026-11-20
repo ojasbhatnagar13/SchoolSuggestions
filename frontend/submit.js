@@ -1,7 +1,7 @@
 // The suggestion form on the home page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js?v=2";
+import { showUpdates } from "./mine.js?v=3";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in

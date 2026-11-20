@@ -37,61 +37,118 @@ export async function mySuggestions() {
   return error ? null : data ?? [];
 }
 
-// A notice inside the sticky nav, so it stays on screen while scrolling
-// until the student dismisses it.
+// The news, as a boarding pass: where the suggestion is "flying to".
+const PASS = {
+  approved: { to: "The Vote page", gate: "Vote", link: ["vote.html", "Go to the Vote page →"] },
+  going_ahead: { to: "Straight to action", gate: "Go", link: ["index.html#ahead-section", "See it →"] },
+  done: { to: "Done", gate: "Arrived", link: ["index.html#done-section", "See it →"] },
+  not_taken_forward: { to: "Not this time", gate: "Closed", link: null },
+};
+
+const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function boardingPass(s, n, total) {
+  const state = STATES[s.status];
+  const pass = PASS[s.status];
+  const card = el("article", `bp bp-${s.status}`);
+  card.setAttribute("role", "dialog");
+  card.setAttribute("aria-modal", "true");
+  card.setAttribute("aria-label", `News about your suggestion: ${state.label}`);
+
+  const main = el("div", "bp-main");
+  const top = el("div", "bp-top");
+  top.append(el("span", "bp-brand", "DPSI Suggestions"), el("span", "bp-kind mono",
+    total > 1 ? `Boarding pass ${n} of ${total}` : "Boarding pass"));
+
+  const field = (label, value) => {
+    const f = el("div", "bp-field");
+    f.append(el("span", "bp-label mono", label), el("span", "bp-value", value));
+    return f;
+  };
+  const fields = el("div", "bp-fields");
+  fields.append(
+    field("Passenger", "You"),
+    field("Flight", `#${s.id}`),
+    field("From", "Your suggestion"),
+    field("To", pass.to),
+  );
+
+  const quote = el("p", "bp-quote", `“${s.suggestion}”`);
+  const note = el("p", "bp-note", state.notice);
+  if (s.reason) note.append(el("span", "bp-reason", ` Staff said: ${s.reason}`));
+
+  const actions = el("div", "bp-actions");
+  const ok = el("button", "btn btn-primary bp-ok", n < total ? "Next" : "Got it");
+  ok.type = "button";
+  actions.append(ok);
+  if (pass.link) {
+    const a = el("a", "bp-link", pass.link[1]);
+    a.href = pass.link[0];
+    actions.append(a);
+  }
+  // The stamp lives in the main part, in space kept free for it.
+  main.append(top, fields, quote, note, actions, el("span", "bp-stamp", state.label));
+
+  const stub = el("div", "bp-stub");
+  stub.append(
+    field("Gate", pass.gate),
+    field("Status", state.label),
+    el("div", "bp-barcode"),
+  );
+
+  card.append(main, stub);
+  return { card, ok };
+}
+
+// When staff decide on a suggestion, its sender gets a boarding pass the
+// next time they open the site: it flips up, gets stamped with what
+// happened, and tears away when they've read it. One pass per update.
 export async function showUpdates(session, rows = null) {
-  document.querySelector(".updates")?.remove();
+  document.querySelector(".bp-backdrop")?.remove();
   if (!session) return;
 
   rows = rows ?? await mySuggestions();
   const updates = (rows ?? []).filter((s) => s.unseen && STATES[s.status]?.notice);
   if (!updates.length) return;
 
-  const banner = el("section", "updates");
-  banner.setAttribute("role", "status");
-  banner.setAttribute("aria-label", "News about your suggestions");
-  const wrap = el("div", "wrap updates-inner");
+  const backdrop = el("div", "bp-backdrop");
+  document.body.append(backdrop);
+  let i = 0;
+  let busy = false;
 
-  const head = el("div", "updates-head");
-  const ok = el("button", "btn btn-ghost updates-dismiss", "Got it");
-  ok.type = "button";
-  ok.addEventListener("click", async () => {
-    ok.disabled = true;
+  const finish = async () => {
+    backdrop.classList.add("is-leaving");
     await sb.rpc("mark_my_suggestions_seen", { p_ids: updates.map((s) => s.id) });
-    banner.remove();
-  });
-  head.append(
-    el("p", "eyebrow", updates.length === 1
-      ? "News about your suggestion"
-      : "News about your suggestions"),
-    ok,
-  );
+    setTimeout(() => backdrop.remove(), reduceMotion() ? 0 : 300);
+    document.removeEventListener("keydown", onKey);
+  };
 
-  const items = el("div", "update-list");
-  for (const s of updates) {
-    const state = STATES[s.status];
-    const item = el("div", `update update-${s.status}`);
-    const text = el("div");
-    text.append(
-      el("span", "update-title", state.label),
-      el("p", "update-text", `“${s.suggestion}”`),
-      el("p", "update-body", state.notice),
-    );
-    item.append(text);
-    if (["approved", "going_ahead", "done"].includes(s.status)
-        && !/\/(index\.html)?$/.test(location.pathname)) {
-      const a = el("a", "update-link", "See it →");
-      a.href = "index.html";
-      item.append(a);
-    }
-    items.append(item);
-  }
+  const show = () => {
+    const { card, ok } = boardingPass(updates[i], i + 1, updates.length);
+    backdrop.replaceChildren(card);
+    ok.focus({ preventScroll: true });
+    ok.addEventListener("click", () => tear(card));
+  };
 
-  wrap.append(head, items);
-  banner.append(wrap);
-  const nav = document.querySelector(".nav");
-  if (nav) nav.append(banner);
-  else document.body.prepend(banner);
+  const tear = (card) => {
+    if (busy || !card) return;
+    busy = true;
+    const next = () => {
+      busy = false;
+      i++;
+      if (i < updates.length) show();
+      else finish();
+    };
+    if (reduceMotion()) return next();
+    card.classList.add("is-torn");
+    setTimeout(next, 650);
+  };
+
+  const onKey = (e) => {
+    if (e.key === "Escape") tear(backdrop.querySelector(".bp"));
+  };
+  document.addEventListener("keydown", onKey);
+  show();
 }
 
 // The list on the My suggestions page. Anything updated since the student
