@@ -2428,3 +2428,9 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
   .journey-sky { top: -40px; height: calc(100% + 60px); left: -20px; right: -20px; width: calc(100% + 40px); }
   .journey.is-live .s4.stamped .stamp { animation-name: stamp-in-side; }
 }
+/* Live: the line is full length and scaled by journey.js. */
+.journey.is-live .journey-fill { width: 80%; transform: scaleX(0); transform-origin: left center; will-change: transform; }
+.journey-sky { will-change: transform; }
+@media (max-width: 760px) {
+  .journey.is-live .journey-fill { width: 3px; height: 80%; transform: scaleY(0); transform-origin: center top; }
+}

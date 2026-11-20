@@ -4,16 +4,17 @@
 //                 going ahead and what is Done
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=2";
-import { createBoard } from "./flap.js?v=1";
+import { createBoard } from "./flap.js?v=2";
 
 // The split-flap board on the home page. Until there are real suggestions to
 // show (or the student is signed out), it explains the box instead.
 const flapEl = document.getElementById("flap");
 const setBoard = flapEl ? createBoard(flapEl.parentElement, flapEl) : () => {};
+// Three messages the board always cycles through, between real suggestions.
 const BOARD_INTRO = [
-  ["Suggest it", "Got a way to make DPSI better? Send it in a minute.", "info"],
-  ["Vote on it", "Back the suggestions you want. One vote each.", "info"],
-  ["See it done", "When the school acts on one, it shows up here.", "done"],
+  ["Now boarding", "Your suggestions for a better DPSI. Send one in a minute.", "info"],
+  ["Vote on it", "Back the ones you want. One vote each, counts stay private.", "open"],
+  ["Arriving: Done", "When the school acts on a suggestion, it lands here.", "done"],
 ];
 setBoard(BOARD_INTRO);
 
@@ -25,7 +26,15 @@ function boardMessages() {
     ...pick(isAhead, "Going ahead", "ahead", 4),
     ...pick(isOpen, "Open for votes", "open", 6),
   ];
-  return real.length ? real : BOARD_INTRO;
+  if (!real.length) return BOARD_INTRO;
+  // One of the three messages after every two real suggestions.
+  const out = [];
+  real.forEach((m, i) => {
+    out.push(m);
+    if (i % 2 === 1) out.push(BOARD_INTRO[((i - 1) / 2) % BOARD_INTRO.length]);
+  });
+  if (real.length === 1) out.push(BOARD_INTRO[0], BOARD_INTRO[1]);
+  return out;
 }
 
 const list = document.getElementById("list"); // vote page only

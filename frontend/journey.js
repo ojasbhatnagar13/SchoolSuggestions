@@ -24,10 +24,15 @@ function start() {
   const ctx = canvas.getContext("2d");
 
   const DUR = 12000; // one flight, ms
-  // When the jet reaches each stop (fraction of the flight), and when it is
-  // gone off the far side.
-  const AT = [0.05, 0.22, 0.42, 0.62, 0.8];
+  // The jet is gone off the far side at this fraction of the flight; the
+  // rest is a short pause before the next one. When it reaches each stop is
+  // worked out from the layout (AT), so the speed never changes.
   const GONE = 0.92;
+  const LEAD = 170; // px flown before the first stop
+  const EXIT = 260; // px flown after the last one
+  let AT = [0.05, 0.22, 0.42, 0.62, 0.8];
+  let along0 = []; // distance of each stop from the start, px
+  let S = 1; // total distance flown, px
   const TRAIL_MS = 1400;
 
   const css = getComputedStyle(document.documentElement);
@@ -48,7 +53,7 @@ function start() {
 
   function measure() {
     const r = canvas.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5); // plenty sharp, half the pixels of 2x
     W = r.width;
     H = r.height;
     canvas.width = Math.round(W * dpr);
@@ -63,52 +68,54 @@ function start() {
     // Left-hand normal: up when flying right, to the right when flying down.
     up = { x: dir.y, y: -dir.x };
     loopR = dir.x > 0.5 ? 46 : 21; // on phones, keep clear of the step text
+
+    // One constant speed for the whole flight: the stops are reached when
+    // the jet gets there, rather than the jet being rushed to a timetable.
+    along0 = points.map((pt) => LEAD + (pt.x - a.x) * dir.x + (pt.y - a.y) * dir.y);
+    S = along0[along0.length - 1] + EXIT;
+    AT = along0.map((d) => (d / S) * GONE);
     trail = [];
   }
 
-  const ease = (t) => t * t * (3 - 2 * t);
   const clamp01 = (t) => Math.max(0, Math.min(1, t));
+  // 0 -> 1 with zero speed AND zero acceleration at both ends, so a move
+  // blends in and out of straight flight with no visible kick.
+  const smoother = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  // A bump 0 -> 1 -> 0 that starts and ends flat.
+  const bump = (t) => Math.sin(Math.PI * t) ** 2;
 
-  // Where the jet is at flight fraction p, before any manoeuvre: straight
-  // through each stop centre, arriving on time.
-  function base(p) {
-    const lead = 170;
-    const first = { x: points[0].x - dir.x * lead, y: points[0].y - dir.y * lead };
-    const last = points[points.length - 1];
-    const off = { x: last.x + dir.x * 260, y: last.y + dir.y * 260 };
-    const keys = [[0, first], ...AT.map((t, i) => [t, points[i]]), [GONE, off]];
-    for (let i = 1; i < keys.length; i++) {
-      if (p <= keys[i][0]) {
-        const [t0, a] = keys[i - 1];
-        const [t1, b] = keys[i];
-        const k = (p - t0) / (t1 - t0);
-        return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
-      }
-    }
-    return off;
-  }
+  // Fraction of the way between stop i and stop i + 1, as a flight fraction.
+  const between = (i, f) => AT[i] + (AT[i + 1] - AT[i]) * f;
 
-  // The flight path: base position plus the manoeuvres, worked out in the
-  // jet's own frame (along = forward, lift = up) so the same flight works
-  // across a laptop screen and down a phone.
+  // The flight path, worked out in the jet's own frame (along = forward,
+  // lift = up) so the same flight works across a laptop and down a phone.
   function pos(p) {
-    const b = base(p);
-    let along = 0;
+    let along = (p / GONE) * S - along0[0]; // relative to the first stop
     let lift = 0;
-    // Loop-the-loop between "AI checks it" and "Staff decide".
-    const L0 = 0.27, L1 = 0.37;
+
+    // Loop-the-loop between "AI checks it" and "Staff decide". The angle
+    // speeds up and slows down smoothly, so the loop eases in and out.
+    const L0 = between(1, 0.2), L1 = between(1, 0.8);
     if (p > L0 && p < L1) {
-      const th = 2 * Math.PI * ease((p - L0) / (L1 - L0));
+      const th = 2 * Math.PI * smoother((p - L0) / (L1 - L0));
       along += loopR * Math.sin(th);
       lift += loopR * (1 - Math.cos(th));
     }
-    // A pull-up and dive before "Students vote".
-    if (p > 0.5 && p < 0.6) lift += (dir.x > 0.5 ? 26 : 14) * Math.sin(Math.PI * (p - 0.5) / 0.1);
-    // A low, lazy weave the rest of the time.
-    lift += 5 * Math.sin(p * Math.PI * 14);
-    // Climb out after "Done".
-    if (p > AT[4]) lift += 420 * ((p - AT[4]) / (GONE - AT[4])) ** 2;
-    return { x: b.x + dir.x * along + up.x * lift, y: b.y + dir.y * along + up.y * lift };
+    // A pull-up and dive between "Staff decide" and "Students vote".
+    const P0 = between(2, 0.25), P1 = between(2, 0.85);
+    if (p > P0 && p < P1) {
+      const t = (p - P0) / (P1 - P0);
+      // Up, then a little below the line, then back: two smooth bumps.
+      lift += (dir.x > 0.5 ? 26 : 14) * (t < 0.6 ? bump(t / 0.6) : -0.35 * bump((t - 0.6) / 0.4));
+    }
+    // A low, lazy weave the whole way.
+    lift += 4 * Math.sin((p / GONE) * Math.PI * 12);
+    // Climb out after "Done": starts level, curves steadily upward.
+    const C0 = AT[4] + 0.01;
+    if (p > C0) lift += 420 * ((p - C0) / (GONE - C0)) ** 2;
+
+    const a = points[0];
+    return { x: a.x + dir.x * along + up.x * lift, y: a.y + dir.y * along + up.y * lift };
   }
 
   function drawJet(x, y, angle, roll, burn) {
@@ -229,9 +236,9 @@ function start() {
     stops[4].classList.toggle("stamped", p >= AT[4] + 0.01 && p < 0.97);
     let k = 0;
     for (let i = 0; i < 4; i++) k += clamp01((p - AT[i]) / (AT[i + 1] - AT[i]));
-    const pct = p < 0.97 ? `${(k / 4) * 80}%` : "0%";
-    if (dir.x > 0.5) { fill.style.width = pct; fill.style.height = ""; }
-    else { fill.style.height = pct; fill.style.width = ""; }
+    // Scaled, not resized, so the page never re-lays itself out per frame.
+    const f = p < 0.97 ? (k / 4).toFixed(4) : "0";
+    fill.style.transform = dir.x > 0.5 ? `scaleX(${f})` : `scaleY(${f})`;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);

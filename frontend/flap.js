@@ -3,7 +3,7 @@
 // first). Only real data -- when there is none to show, it explains the box.
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const ROWS = 4; // one status row, three rows of text
-const HOLD_MS = 7000; // how long each message stays up
+const HOLD_MS = 6000; // how long each message stays up
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const SPACE = " ";
