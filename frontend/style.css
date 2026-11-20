@@ -2245,15 +2245,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 }
 .journey-line { width: 80%; background: var(--line-l2); }
 .journey-fill { width: 0; background: var(--accent); animation: journey-fill var(--dur) linear infinite; }
-.journey-plane {
-  position: absolute;
-  z-index: 2;
-  top: -12px; left: 10%;
-  width: 34px; height: 34px;
-  margin: -17px 0 0 -17px;
-  animation: journey-x var(--dur) ease-in-out infinite;
-}
-.journey-plane svg { width: 100%; height: 100%; fill: var(--accent); stroke: var(--accent-2); stroke-width: 1.2; stroke-linejoin: round; transform: rotate(45deg); }
 .journey-stops {
   position: relative;
   display: grid;
@@ -2301,23 +2292,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 
 /* Plane timeline: hold at a stop, fly to the next. Stops light as it lands
    at 3%, 18%, 38%, 58% and 78%, then the Done stamp lands. */
-@keyframes journey-x {
-  0%        { left: 10%; opacity: 0; }
-  3%, 6%    { left: 10%; opacity: 1; }
-  18%, 26%  { left: 30%; }
-  38%, 46%  { left: 50%; }
-  58%, 66%  { left: 70%; }
-  78%, 92%  { left: 90%; opacity: 1; }
-  97%, 100% { left: 90%; opacity: 0; }
-}
-@keyframes journey-fill {
-  0%, 6%    { width: 0; }
-  18%, 26%  { width: 20%; }
-  38%, 46%  { width: 40%; }
-  58%, 66%  { width: 60%; }
-  78%, 94%  { width: 80%; opacity: 1; }
-  98%, 100% { width: 80%; opacity: 0; }
-}
 @keyframes lit0 { 0%, 2% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 4% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 7%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
 @keyframes lit1 { 0%, 17% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 19% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 22%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
 @keyframes lit2 { 0%, 37% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); transform: scale(1); } 39% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.15); } 42%, 94% { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1); } 98%, 100% { background: var(--paper); color: var(--muted-l); border-color: var(--line-l2); } }
@@ -2334,14 +2308,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
   83%       { opacity: 1; transform: translateY(-50%) rotate(-12deg) scale(0.92); }
   85%, 94%  { opacity: 1; transform: translateY(-50%) rotate(-12deg) scale(1); }
   98%, 100% { opacity: 0; transform: translateY(-50%) rotate(-12deg) scale(1); }
-}
-@keyframes journey-fill-y {
-  0%, 6%    { height: 0; }
-  18%, 26%  { height: 20%; }
-  38%, 46%  { height: 40%; }
-  58%, 66%  { height: 60%; }
-  78%, 94%  { height: 80%; opacity: 1; }
-  98%, 100% { height: 80%; opacity: 0; }
 }
 
 /* Phones: the stops stack, and the line fills downwards as each one lights. */
@@ -2366,7 +2332,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
   .stamp { top: 50%; left: auto; right: 0; transform: translateY(-50%) rotate(-12deg) scale(2); animation-name: stamp-side; }
   .journey-line, .journey-fill { top: 10%; left: 32px; width: 3px; height: 80%; }
   .journey-fill { height: 0; animation-name: journey-fill-y; }
-  .journey-plane { display: none; }
 }
 
 /* Anyone who has asked their device for less motion gets the finished picture. */
@@ -2382,3 +2347,142 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 }
 .hero-top > * { min-width: 0; }
 .flap-frame { overflow: hidden; }
+
+/* ------------------------------------------------------------------ the journey: a fighter jet */
+/* It never stops: it flies the line left to right, passing each stop at 3%,
+   18%, 38%, 58% and 78% of the loop (when that stop lights), doing a loop,
+   a barrel roll and a dip on the way, then climbs out on afterburner. */
+.journey-band { overflow: hidden; }
+.journey { --dur: 12s; }
+.journey-head { margin-bottom: 96px; }
+.journey-plane {
+  position: absolute;
+  z-index: 3;
+  top: 31px; left: 10%;
+  width: 72px; height: 27px;
+  margin: -13.5px 0 0 -36px;
+  animation: journey-x var(--dur) linear infinite;
+}
+.jet-turn, .jet-loop, .jet-move { display: block; width: 100%; height: 100%; }
+/* Rotating around a point above the jet while it keeps moving = a loop. */
+.jet-loop { transform-origin: 50% -46px; animation: jet-loop var(--dur) ease-in-out infinite; }
+.jet-move { position: relative; animation: jet-move var(--dur) ease-in-out infinite; }
+.jet { position: relative; display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.18)); }
+.jet-body   { fill: #6B7480; }
+.jet-wing   { fill: #4C545E; }
+.jet-fin    { fill: #58606B; }
+.jet-intake { fill: #3A4048; }
+.jet-canopy { fill: #8FD0F5; }
+.jet-stripe { fill: var(--accent); }
+.jet-nozzle { fill: #2E3238; }
+
+/* A contrail streaming behind it. */
+.jet-move::before {
+  content: "";
+  position: absolute;
+  top: 50%; right: 96%;
+  width: 90px; height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: linear-gradient(to left, rgba(90, 96, 105, 0.38), rgba(90, 96, 105, 0));
+}
+/* Afterburner: the outer span grows it for the climb-out, the inner flickers. */
+.jet-flame {
+  position: absolute;
+  top: 50%; right: 95%;
+  width: 18px; height: 7px;
+  margin-top: -3.5px;
+  transform-origin: right center;
+  animation: jet-burn var(--dur) ease-in infinite;
+}
+.jet-flame i {
+  display: block;
+  width: 100%; height: 100%;
+  border-radius: 50% 0 0 50%;
+  background: linear-gradient(to left, #FFF3B0, #FFB347 40%, #E8622C 75%, rgba(232, 98, 44, 0));
+  transform-origin: right center;
+  animation: jet-flicker 90ms steps(2) infinite alternate;
+}
+
+@keyframes journey-x {
+  0%        { left: 0%; opacity: 0; }
+  2%        { opacity: 1; }
+  3%        { left: 10%; }
+  18%       { left: 30%; }
+  38%       { left: 50%; }
+  58%       { left: 70%; }
+  78%       { left: 90%; }
+  88%       { left: 108%; opacity: 1; }
+  90%, 100% { left: 108%; opacity: 0; }
+}
+@keyframes jet-loop {
+  0%, 21%   { transform: rotate(0deg); }
+  34%, 100% { transform: rotate(-360deg); }
+}
+@keyframes jet-move {
+  0%, 5%    { transform: translateY(0) rotate(0deg) scaleY(1); }
+  9%        { transform: translateY(-12px) rotate(-9deg) scaleY(1); }
+  14%       { transform: translateY(2px) rotate(5deg) scaleY(1); }
+  17%, 41%  { transform: translateY(0) rotate(0deg) scaleY(1); }
+  /* barrel roll */
+  44%       { transform: translateY(-8px) rotate(-4deg) scaleY(1); }
+  47.5%     { transform: translateY(-14px) rotate(0deg) scaleY(-1); }
+  51%       { transform: translateY(-6px) rotate(3deg) scaleY(1); }
+  54%, 60%  { transform: translateY(0) rotate(0deg) scaleY(1); }
+  /* pull up, then dive back to the line */
+  65%       { transform: translateY(-30px) rotate(-16deg) scaleY(1); }
+  71%       { transform: translateY(6px) rotate(13deg) scaleY(1); }
+  75%, 79%  { transform: translateY(0) rotate(0deg) scaleY(1); }
+  /* climb out */
+  85%       { transform: translateY(-34px) rotate(-26deg) scaleY(1); }
+  90%, 100% { transform: translateY(-80px) rotate(-34deg) scaleY(1); }
+}
+@keyframes jet-burn {
+  0%, 77%   { transform: scaleX(1) scaleY(1); }
+  81%, 90%  { transform: scaleX(2.6) scaleY(1.35); }
+  94%, 100% { transform: scaleX(1) scaleY(1); }
+}
+@keyframes jet-flicker {
+  from { transform: scaleX(0.75); opacity: 0.85; }
+  to   { transform: scaleX(1.1); opacity: 1; }
+}
+
+/* The orange line keeps pace with the jet. */
+@keyframes journey-fill {
+  0%, 3%    { width: 0; }
+  18%       { width: 20%; }
+  38%       { width: 40%; }
+  58%       { width: 60%; }
+  78%, 94%  { width: 80%; opacity: 1; }
+  98%, 100% { width: 80%; opacity: 0; }
+}
+@keyframes journey-fill-y {
+  0%, 3%    { height: 0; }
+  18%       { height: 20%; }
+  38%       { height: 40%; }
+  58%       { height: 60%; }
+  78%, 94%  { height: 80%; opacity: 1; }
+  98%, 100% { height: 80%; opacity: 0; }
+}
+@keyframes journey-y {
+  0%        { top: 0%; opacity: 0; }
+  2%        { opacity: 1; }
+  3%        { top: 10%; }
+  18%       { top: 30%; }
+  38%       { top: 50%; }
+  58%       { top: 70%; }
+  78%       { top: 90%; }
+  88%       { top: 106%; opacity: 1; }
+  90%, 100% { top: 106%; opacity: 0; }
+}
+
+/* Phones: the stops stack, so the jet flies down the line instead. */
+@media (max-width: 760px) {
+  .journey-head { margin-bottom: 44px; }
+  .journey-plane { left: 32px; width: 60px; height: 22.5px; margin: -11.25px 0 0 -30px; animation-name: journey-y; }
+  .jet-turn { transform: rotate(90deg); }
+  .jet-loop { transform-origin: 50% -36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journey-plane { display: none; }
+}
