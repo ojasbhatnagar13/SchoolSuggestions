@@ -56,4 +56,4 @@ watchSession(async (session) => {
   // the top of the site won't repeat it.
   const updated = rows.filter((s) => s.unseen && s.status !== "waiting").map((s) => s.id);
   if (updated.length) await sb.rpc("mark_my_suggestions_seen", { p_ids: updated });
-});
+}, { askToSignIn: true });

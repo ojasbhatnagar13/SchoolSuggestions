@@ -36,4 +36,4 @@ form.addEventListener("submit", async (event) => {
 watchSession((s) => {
   session = s;
   send.firstChild.textContent = s ? "Send feedback " : "Sign in to send ";
-});
+}, { askToSignIn: true });

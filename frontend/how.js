@@ -66,4 +66,4 @@ async function loadRules() {
 }
 
 loadRules();
-watchSession((session) => showUpdates(session));
+watchSession((session) => showUpdates(session), { askToSignIn: true });

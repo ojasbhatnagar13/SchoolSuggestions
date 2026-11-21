@@ -9,9 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=38">
+  <link rel="stylesheet" href="style.css?v=39">
 </head>
 <body>
+  <a class="skip" href="#suggestion">Skip to the suggestion box</a>
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="brand" href="index.html" aria-label="DPSI School Suggestions, home">
@@ -35,41 +36,107 @@
   </header>
 
   <main>
-    <section class="band band-dark home-hero">
-      <div class="wrap">
-        <div class="hero-top">
-          <div>
-            <p class="eyebrow">DPS International Edge · Student suggestions</p>
-            <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Vote, or suggest.</span></h1>
-          </div>
-          <!-- Split-flap board, filled by flap.js with real suggestions. -->
-          <div class="flap-frame">
-            <div class="flap-label mono"><span class="flap-light" aria-hidden="true"></span>The board</div>
-            <div id="flap" class="flap-board" role="img" aria-label="Suggestion board"></div>
-          </div>
+    <section class="band band-dark home home-suggest home-first">
+      <div class="wrap home-grid">
+        <div class="home-copy">
+          <p class="eyebrow">DPS International Edge · Student suggestions</p>
+          <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Suggest something.</span></h1>
+          <ul class="promise">
+            <li><b>Hidden from staff.</b> <span>Staff never see who sent it.</span></li>
+            <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
+            <li><b>Read by staff.</b> <span>A real person decides.</span></li>
+          </ul>
+          <!-- Live preview: replaces the promises above while the student
+               types, showing the card exactly as the Vote page will. -->
+          <article id="preview" class="s-card preview-card" hidden>
+            <div class="s-meta">
+              <span class="s-meta-left"><span class="preview-badge mono">Preview</span><span class="s-cat">How it will look</span></span>
+              <span class="mono s-date" id="preview-date"></span>
+            </div>
+            <p class="s-text" id="preview-text"></p>
+            <p class="s-why" id="preview-why" hidden><span class="mono">Why it helps</span><span id="preview-benefit"></span></p>
+            <div class="s-foot"><span class="mono">On the Vote page once staff approve it</span><button class="vote" type="button" tabindex="-1" disabled>Vote</button></div>
+          </article>
+          <p class="not-for">
+            <b>Not for personal problems.</b> If you're being bullied, feel
+            unsafe, or are going through something hard, please talk to a
+            teacher or a school counsellor in person. This box is anonymous, so
+            nobody can reply to you or help you through it.
+            <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
+            You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
+          </p>
         </div>
 
-        <div class="choice-grid">
-          <a class="choice choice-vote" href="vote.html">
-            <span class="choice-kicker">Vote</span>
-            <span class="choice-title">Vote for suggestions</span>
-            <span id="open-count" class="choice-sub">See what other students want, and back the ones you agree with.</span>
-            <span class="choice-go">Start voting <span aria-hidden="true">→</span></span>
-          </a>
-          <a class="choice choice-suggest" href="suggest.html">
-            <span class="choice-kicker">Suggest</span>
-            <span class="choice-title">Send a suggestion</span>
-            <span class="choice-sub">Staff never see who sent it. It takes a minute.</span>
-            <span class="choice-go">Make a suggestion <span aria-hidden="true">→</span></span>
-          </a>
-        </div>
-        <div id="home-state" hidden></div>
+        <article class="panel panel-dark compose" id="suggest">
+          <!-- Above the form, where the student is already looking: both the
+               "checking..." message and the result appear here. -->
+          <div id="result" class="notice" role="status" hidden></div>
+          <form id="submit-form" class="form">
+            <label for="suggestion" class="field-label">Your suggestion</label>
+            <textarea id="suggestion" maxlength="2000" rows="3" required
+              placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
+            <ul class="tips" id="tips" aria-label="Tips for a clear suggestion">
+              <li data-tip="what">Says what to change</li>
+              <li data-tip="where">Names a place or group</li>
+              <li data-tip="why">Says how it helps</li>
+            </ul>
+
+            <label for="benefit" class="field-label">
+              How would it help? <span class="opt">Optional</span>
+            </label>
+            <textarea id="benefit" class="short-box" maxlength="1000" rows="2"
+              placeholder="e.g. More students would eat a proper lunch instead of skipping it."></textarea>
+
+            <!-- Default: linked privately to the account so the student can
+                 follow it (never shown to staff). Ticked: not linked at all,
+                 so no updates. submit.js swaps the two explanations. -->
+            <!-- Outside the switch box on purpose: true either way, so a
+                 student who reads nothing else still gets it right. -->
+            <div class="anon-always">
+              <svg class="anon-lock" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10.5" width="14" height="10" rx="2"></rect>
+                <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
+              </svg>
+              <div>
+                <p class="anon-always-main">Staff already never see who sent your suggestion.</p>
+                <p class="anon-always-sub">The switch below only decides whether you get updates about it.</p>
+              </div>
+            </div>
+            <div class="anon-choice">
+              <label class="anon-toggle" for="full-anon">
+                <input type="checkbox" id="full-anon">
+                <span class="anon-switch" aria-hidden="true"></span>
+                <span><b>Complete anonymity</b> <span class="opt">Optional</span></span>
+              </label>
+              <div id="anon-default" class="anon-note">
+                Off: it's kept privately with your account, only so you can see
+                what happens to it on your My suggestions page and get updates.
+              </div>
+              <div id="anon-warning" class="anon-note anon-warning" hidden>
+                <p class="anon-big"><b>You will NOT get any updates about this suggestion.</b></p>
+                It won't be linked to your account at all, so it won't appear under
+                your My suggestions page and nobody, not even the site's admins, can trace
+                it back to you. To find out whether it was approved, you'll have to
+                check the Vote page yourself.
+              </div>
+            </div>
+
+            <div class="form-foot">
+              <span id="counter" class="mono counter" aria-live="polite"></span>
+              <button id="send" type="submit" class="btn btn-primary">
+                <span class="btn-label">Sign in to send</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+          <p id="signed-as" class="mono form-note"></p>
+        </article>
       </div>
     </section>
 
-    <!-- The journey of a suggestion: a paper plane flies from stop to stop
-         and each one lights up as it arrives. CSS only. -->
-    <section class="band band-cream journey-band">
+    <!-- Second screen: the journey of a suggestion (a jet flies from stop
+         to stop), then a reel of suggestions on the board. -->
+    <section class="band band-cream journey-band home-second">
       <div class="wrap">
         <div class="journey-head">
           <p class="eyebrow">How it works</p>
@@ -103,6 +170,15 @@
               <span class="stamp" aria-hidden="true">Done</span>
             </li>
           </ol>
+        </div>
+        <div class="reel-block" id="reel-block" hidden>
+          <div class="reel-head">
+            <p class="eyebrow">On the board</p>
+            <a class="reel-more" href="vote.html">Vote on them <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="reel" aria-label="Suggestions from other students">
+            <div class="reel-track" id="reel"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -143,7 +219,8 @@
     </div>
   </footer>
 
-  <script type="module" src="ideas.js?v=33"></script>
+  <script type="module" src="submit.js?v=32"></script>
+  <script type="module" src="ideas.js?v=34"></script>
   <script type="module" src="journey.js?v=2"></script>
   <script type="module" src="reveal.js?v=1"></script>
 </body>

@@ -1,6 +1,6 @@
-// The suggestion form on the home page.
+// The suggestion form, on the home page and the Suggest page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
-import { sb, signIn, watchSession } from "./common.js";
+import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=3";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
@@ -185,6 +185,42 @@ function askToClarify(question) {
   ok.focus();
 }
 
+// After a successful send: a popup repeating what was sent, with the two
+// obvious next steps. Resolves once it is closed.
+function sentPopup(text, line) {
+  document.querySelector(".sent-dialog")?.remove();
+  const dialog = el("dialog", "sent-dialog");
+  dialog.setAttribute("aria-labelledby", "sent-title");
+  const tick = el("span", "sent-tick");
+  tick.setAttribute("aria-hidden", "true");
+  const title = el("h2", null, "Sent!");
+  title.id = "sent-title";
+  const label = el("p", "sent-label mono", "Your suggestion was");
+  const quote = el("p", "sent-quote", `“${text}”`);
+  const note = el("p", "sent-note", line);
+  const vote = el("a", "btn btn-primary", "Vote on other suggestions →");
+  vote.href = "vote.html";
+  const again = el("button", "btn btn-ghost", "Suggest something else");
+  again.type = "button";
+  const actions = el("div", "sent-actions");
+  actions.append(vote, again);
+  dialog.append(tick, title, label, quote, note, actions);
+  document.body.append(dialog);
+
+  return new Promise((resolve) => {
+    const close = () => {
+      dialog.close();
+      dialog.remove();
+      els.text.focus({ preventScroll: true });
+      resolve();
+    };
+    again.addEventListener("click", close);
+    dialog.addEventListener("cancel", (e) => { e.preventDefault(); close(); });
+    dialog.showModal();
+    vote.focus();
+  });
+}
+
 // "Complete anonymity": swaps the reassurance for a bold warning, so nobody
 // ticks it without seeing that it means no updates. Deliberately not reset
 // after sending -- it is the student's standing choice for this visit.
@@ -265,6 +301,7 @@ els.form.addEventListener("submit", async (event) => {
   const stopLoader = startLoader();
   // Read now: the student could untick it while the check is running.
   const fullyAnonymous = anonBox.checked;
+  let sent = ""; // set when it was actually sent: shows the popup
 
   try {
     // getSession() refreshes an expired token, so this is always current.
@@ -336,6 +373,7 @@ els.form.addEventListener("submit", async (event) => {
         "warn", "Thank you for telling us",
       );
     } else if (payload.queued || payload.unchecked) {
+      sent = `It's in the queue and will be checked within a few minutes, then a member of staff reads it.`;
       // Every AI model stayed busy past the wait. It is saved and queued; the
       // once-a-minute run checks it, and My suggestions shows the result.
       notice(
@@ -361,6 +399,7 @@ els.form.addEventListener("submit", async (event) => {
         "warn", "Not added: against the guidelines",
       );
     } else {
+      sent = `It's waiting for a member of staff to read it. Once approved, it goes on the Vote page.`;
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
         (fullyAnonymous
@@ -370,6 +409,7 @@ els.form.addEventListener("submit", async (event) => {
       );
     }
     clearForm();
+    if (sent) await sentPopup(suggestion, sent);
     showUpdates(session); // news about earlier suggestions, if any
   } catch (err) {
     // fetch() rejects with a bare TypeError for DNS failures, CORS blocks and
@@ -401,4 +441,4 @@ watchSession((newSession) => {
   session = newSession;
   showAccount();
   showUpdates(session);
-});
+}, { askToSignIn: true });

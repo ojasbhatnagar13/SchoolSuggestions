@@ -2700,3 +2700,150 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
   stroke-width: 2;
   stroke-linecap: round;
 }
+
+/* ------------------------------------------------------------------ home: two full screens */
+/* First screen: only the heading and the suggestion box. */
+.home-first {
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  align-items: center;
+  padding: 40px 0 48px;
+}
+.home-first > .wrap { width: 100%; }
+/* Second screen: the jet's journey, then the reel. */
+.home-second {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: 72px 0;
+}
+.home-second > .wrap { width: 100%; }
+.home-second .journey-head { margin-bottom: 72px; }
+
+/* The reel: suggestions on the board drifting past, paused on hover. */
+.reel-block { margin-top: 72px; }
+.reel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 18px; }
+.reel-head .eyebrow { margin: 0; }
+.reel-more { color: var(--accent); font-weight: 700; text-decoration: none; }
+.reel-more:hover { text-decoration: underline; }
+.reel {
+  overflow: hidden;
+  margin: 0 -8px;
+  padding: 8px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.reel-track { display: flex; gap: 16px; width: max-content; }
+.reel-track.is-moving { animation: reel-roll var(--reel-time, 60s) linear infinite; }
+.reel:hover .reel-track, .reel:focus-within .reel-track { animation-play-state: paused; }
+@keyframes reel-roll { to { transform: translateX(calc(-50% - 8px)); } }
+.reel-card {
+  --rc: var(--accent);
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  width: 300px;
+  min-height: 150px;
+  padding: 18px 20px;
+  background: var(--paper);
+  border: 1px solid var(--line-l);
+  border-top: 4px solid var(--rc);
+  border-radius: 10px;
+  color: var(--text-l);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.reel-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12); }
+.reel-card.is-ahead { --rc: #3F8F96; }
+.reel-card.is-done { --rc: var(--ok-l); }
+.reel-state { font-size: 12.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rc); }
+.reel-text {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.reel-cat { font-size: 14px; color: var(--muted-l); }
+@media (max-width: 600px) {
+  .home-second { padding: 56px 0; }
+  .home-second .journey-head { margin-bottom: 40px; }
+  .reel-block { margin-top: 48px; }
+  .reel-card { width: 250px; }
+}
+
+/* ------------------------------------------------------------------ sign-in popup and "sent" popup */
+.signin-dialog, .sent-dialog {
+  width: min(460px, calc(100% - 32px));
+  padding: 32px 30px 26px;
+  border: 1px solid var(--line-d);
+  border-top: 4px solid var(--accent);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text-d);
+  text-align: center;
+}
+.signin-dialog::backdrop, .sent-dialog::backdrop { background: rgba(10, 10, 10, 0.7); backdrop-filter: blur(3px); }
+.signin-dialog[open], .sent-dialog[open] { animation: pop-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } }
+.signin-logo { width: 64px; height: 64px; object-fit: contain; padding: 8px; background: #fff; border-radius: 12px; }
+.signin-dialog h2, .sent-dialog h2 { margin: 16px 0 10px; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.signin-body { margin: 0 0 22px; font-size: 16px; line-height: 1.55; color: var(--muted-d); }
+.signin-dialog .btn { width: 100%; justify-content: center; }
+.signin-later { margin-top: 14px; font-size: 15px; }
+
+.sent-tick {
+  display: inline-grid;
+  place-items: center;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.sent-tick::after {
+  content: "";
+  width: 22px; height: 12px;
+  margin-top: -5px;
+  border: solid #fff;
+  border-width: 0 0 4px 4px;
+  transform: rotate(-45deg);
+}
+.sent-dialog h2 { margin-top: 12px; }
+.sent-label { margin: 0 0 6px; font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint-d); }
+.sent-quote {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: var(--ink);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.sent-note { margin: 0 0 22px; font-size: 15px; line-height: 1.55; color: var(--muted-d); }
+.sent-actions { display: grid; gap: 10px; }
+.sent-actions .btn { width: 100%; justify-content: center; }
+
+/* Vote page, signed out with the popup closed: one quiet line. */
+.signed-out-line { margin: 0; padding: 28px 0; font-size: 17px; color: var(--muted-d); }
+.signed-out-line .link-btn { font-size: 17px; color: var(--accent); font-weight: 700; padding: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .signin-dialog[open], .sent-dialog[open] { animation: none; }
+}
+/* Home's first screen holds the whole form on a laptop: a tighter version. */
+.home-first { padding: 24px 0 28px; }
+.home-first .compose { padding-top: 22px; padding-bottom: 20px; }
+.home-first #suggestion { min-height: 0; height: 96px; }
+.home-first #benefit { min-height: 0; height: 58px; }
+.home-first .tips { margin-top: 8px; }
+.home-first .anon-always { margin-top: 10px; padding: 10px 14px; }
+.home-first .anon-always-main { font-size: 15px; }
+.home-first .anon-always-sub { font-size: 13.5px; margin-top: 2px; }
+.home-first .anon-choice { margin-top: 8px; }
+.home-first .anon-note { font-size: 13.5px; }
+.home-first .form-note { margin-top: 10px; }

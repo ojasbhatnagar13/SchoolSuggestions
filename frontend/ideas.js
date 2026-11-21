@@ -1,46 +1,14 @@
 // Two pages share this file (old name kept so cached pages don't break):
 //   vote.html  -- only the suggestions open for votes, nothing else
-//   index.html -- home: the way in to voting and suggesting, then what is
-//                 going ahead and what is Done
+//   index.html -- home: under the suggestion form (submit.js), a reel of
+//                 suggestions on the board, then what is going ahead and Done
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=3";
-import { createBoard } from "./flap.js?v=2";
 import { searchTerms, fuzzyScore } from "./fuzzy.js?v=1";
 
-// The split-flap board on the home page. Until there are real suggestions to
-// show (or the student is signed out), it explains the box instead.
-const flapEl = document.getElementById("flap");
-const setBoard = flapEl ? createBoard(flapEl.parentElement, flapEl) : () => {};
-// Three messages the board always cycles through, between real suggestions.
-const BOARD_INTRO = [
-  ["Now boarding", "Your suggestions for a better DPSI. Send one in a minute.", "info"],
-  ["Vote on it", "Back the ones you want. One vote each, counts stay private.", "open"],
-  ["Arriving: Done", "When the school acts on a suggestion, it lands here.", "done"],
-];
-setBoard(BOARD_INTRO);
-
-function boardMessages() {
-  const pick = (test, status, kind, max) =>
-    suggestions.filter(test).slice(0, max).map((s) => [status, s.summary || s.suggestion, kind]);
-  const real = [
-    ...pick(isDone, "Done", "done", 8),
-    ...pick(isAhead, "Going ahead", "ahead", 4),
-    ...pick(isOpen, "Open for votes", "open", 6),
-  ];
-  if (!real.length) return BOARD_INTRO;
-  // One of the three messages after every two real suggestions.
-  const out = [];
-  real.forEach((m, i) => {
-    out.push(m);
-    if (i % 2 === 1) out.push(BOARD_INTRO[((i - 1) / 2) % BOARD_INTRO.length]);
-  });
-  if (real.length === 1) out.push(BOARD_INTRO[0], BOARD_INTRO[1]);
-  return out;
-}
-
 const list = document.getElementById("list"); // vote page only
-const homeState = document.getElementById("home-state"); // home page only
-const openCount = document.getElementById("open-count"); // home page only
+const reel = document.getElementById("reel"); // home page only
+const reelBlock = document.getElementById("reel-block");
 const filterBar = document.getElementById("categories");
 const searchWrap = document.getElementById("search-wrap"); // vote page only
 const searchBox = document.getElementById("search");
@@ -326,18 +294,46 @@ function renderVote() {
   })]));
 }
 
+// The reel on the home page: suggestions on the board drifting past. Newest
+// first, never by votes (counts stay private so nothing snowballs).
+function reelCard(s) {
+  const c = el("article", "reel-card" + (isDone(s) ? " is-done" : isAhead(s) ? " is-ahead" : ""));
+  c.append(
+    el("span", "reel-state mono", isDone(s) ? "Done" : isAhead(s) ? "Going ahead" : "Open for votes"),
+    el("p", "reel-text", s.summary || s.suggestion),
+    el("span", "reel-cat", s.category || "Uncategorised"),
+  );
+  return c;
+}
+
+function renderReel() {
+  const items = [
+    ...suggestions.filter(isOpen).slice(0, 10),
+    ...suggestions.filter(isAhead).slice(0, 4),
+    ...suggestions.filter(isDone).slice(0, 6),
+  ];
+  reelBlock.hidden = !items.length;
+  if (!items.length) return;
+  const cards = items.map(reelCard);
+  // Enough for a loop: the set is repeated once, and the copy is hidden from
+  // screen readers. Too few to loop just sit still.
+  const moving = items.length >= 3 && !reduceMotion;
+  if (moving) {
+    const copy = items.map(reelCard);
+    copy.forEach((c) => c.setAttribute("aria-hidden", "true"));
+    cards.push(...copy);
+  }
+  reel.classList.toggle("is-moving", moving);
+  reel.style.setProperty("--reel-time", `${items.length * 6}s`);
+  reel.replaceChildren(...cards);
+}
+
 function renderHome() {
-  const open = suggestions.filter(isOpen);
-  const fresh = open.filter(isNew).length;
-  openCount.textContent = open.length
-    ? `${plural(open.length, "suggestion")} open for votes` + (fresh ? `, ${fresh} new since your last visit.` : ".")
-    : "Nothing is open for votes right now. Check back soon.";
+  renderReel();
 
   const ahead = suggestions.filter(isAhead).sort(byNew);
   aheadSection.hidden = !ahead.length;
   aheadList.replaceChildren(...ahead.map(card));
-
-  setBoard(boardMessages());
 
   const done = suggestions.filter(isDone);
   doneSection.hidden = !done.length;
@@ -346,7 +342,7 @@ function renderHome() {
 }
 
 function hideBoard() {
-  setBoard(BOARD_INTRO);
+  if (reelBlock) reelBlock.hidden = true;
   if (filterBar) filterBar.hidden = true;
   if (searchWrap) searchWrap.hidden = true;
   if (newNote) newNote.hidden = true;
@@ -354,33 +350,23 @@ function hideBoard() {
   if (doneSection) doneSection.hidden = true;
 }
 
-// Where messages go: the list on the vote page, under the two big choices on
-// the home page.
+// Messages go in the list on the vote page. The home page has the form for
+// those (submit.js), so there the board's sections simply stay hidden.
 function showState(panel) {
-  if (list) {
-    list.replaceChildren(panel);
-  } else {
-    homeState.replaceChildren(panel);
-    homeState.hidden = !panel;
-  }
+  list?.replaceChildren(panel);
 }
 
+// Signed out, the sign-in popup (common.js) does the asking. If it was
+// closed, the vote page keeps one quiet line with a way back in.
 function signedOut() {
   hideBoard();
-  const button = el("button", "btn btn-primary", "Sign in with Google");
+  if (!list) return;
+  const line = el("p", "signed-out-line");
+  const button = el("button", "link-btn", "Sign in");
   button.type = "button";
   button.addEventListener("click", signIn);
-  showState(boardState({
-    title: "Sign in to see what everyone's suggested.",
-    body: "The board stays inside the school instead of being shared around " +
-      "online. The same sign-in lets you send suggestions of your own.",
-    action: button,
-    points: [
-      "Suggestions approved by staff, newest first",
-      "One vote per student per suggestion",
-      "Vote counts stay private, so nothing snowballs",
-    ],
-  }));
+  line.append(button, " with your school Google account to see and vote on suggestions.");
+  list.replaceChildren(line);
 }
 
 async function refresh(session) {
@@ -405,8 +391,9 @@ async function refresh(session) {
     return;
   }
 
-  // News about the student's own suggestions, whatever the board holds.
-  showUpdates(session);
+  // News about the student's own suggestions, whatever the board holds. On
+  // the home page the form's script already does this.
+  if (list) showUpdates(session);
 
   const [votesRes, listRes] = await Promise.all([
     sb.rpc("my_votes"),
@@ -431,9 +418,8 @@ async function refresh(session) {
 
   suggestions = listRes.data ?? [];
   if (!list) {
-    // Home: the two choices always show; only the lists below change. Not
-    // counted as a visit, or the vote page would lose its "New" labels.
-    homeState.hidden = true;
+    // Home: only the reel and the lists change. Not counted as a visit, or
+    // the vote page would lose its "New" labels.
     render();
     return;
   }
@@ -464,4 +450,4 @@ async function refresh(session) {
   rememberVisit();
 }
 
-watchSession(refresh);
+watchSession(refresh, { askToSignIn: true });
