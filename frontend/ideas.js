@@ -317,8 +317,36 @@ function reelCard(s) {
   c.append(
     el("span", "reel-state mono", s.example ? `Example · ${state}` : state),
     el("p", "reel-text", s.summary || s.suggestion),
-    el("span", "reel-cat", s.category || "Uncategorised"),
   );
+  // Vote straight from the reel. Only open ones take votes; examples show a
+  // button that does nothing, so the card looks like the real thing.
+  const foot = el("div", "reel-foot");
+  const status = el("span", "mono reel-cat", s.category || "Uncategorised");
+  foot.append(status);
+  if (isOpen(s)) {
+    const btn = el("button", "vote");
+    btn.type = "button";
+    if (s.example) {
+      btn.textContent = "Vote";
+      btn.disabled = true;
+      btn.title = "This is only an example";
+    } else {
+      btn.dataset.id = String(s.id);
+      showVote(btn, myVotes.has(s.id));
+      btn.addEventListener("click", async () => {
+        const before = myVotes.has(s.id);
+        await toggleVote(s.id, btn);
+        if (myVotes.has(s.id) === before) return; // failed: the error stays on the card
+        status.textContent = s.category || "Uncategorised";
+        // The reel shows each card twice to loop; keep both copies in step.
+        reel.querySelectorAll(`.vote[data-id="${s.id}"]`).forEach((b) => {
+          if (b !== btn) showVote(b, myVotes.has(s.id));
+        });
+      });
+    }
+    foot.append(btn);
+  }
+  c.append(foot);
   return c;
 }
 

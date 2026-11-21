@@ -2852,3 +2852,12 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 @media (max-width: 600px) { .home-second .reel-block { margin-bottom: 48px; } }
 /* Example cards in the reel: a dashed edge so they read as examples. */
 .reel-card.is-example { border-style: dashed; border-top-style: solid; }
+/* Vote from the reel. */
+.reel-card { grid-template-rows: auto 1fr auto; }
+.reel-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 4px; }
+.reel-foot .reel-cat { font-family: var(--mono); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reel-foot .vote { flex: none; }
+.reel-foot .vote:disabled { opacity: 0.55; cursor: default; }
+.reel-foot button.vote { min-width: 104px; padding: 8px 16px; border-color: var(--line-l2); color: var(--text-l); border-radius: 6px; }
+.reel-foot button.vote:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.reel-foot button.vote.voted { background: var(--accent); border-color: var(--accent); color: #fff; }
