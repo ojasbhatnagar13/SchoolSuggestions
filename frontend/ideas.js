@@ -5,6 +5,7 @@
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=3";
 import { createBoard } from "./flap.js?v=2";
+import { searchTerms, fuzzyScore } from "./fuzzy.js?v=1";
 
 // The split-flap board on the home page. Until there are real suggestions to
 // show (or the student is signed out), it explains the box instead.
@@ -44,6 +45,7 @@ const filterBar = document.getElementById("categories");
 const searchWrap = document.getElementById("search-wrap"); // vote page only
 const searchBox = document.getElementById("search");
 let query = "";
+let terms = [];
 let entered = false; // cards animate in only on the first render
 const entering = (list) => {
   if (entered) return list;
@@ -56,7 +58,8 @@ const entering = (list) => {
   return list;
 };
 searchBox?.addEventListener("input", () => {
-  query = searchBox.value.trim().toLowerCase();
+  query = searchBox.value.trim();
+  terms = searchTerms(query);
   render();
 });
 const aheadSection = document.getElementById("ahead-section");
@@ -300,12 +303,12 @@ function render() {
 function renderVote() {
   renderFilters();
   searchWrap.hidden = suggestions.length < 2;
-  const matches = (s) => !query ||
-    [s.suggestion, s.benefit, s.summary, s.category].some((t) => (t || "").toLowerCase().includes(query));
+  // Forgiving of spelling mistakes; the closest matches come first.
+  const score = new Map(suggestions.map((s) => [s, fuzzyScore(terms, [s.suggestion, s.benefit, s.summary, s.category])]));
   const shown = (category === "all"
     ? suggestions
-    : suggestions.filter((s) => (s.category || "Uncategorised") === category)).filter(matches);
-  const open = shown.filter(isOpen).sort(byNew);
+    : suggestions.filter((s) => (s.category || "Uncategorised") === category)).filter((s) => score.get(s) > 0);
+  const open = shown.filter(isOpen).sort((a, b) => (query ? score.get(b) - score.get(a) : 0) || byNew(a, b));
 
   const fresh = suggestions.filter(isNew).length;
   newNote.hidden = !fresh;
