@@ -9,6 +9,20 @@ import { searchTerms, fuzzyScore } from "./fuzzy.js?v=1";
 const list = document.getElementById("list"); // vote page only
 const reel = document.getElementById("reel"); // home page only
 const reelBlock = document.getElementById("reel-block");
+const reelLabel = document.getElementById("reel-label");
+
+// Shown in the reel until real suggestions are approved (or when signed
+// out), clearly labelled as examples. Remove once the board fills up.
+const SAMPLES = [
+  ["approved", "More benches near the basketball court for break time", "Sports"],
+  ["accepted", "Water coolers on every floor, not just the ground floor", "Facilities"],
+  ["approved", "Healthier snack options in the canteen, like fruit and sandwiches", "Food"],
+  ["actioned", "Keep the library open during lunch break", "Library"],
+  ["approved", "A music room students can book after school", "Clubs"],
+  ["approved", "Shade over the bus waiting area for hot afternoons", "Transport"],
+  ["accepted", "Lockers for senior students to keep heavy books", "Facilities"],
+  ["approved", "A monthly inter-house quiz during assembly", "Events"],
+].map(([status, suggestion, category]) => ({ status, suggestion, category }));
 const filterBar = document.getElementById("categories");
 const searchWrap = document.getElementById("search-wrap"); // vote page only
 const searchBox = document.getElementById("search");
@@ -306,14 +320,15 @@ function reelCard(s) {
   return c;
 }
 
-function renderReel() {
-  const items = [
-    ...suggestions.filter(isOpen).slice(0, 10),
-    ...suggestions.filter(isAhead).slice(0, 4),
-    ...suggestions.filter(isDone).slice(0, 6),
+function renderReel(real = suggestions) {
+  let items = [
+    ...real.filter(isOpen).slice(0, 10),
+    ...real.filter(isAhead).slice(0, 4),
+    ...real.filter(isDone).slice(0, 6),
   ];
-  reelBlock.hidden = !items.length;
-  if (!items.length) return;
+  const examples = !items.length;
+  if (examples) items = SAMPLES;
+  reelLabel.textContent = examples ? "Examples of suggestions" : "On the board";
   const cards = items.map(reelCard);
   // Enough for a loop: the set is repeated once, and the copy is hidden from
   // screen readers. Too few to loop just sit still.
@@ -342,7 +357,7 @@ function renderHome() {
 }
 
 function hideBoard() {
-  if (reelBlock) reelBlock.hidden = true;
+  if (reelBlock) renderReel([]);
   if (filterBar) filterBar.hidden = true;
   if (searchWrap) searchWrap.hidden = true;
   if (newNote) newNote.hidden = true;

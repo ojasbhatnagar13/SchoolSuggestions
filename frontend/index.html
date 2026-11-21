@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=39">
+  <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -134,10 +134,19 @@
       </div>
     </section>
 
-    <!-- Second screen: the journey of a suggestion (a jet flies from stop
-         to stop), then a reel of suggestions on the board. -->
+    <!-- Second screen: a reel of suggestions on the board, then the journey
+         of a suggestion (a jet flies from stop to stop). -->
     <section class="band band-cream journey-band home-second">
       <div class="wrap">
+        <div class="reel-block" id="reel-block">
+          <div class="reel-head">
+            <p class="eyebrow" id="reel-label">On the board</p>
+            <a class="reel-more" href="vote.html">Vote on them <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="reel" aria-label="Suggestions from other students">
+            <div class="reel-track" id="reel"></div>
+          </div>
+        </div>
         <div class="journey-head">
           <p class="eyebrow">How it works</p>
           <h2 class="h2">From your head<br>to done.</h2>
@@ -170,15 +179,6 @@
               <span class="stamp" aria-hidden="true">Done</span>
             </li>
           </ol>
-        </div>
-        <div class="reel-block" id="reel-block" hidden>
-          <div class="reel-head">
-            <p class="eyebrow">On the board</p>
-            <a class="reel-more" href="vote.html">Vote on them <span aria-hidden="true">→</span></a>
-          </div>
-          <div class="reel" aria-label="Suggestions from other students">
-            <div class="reel-track" id="reel"></div>
-          </div>
         </div>
       </div>
     </section>
@@ -220,7 +220,7 @@
   </footer>
 
   <script type="module" src="submit.js?v=32"></script>
-  <script type="module" src="ideas.js?v=34"></script>
+  <script type="module" src="ideas.js?v=35"></script>
   <script type="module" src="journey.js?v=2"></script>
   <script type="module" src="reveal.js?v=1"></script>
 </body>

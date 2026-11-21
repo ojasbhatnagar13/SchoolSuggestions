@@ -2847,3 +2847,6 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 .home-first .anon-choice { margin-top: 8px; }
 .home-first .anon-note { font-size: 13.5px; }
 .home-first .form-note { margin-top: 10px; }
+/* Reel first on the second screen, the journey under it. */
+.home-second .reel-block { margin: 0 0 80px; }
+@media (max-width: 600px) { .home-second .reel-block { margin-bottom: 48px; } }
