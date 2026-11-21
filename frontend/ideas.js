@@ -22,7 +22,7 @@ const SAMPLES = [
   ["approved", "Shade over the bus waiting area for hot afternoons", "Transport"],
   ["accepted", "Lockers for senior students to keep heavy books", "Facilities"],
   ["approved", "A monthly inter-house quiz during assembly", "Events"],
-].map(([status, suggestion, category]) => ({ status, suggestion, category }));
+].map(([status, suggestion, category]) => ({ status, suggestion, category, example: true }));
 const filterBar = document.getElementById("categories");
 const searchWrap = document.getElementById("search-wrap"); // vote page only
 const searchBox = document.getElementById("search");
@@ -311,9 +311,11 @@ function renderVote() {
 // The reel on the home page: suggestions on the board drifting past. Newest
 // first, never by votes (counts stay private so nothing snowballs).
 function reelCard(s) {
-  const c = el("article", "reel-card" + (isDone(s) ? " is-done" : isAhead(s) ? " is-ahead" : ""));
+  const state = isDone(s) ? "Done" : isAhead(s) ? "Going ahead" : "Open for votes";
+  const c = el("article", "reel-card" + (isDone(s) ? " is-done" : isAhead(s) ? " is-ahead" : "") +
+    (s.example ? " is-example" : ""));
   c.append(
-    el("span", "reel-state mono", isDone(s) ? "Done" : isAhead(s) ? "Going ahead" : "Open for votes"),
+    el("span", "reel-state mono", s.example ? `Example · ${state}` : state),
     el("p", "reel-text", s.summary || s.suggestion),
     el("span", "reel-cat", s.category || "Uncategorised"),
   );
@@ -326,9 +328,11 @@ function renderReel(real = suggestions) {
     ...real.filter(isAhead).slice(0, 4),
     ...real.filter(isDone).slice(0, 6),
   ];
-  const examples = !items.length;
-  if (examples) items = SAMPLES;
-  reelLabel.textContent = examples ? "Examples of suggestions" : "On the board";
+  // Until the board has enough of its own, examples (marked as such) fill
+  // the reel up to eight, so it always has something to roll.
+  const hasReal = items.length > 0;
+  items = [...items, ...SAMPLES.slice(0, Math.max(0, 8 - items.length))];
+  reelLabel.textContent = hasReal ? "On the board" : "Examples of suggestions";
   const cards = items.map(reelCard);
   // Enough for a loop: the set is repeated once, and the copy is hidden from
   // screen readers. Too few to loop just sit still.
@@ -339,7 +343,7 @@ function renderReel(real = suggestions) {
     cards.push(...copy);
   }
   reel.classList.toggle("is-moving", moving);
-  reel.style.setProperty("--reel-time", `${items.length * 6}s`);
+  reel.style.setProperty("--reel-time", `${items.length * 4}s`);
   reel.replaceChildren(...cards);
 }
 

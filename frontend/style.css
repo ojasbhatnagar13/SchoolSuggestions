@@ -2850,3 +2850,5 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 /* Reel first on the second screen, the journey under it. */
 .home-second .reel-block { margin: 0 0 80px; }
 @media (max-width: 600px) { .home-second .reel-block { margin-bottom: 48px; } }
+/* Example cards in the reel: a dashed edge so they read as examples. */
+.reel-card.is-example { border-style: dashed; border-top-style: solid; }
