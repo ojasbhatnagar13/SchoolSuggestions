@@ -3,7 +3,7 @@
 //   index.html -- home: under the suggestion form (submit.js), a reel of
 //                 suggestions on the board, then what is going ahead and Done
 import { sb, el, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js?v=3";
+import { showUpdates } from "./mine.js?v=4";
 import { searchTerms, fuzzyScore } from "./fuzzy.js?v=1";
 
 const list = document.getElementById("list"); // vote page only
@@ -468,6 +468,10 @@ async function refresh(session) {
     // Home: only the reel and the lists change. Not counted as a visit, or
     // the vote page would lose its "New" labels.
     render();
+    // Arrived from a link to one of the lists (e.g. "See it" on a boarding
+    // pass): the list was hidden until now, so the browser couldn't scroll.
+    const target = location.hash && document.querySelector(location.hash);
+    if (target && !target.hidden) target.scrollIntoView();
     return;
   }
   // The vote page shows only what can be voted on; filters count only those.

@@ -2,7 +2,7 @@
 // stands, with any reason staff gave. Only ever their own -- the database
 // answers for the signed-in account only (docs/setup-my-suggestions.sql).
 import { sb, el, signIn, watchSession } from "./common.js";
-import { mySuggestions, renderMine } from "./mine.js?v=3";
+import { mySuggestions, renderMine } from "./mine.js?v=4";
 
 const list = document.getElementById("mine-list");
 const empty = document.getElementById("mine-empty");

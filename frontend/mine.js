@@ -81,10 +81,11 @@ function boardingPass(s, n, total) {
   const ok = el("button", "btn btn-primary bp-ok", n < total ? "Next" : "Got it");
   ok.type = "button";
   actions.append(ok);
+  let link = null;
   if (pass.link) {
-    const a = el("a", "bp-link", pass.link[1]);
-    a.href = pass.link[0];
-    actions.append(a);
+    link = el("a", "bp-link", pass.link[1]);
+    link.href = pass.link[0];
+    actions.append(link);
   }
   // The stamp lives in the main part, in space kept free for it.
   main.append(top, fields, quote, note, actions, el("span", "bp-stamp", state.label));
@@ -97,37 +98,65 @@ function boardingPass(s, n, total) {
   );
 
   card.append(main, stub);
-  return { card, ok };
+  return { card, ok, link };
 }
 
 // When staff decide on a suggestion, its sender gets a boarding pass the
 // next time they open the site: it flips up, gets stamped with what
 // happened, and tears away when they've read it. One pass per update.
-export async function showUpdates(session, rows = null) {
-  document.querySelector(".bp-backdrop")?.remove();
-  if (!session) return;
+// Sign-in fires more than one session event, and a page can ask from more
+// than one place, so only one check runs at a time and only one pass shows.
+let checking = false;
 
-  rows = rows ?? await mySuggestions();
+export async function showUpdates(session, rows = null) {
+  if (!session) {
+    document.querySelector(".bp-backdrop")?.remove();
+    return;
+  }
+  if (checking || document.querySelector(".bp-backdrop")) return;
+  checking = true;
+  try {
+    rows = rows ?? await mySuggestions();
+  } finally {
+    checking = false;
+  }
   const updates = (rows ?? []).filter((s) => s.unseen && STATES[s.status]?.notice);
-  if (!updates.length) return;
+  if (!updates.length || document.querySelector(".bp-backdrop")) return;
 
   const backdrop = el("div", "bp-backdrop");
   document.body.append(backdrop);
   let i = 0;
   let busy = false;
 
+  const markSeen = () => sb.rpc("mark_my_suggestions_seen", { p_ids: updates.map((s) => s.id) });
+
   const finish = async () => {
     backdrop.classList.add("is-leaving");
-    await sb.rpc("mark_my_suggestions_seen", { p_ids: updates.map((s) => s.id) });
-    setTimeout(() => backdrop.remove(), reduceMotion() ? 0 : 300);
     document.removeEventListener("keydown", onKey);
+    await markSeen();
+    setTimeout(() => backdrop.remove(), reduceMotion() ? 0 : 300);
   };
 
   const show = () => {
-    const { card, ok } = boardingPass(updates[i], i + 1, updates.length);
+    const { card, ok, link } = boardingPass(updates[i], i + 1, updates.length);
     backdrop.replaceChildren(card);
     ok.focus({ preventScroll: true });
     ok.addEventListener("click", () => tear(card));
+    // Going to see it counts as reading it: close the pass and go, so it
+    // can't come back on the next page or stay over the section it links to.
+    link?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      document.removeEventListener("keydown", onKey);
+      await markSeen();
+      backdrop.remove();
+      const to = new URL(link.href);
+      if (to.pathname === location.pathname && to.hash) {
+        document.querySelector(to.hash)?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+        history.replaceState(null, "", to.hash);
+      } else {
+        location.href = link.href;
+      }
+    });
   };
 
   const tear = (card) => {

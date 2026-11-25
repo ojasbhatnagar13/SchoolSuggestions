@@ -1,7 +1,7 @@
 // The suggestion form, on the home page and the Suggest page.
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, el, signIn, watchSession } from "./common.js";
-import { showUpdates } from "./mine.js?v=3";
+import { showUpdates } from "./mine.js?v=4";
 
 // PLACEHOLDERS -- the school must replace these with its real wellbeing
 // contacts before launch. Also in the "Not for personal problems" note in
@@ -221,18 +221,6 @@ function sentPopup(text, line) {
   });
 }
 
-// "Complete anonymity": swaps the reassurance for a bold warning, so nobody
-// ticks it without seeing that it means no updates. Deliberately not reset
-// after sending -- it is the student's standing choice for this visit.
-const anonBox = document.getElementById("full-anon");
-const anonDefault = document.getElementById("anon-default");
-const anonWarning = document.getElementById("anon-warning");
-anonBox.addEventListener("change", () => {
-  anonDefault.hidden = anonBox.checked;
-  anonWarning.hidden = !anonBox.checked;
-  anonBox.closest(".anon-choice").classList.toggle("is-on", anonBox.checked);
-});
-
 function clearForm() {
   els.text.value = "";
   els.benefit.value = "";
@@ -299,8 +287,6 @@ els.form.addEventListener("submit", async (event) => {
   els.send.disabled = true;
   els.sendLabel.textContent = "Checking…";
   const stopLoader = startLoader();
-  // Read now: the student could untick it while the check is running.
-  const fullyAnonymous = anonBox.checked;
   let sent = ""; // set when it was actually sent: shows the popup
 
   try {
@@ -320,7 +306,7 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit, fullyAnonymous }),
+      body: JSON.stringify({ suggestion, benefit }),
     });
     const payload = await res.json();
 
@@ -379,9 +365,7 @@ els.form.addEventListener("submit", async (event) => {
       notice(
         `Sent as #${payload.id}. Lots of students are sending right now, so ` +
         `yours is in the queue and will be checked within a few minutes. ` +
-        (fullyAnonymous
-          ? `It was sent with complete anonymity, so check the Vote page later to see if it's approved.`
-          : `You can follow it on your My suggestions page.`),
+        `You can follow it on your My suggestions page.`,
         "ok", "Sent, waiting in the queue",
       );
     } else if (payload.status === "spam") {
@@ -402,9 +386,7 @@ els.form.addEventListener("submit", async (event) => {
       sent = `It's waiting for a member of staff to read it. Once approved, it goes on the Vote page.`;
       notice(
         `Sent as #${payload.id} under “${payload.category}”. ` +
-        (fullyAnonymous
-          ? `It was sent with complete anonymity, so you won't get updates: check the Vote page to see if it's approved.`
-          : `It will appear on the Vote page once staff approve it.`),
+        `It will appear on the Vote page once staff approve it.`,
         "ok", "Sent for staff review",
       );
     }

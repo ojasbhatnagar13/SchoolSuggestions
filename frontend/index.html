@@ -87,37 +87,16 @@
             <textarea id="benefit" class="short-box" maxlength="1000" rows="2"
               placeholder="e.g. More students would eat a proper lunch instead of skipping it."></textarea>
 
-            <!-- Default: linked privately to the account so the student can
-                 follow it (never shown to staff). Ticked: not linked at all,
-                 so no updates. submit.js swaps the two explanations. -->
-            <!-- Outside the switch box on purpose: true either way, so a
-                 student who reads nothing else still gets it right. -->
+            <!-- Linked privately to the account so the student can follow it.
+                 Staff never see the link. -->
             <div class="anon-always">
               <svg class="anon-lock" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="5" y="10.5" width="14" height="10" rx="2"></rect>
                 <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
               </svg>
               <div>
-                <p class="anon-always-main">Staff already never see who sent your suggestion.</p>
-                <p class="anon-always-sub">The switch below only decides whether you get updates about it.</p>
-              </div>
-            </div>
-            <div class="anon-choice">
-              <label class="anon-toggle" for="full-anon">
-                <input type="checkbox" id="full-anon">
-                <span class="anon-switch" aria-hidden="true"></span>
-                <span><b>Complete anonymity</b> <span class="opt">Optional</span></span>
-              </label>
-              <div id="anon-default" class="anon-note">
-                Off: it's kept privately with your account, only so you can see
-                what happens to it on your My suggestions page and get updates.
-              </div>
-              <div id="anon-warning" class="anon-note anon-warning" hidden>
-                <p class="anon-big"><b>You will NOT get any updates about this suggestion.</b></p>
-                It won't be linked to your account at all, so it won't appear under
-                your My suggestions page and nobody, not even the site's admins, can trace
-                it back to you. To find out whether it was approved, you'll have to
-                check the Vote page yourself.
+                <p class="anon-always-main">Staff never see who sent your suggestion.</p>
+                <p class="anon-always-sub">It's kept privately with your account, only so you can follow it on your My suggestions page.</p>
               </div>
             </div>
 
@@ -219,8 +198,8 @@
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=32"></script>
-  <script type="module" src="ideas.js?v=37"></script>
+  <script type="module" src="submit.js?v=33"></script>
+  <script type="module" src="ideas.js?v=38"></script>
   <script type="module" src="journey.js?v=2"></script>
   <script type="module" src="reveal.js?v=1"></script>
 </body>
