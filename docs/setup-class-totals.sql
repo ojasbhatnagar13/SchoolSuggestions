@@ -9,7 +9,7 @@
 --     (open for votes, going ahead, done), so sending lots doesn't help.
 --   * A class only appears once it has 3+ approved suggestions, so a total
 --     can't point at one suggestion.
---   * Totals are a snapshot taken on the 1st of each month, not live, so
+--   * Totals are a snapshot taken weekly (Monday) for the trial, not live, so
 --     nobody can match a change in a total to a suggestion that just appeared.
 --   * Total votes are shown for the leading class only.
 
@@ -104,9 +104,10 @@ $$;
 revoke all on function public.class_leaderboard() from public, anon;
 grant execute on function public.class_leaderboard() to authenticated;
 
--- 00:05 on the 1st of every month.
+-- Weekly for the trial: 00:05 UTC every Monday (05:35 in India). For monthly,
+-- use '5 0 1 * *'.
 select cron.unschedule(jobid) from cron.job where jobname = 'class-totals';
-select cron.schedule('class-totals', '5 0 1 * *', $$select public.refresh_class_totals()$$);
+select cron.schedule('class-totals', '5 0 * * 1', $$select public.refresh_class_totals()$$);
 
 -- First snapshot now (empty until classes reach 3 approved suggestions).
 select public.refresh_class_totals();
