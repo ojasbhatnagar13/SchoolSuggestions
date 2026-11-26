@@ -377,6 +377,17 @@ async function currentUser(req: Request): Promise<{ id: string; token: string } 
 // existing } when this idea already exists. The database owns both decisions
 // -- auto-rejection and duplicate matching -- so this function cannot drift
 // from main.py.
+const GRADES = ["MYP 1", "MYP 2", "MYP 3", "MYP 4", "MYP 5", "DP 1", "DP 2", "CP 1", "CP 2"];
+const SECTIONS = ["A", "B", "C", "D", "E"];
+
+// Counts a saved suggestion for a grade and section, if the student chose
+// one. A failure here must never lose the suggestion itself.
+async function tagClass(id: number | undefined, grade: string | null, section: string | null) {
+  if (!id || !grade || !section) return;
+  await rpc("tag_suggestion_class", { p_secret: SUBMIT_SECRET, p_id: id, p_grade: grade, p_section: section })
+    .catch((err) => console.warn("class tag failed:", err));
+}
+
 async function save(
   suggestion: string,
   benefit: string,
@@ -527,17 +538,21 @@ Deno.serve(async (req) => {
   let suggestion: string;
   let benefit: string;
   let receipt: string;
-  let fullyAnonymous = false;
+  // Optional: count it for the student's grade and section. Stored apart
+  // from the suggestion, never shown to staff (docs/setup-class-totals.sql).
+  let grade: string | null = null;
+  let section: string | null = null;
   try {
     const body = await req.json();
     suggestion = String(body?.suggestion ?? "").trim();
     benefit = String(body?.benefit ?? "").trim();
     receipt = String(body?.receipt ?? "").trim().slice(0, 64);
-    // "Complete anonymity" ticked: the suggestion is not linked to the
-    // account at all, so nobody, admins included, can trace it -- and the
-    // student gets no updates about it. The rate limit still counts the
-    // account (by salted hash and hour only), so it cannot be used to spam.
-    fullyAnonymous = body?.fullyAnonymous === true;
+    const g = String(body?.grade ?? "");
+    const sec = String(body?.section ?? "");
+    if (GRADES.includes(g) && SECTIONS.includes(sec)) {
+      grade = g;
+      section = sec;
+    }
   } catch {
     return json({ error: "Body must be JSON like {\"suggestion\": \"...\"}" }, 400);
   }
@@ -607,7 +622,8 @@ Deno.serve(async (req) => {
       // With no AI yet, the word check is all there is, so a match goes to
       // the red section now and the student gets the counsellor reply.
       const flagged = mentionsConcern(suggestion, benefit);
-      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, fullyAnonymous ? null : user.id, true);
+      const saved = await save(suggestion, benefit, uncheckedAnalysis(suggestion), flagged, receipt, user.id, true);
+      await tagClass(saved.id, grade, section);
       return json({
         id: saved.id,
         status: saved.status,
@@ -644,7 +660,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const saved = await save(suggestion, benefit, analysis, concern, receipt, fullyAnonymous ? null : user.id);
+    const saved = await save(suggestion, benefit, analysis, concern, receipt, user.id);
+    await tagClass(saved.id, grade, section);
 
     // Nothing was written -- the idea already exists. Send back the original
     // so the student can see it rather than just being told "no".

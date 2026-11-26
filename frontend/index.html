@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=42">
+  <link rel="stylesheet" href="style.css?v=43">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -100,6 +100,24 @@
               </div>
             </div>
 
+            <!-- Optional: count it for a grade and section. Staff never see it
+                 on the suggestion; only monthly class totals are shown. -->
+            <fieldset class="class-pick">
+              <legend class="field-label">Count it for your class <span class="opt">Optional</span></legend>
+              <div class="class-selects">
+                <select id="grade" aria-label="Grade">
+                  <option value="">Grade</option>
+                  <option>MYP 1</option><option>MYP 2</option><option>MYP 3</option><option>MYP 4</option><option>MYP 5</option>
+                  <option>DP 1</option><option>DP 2</option><option>CP 1</option><option>CP 2</option>
+                </select>
+                <select id="section" aria-label="Section">
+                  <option value="">Section</option>
+                  <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+                </select>
+              </div>
+              <p class="class-note" id="class-note">If it's approved, it adds to your class's total. Staff never see which class sent it.</p>
+            </fieldset>
+
             <div class="form-foot">
               <span id="counter" class="mono counter" aria-live="polite"></span>
               <button id="send" type="submit" class="btn btn-primary">
@@ -162,6 +180,22 @@
       </div>
     </section>
 
+    <!-- Class leaderboard: monthly totals only (docs/setup-class-totals.sql). -->
+    <section class="band band-dark classes-band" id="classes-section">
+      <div class="wrap">
+        <div class="done-head">
+          <div>
+            <p class="eyebrow">Class leaderboard</p>
+            <h2 class="h2">Which class is<br>making DPSI better?</h2>
+          </div>
+          <p class="mono done-note">Updated on the 1st of each month</p>
+        </div>
+        <div id="classes"></div>
+        <p class="classes-rules">Only approved suggestions count. A class shows up once it has 3.
+          Staff never see which class sent any suggestion, only these totals.</p>
+      </div>
+    </section>
+
     <section class="band band-cream-2 ahead-band" id="ahead-section" hidden>
       <div class="wrap">
         <div class="done-head">
@@ -198,8 +232,8 @@
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=33"></script>
-  <script type="module" src="ideas.js?v=38"></script>
+  <script type="module" src="submit.js?v=34"></script>
+  <script type="module" src="ideas.js?v=39"></script>
   <script type="module" src="journey.js?v=2"></script>
   <script type="module" src="reveal.js?v=1"></script>
 </body>

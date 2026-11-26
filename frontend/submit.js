@@ -221,6 +221,34 @@ function sentPopup(text, line) {
   });
 }
 
+// Grade and section: optional, remembered in this browser so it only has to
+// be picked once. Both or neither -- half a class can't be counted.
+const CLASS_KEY = "my-class";
+const gradeBox = $("grade");
+const sectionBox = $("section");
+const classNote = $("class-note");
+const CLASS_NOTE = classNote.textContent;
+try {
+  const saved = JSON.parse(localStorage.getItem(CLASS_KEY));
+  if (saved) { gradeBox.value = saved.grade ?? ""; sectionBox.value = saved.section ?? ""; }
+} catch { /* not remembered */ }
+
+function classChoice() {
+  const grade = gradeBox.value;
+  const section = sectionBox.value;
+  return grade && section ? { grade, section } : null;
+}
+function updateClassNote() {
+  const half = Boolean(gradeBox.value) !== Boolean(sectionBox.value);
+  classNote.textContent = half ? "Pick both your grade and your section to count it." : CLASS_NOTE;
+  classNote.classList.toggle("warn", half);
+  try {
+    localStorage.setItem(CLASS_KEY, JSON.stringify({ grade: gradeBox.value, section: sectionBox.value }));
+  } catch { /* fine */ }
+}
+gradeBox.addEventListener("change", updateClassNote);
+sectionBox.addEventListener("change", updateClassNote);
+
 function clearForm() {
   els.text.value = "";
   els.benefit.value = "";
@@ -306,7 +334,7 @@ els.form.addEventListener("submit", async (event) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ suggestion, benefit }),
+      body: JSON.stringify({ suggestion, benefit, ...(classChoice() ?? {}) }),
     });
     const payload = await res.json();
 
