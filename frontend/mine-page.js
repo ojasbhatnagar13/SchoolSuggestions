@@ -35,7 +35,7 @@ watchSession(async (session) => {
   }
   if (!rows.length) {
     const link = el("a", "btn btn-primary", "Make a suggestion →");
-    link.href = "suggest.html";
+    link.href = "index.html";
     return emptyState("Nothing here yet.",
       "When you send a suggestion, it appears here so you can see what happens to it.", link);
   }

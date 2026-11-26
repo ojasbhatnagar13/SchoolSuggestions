@@ -13,8 +13,8 @@ import unittest
 
 from helpers import FRONTEND, ROOT, public_config
 
-PAGES = ["index.html", "suggest.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html", "privacy.html", "vote.html"]
-STUDENT_TABS = {"index.html": "Home", "vote.html": "Vote", "suggest.html": "Suggest",
+PAGES = ["index.html", "leaderboard.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html", "privacy.html", "vote.html"]
+STUDENT_TABS = {"index.html": "Home", "vote.html": "Vote", "leaderboard.html": "Leaderboard",
                 "mine.html": "My suggestions", "how.html": "How it works"}
 
 
@@ -119,7 +119,7 @@ class TestPages(unittest.TestCase):
         self.assertEqual(len(versions), 1, f"style.css versions differ between pages: {versions}")
 
     def test_form_limits_match_the_server(self):
-        index = self.read("suggest.html")
+        index = self.read("index.html")
         edge = (ROOT / "supabase/functions/moderate-suggestion/index.ts").read_text(encoding="utf-8")
         submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
         server_max = re.search(r"const MAX_LENGTH = (\d[\d_]*)", edge).group(1).replace("_", "")
@@ -133,7 +133,7 @@ class TestHelpContacts(unittest.TestCase):
     def test_same_contacts_in_the_notice_and_the_reply(self):
         """The wellbeing contacts appear in two places; they must not drift."""
         submit = (FRONTEND / "submit.js").read_text(encoding="utf-8")
-        index = (FRONTEND / "suggest.html").read_text(encoding="utf-8")
+        index = (FRONTEND / "index.html").read_text(encoding="utf-8")
         phone, email = re.search(r'const HELP = \{ phone: "([^"]+)", email: "([^"]+)" \}', submit).groups()
         self.assertIn(phone, index)
         self.assertIn(email, index)

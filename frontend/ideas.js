@@ -375,51 +375,7 @@ function renderReel(real = suggestions) {
   reel.replaceChildren(...cards);
 }
 
-// The class leaderboard: monthly totals of approved suggestions per grade and
-// section. Votes are given for the leading class only.
-const classesEl = document.getElementById("classes"); // home page only
-let classes = [];
-
-function renderClasses() {
-  if (!classesEl) return;
-  if (!classes.length) {
-    const empty = el("div", "classes-empty");
-    empty.append(
-      el("p", "classes-empty-title", "No class is on the board yet."),
-      el("p", null, "When you send a suggestion, pick your grade and section. " +
-        "Once your class has 3 approved suggestions, it shows up here."),
-    );
-    classesEl.replaceChildren(empty);
-    return;
-  }
-  const [lead, ...rest] = classes;
-  const stat = (n, label) => {
-    const d = el("div", "lead-stat");
-    d.append(el("span", "lead-n", String(n)), el("span", "lead-label mono", label));
-    return d;
-  };
-  const leader = el("div", "class-lead");
-  const name = el("div", "lead-name");
-  name.append(el("span", "lead-place mono", "Leading"), el("span", "lead-class", `${lead.grade} ${lead.section}`));
-  const stats = el("div", "lead-stats");
-  stats.append(stat(lead.approved, "approved"), stat(lead.done, "done"), stat(lead.votes ?? 0, "votes"));
-  leader.append(name, stats);
-
-  const list = el("ol", "class-list");
-  for (const c of rest) {
-    const li = el("li", "class-row");
-    li.append(
-      el("span", "class-place mono", String(c.place)),
-      el("span", "class-name", `${c.grade} ${c.section}`),
-      el("span", "class-nums mono", `${plural(c.approved, "approved")} · ${c.done} done`),
-    );
-    list.append(li);
-  }
-  classesEl.replaceChildren(leader, ...(rest.length ? [list] : []));
-}
-
 function renderHome() {
-  renderClasses();
   renderReel();
 
   const ahead = suggestions.filter(isAhead).sort(byNew);
@@ -434,8 +390,6 @@ function renderHome() {
 
 function hideBoard() {
   if (reelBlock) renderReel([]);
-  classes = [];
-  renderClasses();
   if (filterBar) filterBar.hidden = true;
   if (searchWrap) searchWrap.hidden = true;
   if (newNote) newNote.hidden = true;
@@ -488,16 +442,14 @@ async function refresh(session) {
   // the home page the form's script already does this.
   if (list) showUpdates(session);
 
-  const [votesRes, listRes, classRes] = await Promise.all([
+  const [votesRes, listRes] = await Promise.all([
     sb.rpc("my_votes"),
     // Newest first, always. Ordering by popularity is the bandwagon
     // mechanism, and the vote count is not sent to students anyway.
     sb.from("public_suggestions").select("*").order("created_at", { ascending: false })
       // Times are rounded to the hour, so the id breaks ties within one.
       .order("id", { ascending: false }),
-    classesEl ? sb.rpc("class_leaderboard") : Promise.resolve({ data: [] }),
   ]);
-  classes = classRes.error ? [] : classRes.data ?? [];
 
   myVotes = new Set(votesRes.error ? [] : votesRes.data ?? []);
 
@@ -527,7 +479,7 @@ async function refresh(session) {
   if (!suggestions.length) {
     hideBoard();
     const link = el("a", "btn btn-primary", "Send a suggestion →");
-    link.href = "suggest.html";
+    link.href = "index.html";
     showState(boardState({
       title: "Nothing approved yet.",
       body: "Suggestions appear here once a member of staff has read and " +
