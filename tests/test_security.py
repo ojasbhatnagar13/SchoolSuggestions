@@ -51,6 +51,8 @@ NEEDS_SECRET = {
     "refund_account_slot": {"p_secret": "guess", "p_account_hash": "a" * 64},
     "moderation_config": {"p_secret": "guess"},
     "live_topics": {"p_secret": "guess"},
+    "submit_report": {"p_secret": "guess", "p_report": "test", "p_place": None, "p_email": None,
+                      "p_category": None, "p_urgency": "normal", "p_summary": None, "p_checked": True},
     "tag_suggestion_class": {"p_secret": "guess", "p_id": 1, "p_grade": "MYP 1", "p_section": "A"},
     "queued_suggestions": {"p_secret": "guess", "p_limit": 5},
     "queue_attempt_failed": {"p_secret": "guess", "p_id": 1},

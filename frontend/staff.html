@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=43">
+  <link rel="stylesheet" href="style.css?v=45">
 </head>
 <body>
   <header class="nav">
@@ -48,6 +48,27 @@
             Sign in with Google <span aria-hidden="true">→</span>
           </button>
         </div>
+      </div>
+    </section>
+
+    <!-- Speak Up: reports from students about something wrong
+         (docs/setup-speak-up.sql). Anonymous unless the student added their name. -->
+    <section class="band band-cream-2 reports-band" id="reports-section" hidden>
+      <div class="wrap">
+        <div class="done-head">
+          <div>
+            <p class="eyebrow">Speak Up</p>
+            <h2 class="h2">Reports from<br>students.</h2>
+          </div>
+          <p class="mono done-note" id="reports-count"></p>
+        </div>
+        <p class="reports-note">
+          Students use Speak Up to tell staff about something wrong. Most are
+          anonymous: nobody, admins included, can find out who sent them. Some
+          include the student's name and email so you can talk to them.
+          Reports are not checked for truth, so treat them as a lead, not proof.
+        </p>
+        <ul id="reports-list" class="reports-list"></ul>
       </div>
     </section>
 
@@ -184,6 +205,6 @@
     </div>
   </footer>
 
-  <script type="module" src="staff.js?v=26"></script>
+  <script type="module" src="staff.js?v=27"></script>
 </body>
 </html>

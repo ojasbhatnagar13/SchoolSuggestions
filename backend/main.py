@@ -48,7 +48,7 @@ ANALYSIS_SCHEMA = types.Schema(
             items=types.Schema(
                 type=types.Type.STRING,
                 enum=["no_suggestion", "rude", "sarcastic", "unclear",
-                      "several_requests", "names_person", "hidden_concern"],
+                      "several_requests", "names_person", "hidden_concern", "report"],
             ),
         ),
     },
@@ -119,6 +119,14 @@ Use the background like this:
   - A normal suggestion that ALSO reports bullying, harm, abuse or feeling
     unsafe ("more variety at lunch, also people keep hitting me"): add the
     hidden_concern flag and use that same exact reason. A person must see it.
+  - Tells staff about something someone did or is doing wrong, rather than
+    asking for a change: bullying or harassing someone, cheating, stealing,
+    damaging property, vaping, smoking or drugs, fighting, a staff member
+    behaving wrongly, or anything unsafe that is happening. Never spam. Add
+    the report flag. The student is sent to the school's separate private
+    box for this ("Speak Up"). A suggestion about a problem ("put monitors
+    in the corridors to stop bullying", "stricter rules on vaping") is a
+    normal suggestion, not a report.
 
 Wording flags tell staff how a submission is written. List every one that
 applies, or none:
@@ -137,6 +145,8 @@ applies, or none:
   several_requests  asks for more than one unrelated thing
   names_person      mentions a specific teacher, staff member or student
   hidden_concern    as described above
+  report            as described above: telling staff about wrongdoing or
+                    something unsafe, not asking for a change
 
 Fill every field:
   spam         Yes for SPAM as defined above. Otherwise No.

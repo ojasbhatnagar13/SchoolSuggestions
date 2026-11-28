@@ -26,7 +26,7 @@ EXPECTED = {("public_suggestions", "authenticated", "SELECT")}
 # anon can execute is a mistake.
 ANON_FUNCTIONS = {
     "auto_status", "public_rules", "submit_suggestion", "claim_account_slot", "refund_account_slot",
-    "moderation_config", "live_topics", "tag_suggestion_class",
+    "moderation_config", "live_topics", "tag_suggestion_class", "submit_report",
     # the AI queue (docs/setup-ai-queue.sql); all demand the server secret
     "queued_suggestions", "apply_ai_check", "queue_attempt_failed",
 }

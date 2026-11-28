@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="style.css?v=43">
+  <link rel="stylesheet" href="style.css?v=45">
 </head>
 <body>
   <a class="skip" href="#suggestion">Skip to the suggestion box</a>
@@ -37,18 +37,23 @@
 
   <main>
     <section class="band band-dark home home-suggest home-first">
-      <div class="wrap home-grid">
+      <div class="wrap home-grid" id="boxes">
         <div class="home-copy">
           <p class="eyebrow">DPS International Edge · Student suggestions</p>
-          <h1 class="headline headline-md">Make DPSI better.<br><span class="accent">Suggest something.</span></h1>
-          <ul class="promise">
+          <h1 class="headline headline-md">Make DPSI better.<br><span class="accent suggest-only">Suggest something.</span><span class="accent speak-only">Speak up safely.</span></h1>
+          <ul class="promise speak-only">
+            <li><b>Anonymous.</b> <span>Not linked to your account at all.</span></li>
+            <li><b>Only staff read it.</b> <span>Never shown to students.</span></li>
+            <li><b>Your choice.</b> <span>Add your name if it's about you.</span></li>
+          </ul>
+          <ul class="promise suggest-only">
             <li><b>Hidden from staff.</b> <span>Staff never see who sent it.</span></li>
             <li><b>Students only.</b> <span>Sign in with your school account.</span></li>
             <li><b>Read by staff.</b> <span>A real person decides.</span></li>
           </ul>
           <!-- Live preview: replaces the promises above while the student
                types, showing the card exactly as the Vote page will. -->
-          <article id="preview" class="s-card preview-card" hidden>
+          <article id="preview" class="s-card preview-card suggest-only" hidden>
             <div class="s-meta">
               <span class="s-meta-left"><span class="preview-badge mono">Preview</span><span class="s-cat">How it will look</span></span>
               <span class="mono s-date" id="preview-date"></span>
@@ -58,20 +63,25 @@
             <div class="s-foot"><span class="mono">On the Vote page once staff approve it</span><button class="vote" type="button" tabindex="-1" disabled>Vote</button></div>
           </article>
           <p class="not-for">
-            <b>Not for personal problems.</b> If you're being bullied, feel
-            unsafe, or are going through something hard, please talk to a
-            teacher or a school counsellor in person. This box is anonymous, so
-            nobody can reply to you or help you through it.
+            <b>If someone is in danger right now,</b> tell a teacher straight
+            away. Being bullied, or going through something hard? Use
+            <a href="#speak-up" class="to-speak-up">Speak Up</a> and include your
+            name, so a teacher or counsellor can help you.
             <!-- PLACEHOLDERS: the school must replace these. Must match HELP in submit.js. -->
             You can also call <b>+91 XXXXX XXXXX</b> or email <b>help@dpsiedge.edu.in</b>.
           </p>
         </div>
 
         <article class="panel panel-dark compose" id="suggest">
+          <!-- Two boxes: suggestions (submit.js) and Speak Up (speakup.js). -->
+          <div class="box-tabs" role="tablist" aria-label="Choose a box">
+            <button type="button" role="tab" id="tab-suggest" aria-controls="submit-form" aria-selected="true">Suggest a change</button>
+            <button type="button" role="tab" id="tab-speak" aria-controls="report-form" aria-selected="false">Speak Up</button>
+          </div>
           <!-- Above the form, where the student is already looking: both the
                "checking..." message and the result appear here. -->
-          <div id="result" class="notice" role="status" hidden></div>
-          <form id="submit-form" class="form">
+          <div id="result" class="notice suggest-only" role="status" hidden></div>
+          <form id="submit-form" class="form suggest-only" role="tabpanel" aria-labelledby="tab-suggest">
             <label for="suggestion" class="field-label">Your suggestion</label>
             <textarea id="suggestion" maxlength="2000" rows="3" required
               placeholder="e.g. Add more healthy options to the school canteen menu."></textarea>
@@ -126,7 +136,46 @@
               </button>
             </div>
           </form>
-          <p id="signed-as" class="mono form-note"></p>
+          <p id="signed-as" class="mono form-note suggest-only"></p>
+
+          <!-- Speak Up: tell teachers about something wrong
+               (docs/setup-speak-up.sql). Anonymous unless "Include my name". -->
+          <div id="report-result" class="notice speak-only" role="status" hidden></div>
+          <form id="report-form" class="form speak-only" role="tabpanel" aria-labelledby="tab-speak">
+            <label for="report" class="field-label">What happened?</label>
+            <textarea id="report" maxlength="2000" rows="4" required
+              placeholder="e.g. Some older students keep taking a younger student's lunch at break."></textarea>
+
+            <label for="place" class="field-label">
+              Where and when? <span class="opt">Optional</span>
+            </label>
+            <input id="place" class="short-box" type="text" maxlength="300" autocomplete="off"
+              placeholder="e.g. Near the canteen, most days at first break.">
+
+            <div class="anon-choice">
+              <label class="anon-toggle" for="named">
+                <input type="checkbox" id="named">
+                <span class="anon-switch" aria-hidden="true"></span>
+                <span><b>Include my name</b> <span class="opt">Optional</span></span>
+              </label>
+              <div id="named-off" class="anon-note">
+                Off: completely anonymous. It isn't linked to your account at
+                all, so nobody can find out it was you, and teachers can't reply.
+              </div>
+              <div id="named-on" class="anon-note anon-warning" hidden>
+                <b>The teacher who reads it will see your name and email,</b> so
+                they can talk to you. Use this if it's about you, like bullying.
+              </div>
+            </div>
+
+            <div class="form-foot">
+              <span id="report-counter" class="mono counter" aria-live="polite"></span>
+              <button id="report-send" type="submit" class="btn btn-primary">
+                <span class="btn-label">Sign in to send</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
         </article>
       </div>
     </section>
@@ -217,7 +266,8 @@
     </div>
   </footer>
 
-  <script type="module" src="submit.js?v=34"></script>
+  <script type="module" src="submit.js?v=35"></script>
+  <script type="module" src="speakup.js?v=1"></script>
   <script type="module" src="ideas.js?v=40"></script>
   <script type="module" src="journey.js?v=2"></script>
   <script type="module" src="reveal.js?v=1"></script>

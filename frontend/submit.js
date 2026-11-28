@@ -2,11 +2,8 @@
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=4";
+import { HELP, showBox, offerMove } from "./boxes.js?v=1";
 
-// PLACEHOLDERS -- the school must replace these with its real wellbeing
-// contacts before launch. Also in the "Not for personal problems" note in
-// index.html; tests/test_static.py checks the two match.
-const HELP = { phone: "+91 XXXXX XXXXX", email: "help@dpsiedge.edu.in" };
 
 // Must match maxlength in index.html and the limits in the Edge Function.
 const MAX_LENGTH = 2000;
@@ -356,6 +353,33 @@ els.form.addEventListener("submit", async (event) => {
       // text stays in the box and the student is asked to say more.
       notice("Not sent yet. Please add a little more detail and send it again.", "warn", "Needs a bit more detail");
       askToClarify(payload.question);
+      return;
+    }
+
+    if (payload.status === "to_speak_up") {
+      // Not a suggestion but telling staff about something wrong. Nothing
+      // was saved: offer to move it to Speak Up, which is private.
+      notice("Not sent yet. This sounds like something to tell staff privately.", "warn", "This belongs in Speak Up");
+      offerMove({
+        title: "This sounds like something to tell staff privately",
+        body: [
+          "The suggestion box is for changes everyone can vote on. What you " +
+          "wrote sounds like something a teacher should know about, so it " +
+          "belongs in Speak Up: it's anonymous unless you add your name, and " +
+          "it's never shown to other students.",
+          `Nothing has been sent yet. If anyone is in danger right now, tell a ` +
+          `teacher straight away, or call ${HELP.phone}.`,
+        ],
+        button: "Move it to Speak Up",
+        onMove: () => {
+          const box = document.getElementById("report");
+          box.value = [suggestion, benefit].filter(Boolean).join("\n\n");
+          box.dispatchEvent(new Event("input"));
+          clearForm();
+          els.result.hidden = true;
+          showBox("speak", { focus: true });
+        },
+      });
       return;
     }
 
