@@ -72,6 +72,25 @@ function askToSignIn() {
   go.focus();
 }
 
+// The "Staff pages" button in the top bar: only for accounts on the staff
+// list. The database answers (is_staff), so nobody else ever sees it; the
+// staff pages check again themselves anyway.
+let staffChecked = null;
+async function showStaffLink(session) {
+  const link = document.getElementById("staff-link");
+  if (!link) return;
+  if (!session) {
+    staffChecked = null;
+    link.hidden = true;
+    return;
+  }
+  if (staffChecked !== session.user.id) {
+    staffChecked = session.user.id;
+    const { data, error } = await sb.rpc("is_staff");
+    link.hidden = error ? true : data !== true;
+  }
+}
+
 // Student pages pass { askToSignIn: true } to get the popup when signed out.
 export function watchSession(onChange = () => {}, { askToSignIn: ask = false } = {}) {
   const who = document.getElementById("who");
@@ -98,6 +117,7 @@ export function watchSession(onChange = () => {}, { askToSignIn: ask = false } =
       if (signin) signin.hidden = !!session;
       if (signout) signout.hidden = !session;
       if (session) document.querySelector(".signin-dialog")?.remove();
+      showStaffLink(session);
       else if (ask) askToSignIn();
       onChange(session);
     }, 0);

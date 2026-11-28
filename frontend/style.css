@@ -2997,3 +2997,18 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 .home-first #benefit { height: 50px; }
 .reports-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
 .reports-bar .done-note { margin: 0; }
+
+/* "Staff pages" in the top bar, for staff accounts only. */
+.staff-btn:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+.staff-btn:hover { background: var(--accent); color: #fff; }
