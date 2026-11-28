@@ -2995,3 +2995,5 @@ button.vote.unpop { animation: vote-unpop 300ms ease-out; }
 .report-actions .qbtn.is-on { opacity: 1; background: var(--text-l); color: var(--paper); border-color: var(--text-l); }
 .home-first #suggestion { height: 80px; }
 .home-first #benefit { height: 50px; }
+.reports-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
+.reports-bar .done-note { margin: 0; }

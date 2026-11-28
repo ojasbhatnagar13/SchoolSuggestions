@@ -3,7 +3,7 @@
 // name" (see docs/setup-speak-up.sql for what is stored).
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, el, signIn, watchSession } from "./common.js";
-import { HELP, showBox, offerMove } from "./boxes.js?v=1";
+import { HELP, showBox, offerMove } from "./boxes.js?v=2";
 
 const MAX_LENGTH = 2000; // must match REPORT_MAX_LENGTH in the Edge Function
 
@@ -92,7 +92,7 @@ function sentPopup(text, named, urgent) {
   ];
   if (urgent) {
     lines.push(`If anyone is in danger right now, tell a teacher straight away. ` +
-      `You can also call ${HELP.phone} or email ${HELP.email}.`);
+      `You can also email ${HELP.name} at ${HELP.email}.`);
   }
   const ok = el("button", "btn btn-primary", "Done");
   ok.type = "button";

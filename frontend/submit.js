@@ -2,7 +2,7 @@
 import { SUPABASE_ANON_KEY, MODERATE_URL } from "./config.js";
 import { sb, el, signIn, watchSession } from "./common.js";
 import { showUpdates } from "./mine.js?v=4";
-import { HELP, showBox, offerMove } from "./boxes.js?v=1";
+import { HELP, showBox, offerMove } from "./boxes.js?v=2";
 
 
 // Must match maxlength in index.html and the limits in the Edge Function.
@@ -368,7 +368,7 @@ els.form.addEventListener("submit", async (event) => {
           "belongs in Speak Up: it's anonymous unless you add your name, and " +
           "it's never shown to other students.",
           `Nothing has been sent yet. If anyone is in danger right now, tell a ` +
-          `teacher straight away, or call ${HELP.phone}.`,
+          `teacher straight away, or email ${HELP.name} at ${HELP.email}.`,
         ],
         button: "Move it to Speak Up",
         onMove: () => {
@@ -404,7 +404,7 @@ els.form.addEventListener("submit", async (event) => {
       notice(
         `Thank you for telling us. ${payload.reason ?? ""} ` +
         `If you or someone else is in danger right now, tell a teacher or any ` +
-        `adult straight away. You can also call ${HELP.phone} or email ` +
+        `adult straight away. You can also email ${HELP.name} at ` +
         `${HELP.email}. A member of staff will read what you wrote and pass it ` +
         `to the pastoral care team, but because this box is anonymous they ` +
         `cannot reply to you. It will not be shown to other students.`,

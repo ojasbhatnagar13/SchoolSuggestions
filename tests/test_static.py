@@ -13,7 +13,7 @@ import unittest
 
 from helpers import FRONTEND, ROOT, public_config
 
-PAGES = ["index.html", "leaderboard.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html", "privacy.html", "vote.html"]
+PAGES = ["index.html", "leaderboard.html", "mine.html", "how.html", "feedback.html", "staff.html", "staff-guide.html", "privacy.html", "vote.html", "staff-reports.html"]
 STUDENT_TABS = {"index.html": "Home", "vote.html": "Vote", "leaderboard.html": "Leaderboard",
                 "mine.html": "My suggestions", "how.html": "How it works"}
 
@@ -134,16 +134,16 @@ class TestHelpContacts(unittest.TestCase):
         """The wellbeing contacts appear in two places; they must not drift."""
         submit = (FRONTEND / "boxes.js").read_text(encoding="utf-8")
         index = (FRONTEND / "index.html").read_text(encoding="utf-8")
-        phone, email = re.search(r'const HELP = \{ phone: "([^"]+)", email: "([^"]+)" \}', submit).groups()
-        self.assertIn(phone, index)
+        name, email = re.search(r'const HELP = \{ name: "([^"]+)", email: "([^"]+)" \}', submit).groups()
+        self.assertIn(name, index)
         self.assertIn(email, index)
 
-    @unittest.expectedFailure
     def test_placeholders_replaced(self):
-        """Expected to fail until the school supplies real contacts -- then
-        remove the decorator so it guards against the placeholder returning."""
-        submit = (FRONTEND / "boxes.js").read_text(encoding="utf-8")
-        self.assertNotIn("XXXXX", submit)
+        """The placeholder contacts must never come back."""
+        for page in ("boxes.js", "index.html", "submit.js", "speakup.js"):
+            text = (FRONTEND / page).read_text(encoding="utf-8")
+            self.assertNotIn("XXXXX", text, page)
+            self.assertNotIn("help@dpsiedge", text, page)
 
 
 class TestVagueBackstop(unittest.TestCase):

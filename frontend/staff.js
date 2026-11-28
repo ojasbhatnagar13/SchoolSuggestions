@@ -702,72 +702,7 @@ async function load() {
   els.board.hidden = false;
   render();
   if (!rulesDirty) await loadRules();
-  await Promise.all([loadReports(), loadFeedback()]);
-}
-
-// ------------------------------------------------------------------ Speak Up reports
-
-const REPORT_STATUS = { new: "New", in_hand: "Being handled", closed: "Closed" };
-
-async function loadReports() {
-  const section = $("reports-section");
-  const { data, error } = await sb.rpc("staff_reports");
-  if (error) {
-    section.hidden = true; // not installed yet
-    return;
-  }
-  section.hidden = false;
-  const open = data.filter((r) => r.status !== "closed");
-  const urgent = open.filter((r) => r.urgency === "urgent").length;
-  $("reports-count").textContent = data.length
-    ? `${open.length} open` + (urgent ? ` · ${urgent} urgent` : "") + ` · ${data.length - open.length} closed`
-    : "Nothing yet";
-
-  const list = $("reports-list");
-  if (!data.length) {
-    list.replaceChildren(el("li", "hint", "No reports yet. Students send them from the Speak Up tab on the home page."));
-    return;
-  }
-  list.replaceChildren(...data.map((r) => {
-    const li = el("li", `report-item report-${r.status}` + (r.urgency === "urgent" ? " is-urgent" : ""));
-    const head = el("div", "report-head");
-    if (r.urgency === "urgent") head.append(el("span", "report-tag tag-urgent", "Urgent"));
-    head.append(el("span", "report-tag", r.category || "Not sorted yet"));
-    if (!r.checked) head.append(el("span", "report-tag", "AI was busy: not checked"));
-    head.append(el("span", "report-when mono", new Date(r.created_at).toLocaleString(undefined, {
-      day: "numeric", month: "short", hour: "numeric",
-    })));
-    li.append(head);
-    if (r.summary) li.append(el("p", "report-summary", r.summary));
-    li.append(el("p", "report-text", r.report));
-    if (r.place) {
-      const place = el("p", "report-place");
-      place.append(el("span", "mono", "Where and when"), el("span", null, r.place));
-      li.append(place);
-    }
-    li.append(el("p", "report-from" + (r.reporter_email ? " is-named" : ""),
-      r.reporter_email ? `From ${r.reporter_email}, who asked to be contacted.` : "Anonymous. Nobody can find out who sent it."));
-
-    const actions = el("div", "report-actions");
-    for (const [value, label] of Object.entries(REPORT_STATUS)) {
-      const b = el("button", "qbtn" + (r.status === value ? " is-on" : ""), label);
-      b.type = "button";
-      b.disabled = r.status === value;
-      b.addEventListener("click", async () => {
-        b.disabled = true;
-        const { error: setError } = await sb.rpc("staff_set_report_status", { p_id: r.id, p_status: value });
-        if (setError) {
-          alert(setError.message);
-          b.disabled = false;
-          return;
-        }
-        await loadReports();
-      });
-      actions.append(b);
-    }
-    li.append(actions);
-    return li;
-  }));
+  await loadFeedback();
 }
 
 // ------------------------------------------------------------------ site feedback

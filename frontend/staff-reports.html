@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speak Up Reports — DPSI School Suggestions</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css?v=46">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="index.html" aria-label="DPSI School Suggestions, student site">
+        <span class="brand-plate"><img src="logo.png" alt="DPS International Edge"></span>
+        <span class="brand-name">suggestions<span class="accent">.dpsi</span></span>
+      </a>
+      <div class="nav-actions" id="account">
+        <span id="who" class="who" hidden></span>
+        <a class="link-btn" href="staff.html">Suggestions</a>
+        <a class="link-btn" href="staff-guide.html">Staff guide</a>
+        <a class="link-btn" href="index.html">Student site</a>
+        <button id="signin" class="link-btn" type="button" hidden>Sign in</button>
+        <button id="signout" class="link-btn" type="button" hidden>Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="band band-dark page-head">
+      <div class="wrap page-head-grid">
+        <div>
+          <p class="eyebrow">Staff only</p>
+          <h1 class="headline headline-md">Speak Up reports.</h1>
+        </div>
+        <p class="page-head-note">
+          What students have told staff about something wrong. <b>Never shown
+          to students.</b> Urgent ones come first.
+        </p>
+      </div>
+      <div class="wrap">
+        <div class="gate-row">
+          <div id="gate" class="notice" role="status" hidden></div>
+          <button class="btn btn-primary" type="button" data-signin hidden>
+            Sign in with Google <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Speak Up: reports from students about something wrong
+         (docs/setup-speak-up.sql). Anonymous unless the student added their name. -->
+    <section class="band band-cream-2 reports-band" id="reports-section" hidden>
+      <div class="wrap">
+        <div class="reports-bar">
+          <p class="mono done-note" id="reports-count"></p>
+          <button id="reports-refresh" class="chip" type="button">Refresh</button>
+        </div>
+        <p class="reports-note">
+          Students use Speak Up to tell staff about something wrong. Most are
+          anonymous: nobody, admins included, can find out who sent them. Some
+          include the student's name and email so you can talk to them.
+          Reports are not checked for truth, so treat them as a lead, not proof.
+        </p>
+        <ul id="reports-list" class="reports-list"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <footer class="footer footer-min">
+    <div class="wrap">
+      <div class="footer-bar mono">
+        <span>DPSI Student Suggestions · Speak Up reports</span>
+        <span>Reports are visible to staff only</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="staff-reports.js?v=1"></script>
+</body>
+</html>

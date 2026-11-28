@@ -4,10 +4,9 @@
 // move the student's text across.
 import { el } from "./common.js";
 
-// PLACEHOLDERS -- the school must replace these with its real wellbeing
-// contacts before launch. Also in the note under the heading in index.html;
-// tests/test_static.py checks the two match.
-export const HELP = { phone: "+91 XXXXX XXXXX", email: "help@dpsiedge.edu.in" };
+// Who students can contact for help. Also in the note under the heading in
+// index.html; tests/test_static.py checks the two match.
+export const HELP = { name: "Meenakshi Sharma", email: "meenakshi.sharma@dpsiedge.edu.in" };
 
 const $ = (id) => document.getElementById(id);
 const grid = $("boxes");
